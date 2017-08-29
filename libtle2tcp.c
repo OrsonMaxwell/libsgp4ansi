@@ -29,16 +29,22 @@ azel(void)
 
   double startmfe, stopmfe, deltamin;
 
+  char longstr1[130] = "1 25544U 98067A   17241.20968750  .00016118  00000-0  25119-3 0  9990";
+  char longstr2[130] = "2 25544  51.6408  34.2995 0004424 198.2687 159.0461 15.54014642 73102";
 
   twoline2rv
   (
-      "1 25544U 98067A   17241.20968750  .00016118  00000-0  25119-3 0  9990",
-      "2 25544  51.6408  34.2995 0004424 198.2687 159.0461 15.54014642 73102",
+      longstr1,
+      longstr2,
       'm',  'm', 'i', grav,
       &startmfe,
       &stopmfe,
       &deltamin,
       &satrec
   );
+  printf("%ld\n", satrec.satnum);
+  printf("%d\n", satrec.error);
+  printf("%lf\n", satrec.alta);
+
   return 0;
 }
