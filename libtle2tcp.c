@@ -9,6 +9,9 @@
 #include <math.h>
 
 #include "libtle2tcp.h"
+#include "sgp4unit.h"
+#include "sgp4ext.h"
+#include "sgp4io.h"
 
 // Test TLE 29.08.2017
 //ISS (ZARYA)
@@ -20,7 +23,7 @@
 int
 azel(void)
 {
-  /*
+  printf("azel\n");
   gravconsttype grav = wgs72;
   elsetrec satrec;
 
@@ -37,6 +40,5 @@ azel(void)
       &deltamin,
       &satrec
   );
-  */
   return 0;
 }

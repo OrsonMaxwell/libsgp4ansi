@@ -257,6 +257,7 @@ void newtonnu
        double* e0, double* m
      )
      {
+printf("newtonnu\n");
        double small, sine, cose;
 
      // ---------------------  implementation   ---------------------
@@ -372,6 +373,7 @@ void rv2coe
        double* nu, double* m, double* arglat, double* truelon, double* lonper
      )
      {
+printf("rv2coe\n");
        double undefined, small, hbar[3], nbar[3], magr, magv, magn, ebar[3], sme,
               rdotv, infinite, temp, c1, hk, twopi, magh, halfpi, e;
 
@@ -511,7 +513,7 @@ void rv2coe
 
          // ------------ find mean anomaly for all orbits -----------
          if ( typeorbit[0] == 'e' )
-             newtonnu(*ecc, nu, &e, m);
+             newtonnu(*ecc, *nu, &e, m);
      }
       else
      {
@@ -568,6 +570,7 @@ void    jday
           double* jd
         )
    {
+printf("jday\n");
      *jd = 367.0 * year -
           floor((7 * (year + floor((mon + 9) / 12.0))) * 0.25) +
           floor( 275 * mon / 9.0 ) +
@@ -620,6 +623,7 @@ void    days2mdhms
           int* mon, int* day, int* hr, int* minute, double* sec
         )
    {
+printf("days2mdhms\n");
      int i, inttemp, dayofyr;
      double    temp;
      int lmonth[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -694,6 +698,7 @@ void    invjday
           int* hr, int* minute, double* sec
         )
    {
+printf("invjday\n");
      int leapyrs;
      double    days, tu, temp;
 
@@ -715,7 +720,7 @@ void    invjday
        }
 
      /* ----------------- find remaing data  ------------------------- */
-     days2mdhms(*year, days, *mon, *day, *hr, *minute, *sec);
+     days2mdhms(*year, days, mon, day, hr, minute, sec);
      *sec = *sec - 0.00000086400;
    }  // end invjday
 
