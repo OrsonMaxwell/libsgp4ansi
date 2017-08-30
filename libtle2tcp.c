@@ -13,21 +13,50 @@
 #include "sgp4ext.h"
 #include "sgp4io.h"
 
-// Test TLE 29.08.2017
-//ISS (ZARYA)
-//1 25544U 98067A   17241.20968750  .00016118  00000-0  25119-3 0  9990
-//2 25544  51.6408  34.2995 0004424 198.2687 159.0461 15.54014642 73102
+/* Test TLE 29.08.2017
+ISS (ZARYA)
+1 25544U 98067A   17241.20968750  .00016118  00000-0  25119-3 0  9990
+2 25544  51.6408  34.2995 0004424 198.2687 159.0461 15.54014642 73102
 
-// Orbitron simulation for 0-0-0 latlonalt ovserver at 2017-08-29 00:00:00UTC
-// AZ:208.5 EL:-28.3 RRt: -3.998km/s (Downlink Doppler shift +1944Hz)
+Epoch is August 29 2017 05:01:57 UTC?
+
+Orbitron simulation for 0-0-0 latlonalt observer at 2017-08-29 06:01:57UTC
+
+1ISS
+Lon 176.8886° W
+Lat 37.4990° S
+Alt (km)  414.447
+Azm 184.1°
+Elv -70.7°
+RA  249.5544°
+Decl  -19.2665°
+Range (km)  12 467.355
+RRt (km/s)  -1.636
+Vel (km/s)  7.664
+Direction Descending
+Eclipse No
+MA (phase)  32.1° (23)
+TA  32.2°
+Orbit # 7 311
+Mag (illum) Not visible
+Constellation Oph
+Downlink Doppler shift 795Hz
+Uplink Doppler shift -664Hz
+*/
+
+
 int
 azel(void)
 {
-  printf("azel\n");
   gravconsttype grav = wgs72;
   elsetrec satrec;
 
   double startmfe, stopmfe, deltamin;
+
+  double ro[3];
+  double vo[3];
+
+  double tsince = 60.0;
 
   char longstr1[130] = "1 25544U 98067A   17241.20968750  .00016118  00000-0  25119-3 0  9990";
   char longstr2[130] = "2 25544  51.6408  34.2995 0004424 198.2687 159.0461 15.54014642 73102";
@@ -36,15 +65,17 @@ azel(void)
   (
       longstr1,
       longstr2,
-      'm',  'm', 'i', grav,
+      'm',  'c', 'i', grav,
       &startmfe,
       &stopmfe,
       &deltamin,
       &satrec
   );
-  printf("%ld\n", satrec.satnum);
-  printf("%d\n", satrec.error);
-  printf("%lf\n", satrec.alta);
+
+  sgp4(grav, &satrec, tsince, ro,  vo);
+
+  printf("TEME vectors:\nX:\t%fkm\nY:\t%fkm\nZ:\t%fkm\nVX:\t%fkm/s\nVY:\t%fkm/s\nVZ:\t%fkm/s\n",
+         ro[0],ro[1],ro[2],vo[0],vo[1],vo[2]);
 
   return 0;
 }

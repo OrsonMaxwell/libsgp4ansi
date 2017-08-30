@@ -50,6 +50,7 @@
 *       ----------------------------------------------------------------      */
 
 #include "sgp4unit.h"
+#include "sgp4ext.h"
 
 const char help = 'n';
 
@@ -216,7 +217,6 @@ static void dpper
        char opsmode
      )
 {
-printf("dpper\n");
      /* --------------------- local variables ------------------------ */
      const double twopi = 2.0 * pi;
      double alfdp, betdp, cosip, cosop, dalf, dbet, dls,
@@ -421,7 +421,6 @@ static void dscom
        double* zmos
      )
 {
-  printf("dscom\n");
      /* -------------------------- constants ------------------------- */
      const double zes     =  0.01675;
      const double zel     =  0.05490;
@@ -700,7 +699,6 @@ static void dsinit
        double* xfact, double* xlamo, double* xli,    double* xni
      )
 {
-  printf("dsinit\n");
      /* --------------------- local variables ------------------------ */
      const double twopi = 2.0 * pi;
 
@@ -990,7 +988,6 @@ static void dspace
        double* mm,    double* xni,   double* nodem,  double* dndt,  double* nm
      )
 {
-  printf("dspace\n");
      const double twopi = 2.0 * pi;
      int iretn , iret;
      double delt, ft, theta, x2li, x2omi, xl, xldot , xnddt, xndt, xomi, g22, g32,
@@ -1189,7 +1186,6 @@ static void initl
        char opsmode
      )
 {
-  printf("initl\n");
      /* --------------------- local variables ------------------------ */
      double ak, d1, del, adel, po, x2o3, j2, xke,
             tumin, mu, radiusearthkm, j3, j4, j3oj2;
@@ -1344,7 +1340,6 @@ bool sgp4init
        const double xnodeo,  elsetrec* satrec
      )
 {
-  printf("sgp4init\n");
      /* --------------------- local variables ------------------------ */
      double ao, ainv,   con42, cosio, sinio, cosio2, eccsq,
           omeosq, posq,   rp,     rteosq,
@@ -1706,7 +1701,6 @@ bool sgp4
        double r[3],  double v[3]
      )
 {
-  printf("sgp4\n");
      double am   , axnl  , aynl , betal ,  cosim , cnod  ,
          cos2u, coseo1, cosi , cosip ,  cosisq, cossu , cosu,
          delm , delomg, em   , emsq  ,  ecose , el2   , eo1 ,
@@ -2020,7 +2014,6 @@ double  gstime
           double jdut1
         )
    {
-  printf("gstime\n");
      const double twopi = 2.0 * pi;
      const double deg2rad = pi / 180.0;
      double       temp, tut1;
@@ -2081,7 +2074,6 @@ void getgravconst
       double* j3oj2
      )
      {
-  printf("getgravconst\n");
        switch (whichconst)
          {
            // -- wgs-72 low precision str#3 constants --
@@ -2123,3 +2115,148 @@ void getgravconst
          }
 
      }   // end getgravconst
+
+/* -----------------------------------------------------------------------------
+*
+*                           function gc_gd
+*
+*  this function converts from geodetic to geocentric latitude for positions
+*    on the surface of the earth.  notice that (1-f) squared = 1-esqrd.
+*
+*  author        : david vallado                  719-573-2600    6 dec 2005
+*
+*  revisions
+*
+*  inputs          description                    range / units
+*    latgd       - geodetic latitude              -pi to pi rad
+*
+*  outputs       :
+*    latgc       - geocentric latitude            -pi to pi rad
+*
+*  locals        :
+*    none.
+*
+*  coupling      :
+*    none.
+*
+*  references    :
+*    vallado       2013, 140, eq 3-11
+* --------------------------------------------------------------------------- */
+
+void gc_gd
+     (
+       double*    latgc ,
+       edirection direct,
+       double*    latgd
+     )
+     {
+       const double eesqrd = 0.006694385000;     // eccentricity of earth sqrd
+
+       if (direct == eTo)
+           *latgd= atan( tan(*latgc)/(1.0  - eesqrd) );
+         else
+           *latgc= atan( (1.0  - eesqrd)*tan(*latgd) );
+     }   // procedure gc_gd
+
+
+
+/* -----------------------------------------------------------------------------
+*
+*                           function ijk2ll
+*
+*  these subroutines convert a geocentric equatorial position vector into
+*    latitude and longitude.  geodetic and geocentric latitude are found. the
+*    inputs must be ecef.
+*
+*  author        : david vallado                  719-573-2600    6 dec 2005
+*
+*  revisions
+*
+*  inputs          description                    range / units
+*    recef       - ecef position vector           km
+*    jdut1       - julian date (ut1)              days from 4713 bc
+*
+*  outputs       :
+*    latgc       - geocentric latitude            -pi to pi rad
+*    latgd       - geodetic latitude              -pi to pi rad
+*    lon         - longitude (west -)             -2pi to 2pi rad
+*    hellp       - height above the ellipsoid     km
+*
+*  locals        :
+*    temp        - diff between geocentric/
+*                  geodetic lat                   rad
+*    gst         - greenwich sidereal time        rad
+*    sintemp     - sine of temp                   rad
+*    olddelta    - previous value of deltalat     rad
+*    rtasc       - right ascension                rad
+*    decl        - declination                    rad
+*    i           - index
+*
+*  coupling      :
+*    mag         - magnitude of a vector
+*    gstime      - greenwich sidereal time
+*    gcgd        - converts between geocentric and geodetic latitude
+*
+*  references    :
+*    vallado       2013, 173, alg 12 and alg 13, ex 3-3
+* --------------------------------------------------------------------------- */
+
+void ijk2ll
+     (
+       double recef[3], double jdut1,
+       double* latgc, double* latgd, double* lon, double* hellp
+     )
+     {
+       const double twopi      =    2.0*pi;
+       const double small      =    0.00000001;         // small value for tolerances
+       const double re         = 6378.137;
+       const double eesqrd     =    0.006694385000;     // eccentricity of earth sqrd
+       double magr, gst, decl, rtasc, olddelta, temp, sintemp, s, c = 0.0;
+       int i;
+
+        // ---------------------------  implementation   -----------------------
+        magr = mag( recef );
+
+        // ---------------------- find longitude value  ------------------------
+        temp = sqrt( recef[0]*recef[0] + recef[1]*recef[1] );
+        if ( fabs( temp ) < small )
+            rtasc= sgn(recef[2])*pi*0.5;
+          else
+            rtasc= atan2( recef[1], recef[0] );
+
+        gst  = gstime( jdut1 );
+        *lon  = rtasc - gst;
+        if ( fabs(*lon) >= pi )   // mod it ?
+          {
+            if ( *lon < 0.0  )
+                *lon= twopi + *lon;
+              else
+                *lon= *lon - twopi;
+
+          }
+        decl = asin( recef[2] / magr );
+        *latgd= decl;
+
+        // ----------------- iterate to find geodetic latitude -----------------
+        i = 1;
+        olddelta = *latgd + 10.0;
+
+        while ((fabs(olddelta - *latgd) >= small) && (i<10))
+          {
+            olddelta= *latgd;
+            sintemp = sin( *latgd );
+            c       = re  / (sqrt( 1.0 - eesqrd*sintemp*sintemp ));
+            *latgd   = atan( (recef[2] + c*eesqrd*sintemp)/temp );
+            i = i + 1;
+          }
+
+        if ((pi*0.5 - fabs(*latgd)) > pi/180.0)  // 1 deg
+           *hellp   = (temp/cos(*latgd)) - c;
+         else
+         {
+           s = c * (1.0 - eesqrd);
+           *hellp   = recef[2]/sin(*latgd) - s;
+         }
+
+        gc_gd(latgc, eFrom, latgd);
+   }   // procedure ijk2ll

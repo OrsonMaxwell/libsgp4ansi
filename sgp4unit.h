@@ -72,6 +72,11 @@ typedef enum
   wgs84
 } gravconsttype;
 
+typedef enum
+    {
+       eTo, eFrom
+    } edirection;
+
 typedef struct elsetrec
 {
   long int  satnum;
