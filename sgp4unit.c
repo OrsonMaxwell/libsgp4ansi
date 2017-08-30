@@ -2158,7 +2158,45 @@ void gc_gd
            *latgc= atan( (1.0  - eesqrd)*tan(*latgd) );
      }   // procedure gc_gd
 
+/*
+polarm
+This function calulates the transformation matrix that accounts for polar
+motion. Polar motion coordinates are estimated using IERS Bulletin
+rather than directly input for simplicity.
+Author: David Vallado, 2007
+Ported to C++ by Grady Hillhouse with some modifications, July 2015.
+INPUTS          DESCRIPTION                     RANGE/UNITS
+jdut1           Julian date                     days
+OUTPUTS         DESCRIPTION
+pm              Transformation matrix for ECEF - PEF
+*/
 
+void polarm(double jdut1, double pm[3][3])
+{
+    double MJD; //Julian Date - 2,400,000.5 days
+    double A;
+    double C;
+    double xp; //Polar motion coefficient in radians
+    double yp; //Polar motion coefficient in radians
+
+    //Predict polar motion coefficients using IERS Bulletin - A (Vol. XXVIII No. 030)
+    MJD = jdut1 - 2400000.5;
+    A = 2 * pi * (MJD - 57226) / 365.25;
+    C = 2 * pi * (MJD - 57226) / 435;
+
+    xp = (0.1033 + 0.0494*cos(A) + 0.0482*sin(A) + 0.0297*cos(C) + 0.0307*sin(C)) * 4.84813681e-6;
+    yp = (0.3498 + 0.0441*cos(A) - 0.0393*sin(A) + 0.0307*cos(C) - 0.0297*sin(C)) * 4.84813681e-6;
+
+    pm[0][0] = cos(xp);
+    pm[0][1] = 0.0;
+    pm[0][2] = -sin(xp);
+    pm[1][0] = sin(xp) * sin(yp);
+    pm[1][1] = cos(yp);
+    pm[1][2] = cos(xp) * sin(yp);
+    pm[2][0] = sin(xp) * cos(yp);
+    pm[2][1] = -sin(yp);
+    pm[2][2] = cos(xp) * cos(yp);
+}
 
 /* -----------------------------------------------------------------------------
 *
@@ -2225,7 +2263,8 @@ void ijk2ll
             rtasc= atan2( recef[1], recef[0] );
 
         gst  = gstime( jdut1 );
-        *lon  = rtasc - gst;
+        //*lon  = rtasc - gst; // Already done elsewhere
+        *lon  = rtasc;
         if ( fabs(*lon) >= pi )   // mod it ?
           {
             if ( *lon < 0.0  )
@@ -2260,3 +2299,193 @@ void ijk2ll
 
         gc_gd(latgc, eFrom, latgd);
    }   // procedure ijk2ll
+
+/*
+teme2ecef
+This function transforms a vector from a true equator mean equinox (TEME)
+frame to an earth-centered, earth-fixed (ECEF) frame.
+Author: David Vallado, 2007
+Ported to C++ by Grady Hillhouse with some modifications, July 2015.
+INPUTS          DESCRIPTION                     RANGE/UNITS
+rteme           Position vector (TEME)          km
+vteme           Velocity vector (TEME)          km/s
+jdut1           Julian date                     days
+OUTPUTS         DESCRIPTION                     RANGE/UNITS
+recef           Position vector (ECEF)          km
+vecef           Velocity vector (ECEF)          km/s
+*/
+
+void teme2ecef(double rteme[3], double vteme[3], double jdut1, double recef[3], double vecef[3])
+{
+    double gmst;
+    double st[3][3];
+    double rpef[3];
+    double vpef[3];
+    double pm[3][3];
+    double omegaearth[3];
+
+    //Get Greenwich mean sidereal time
+    gmst = gstime(jdut1);
+
+    //st is the pef - tod matrix
+    st[0][0] = cos(gmst);
+    st[0][1] = -sin(gmst);
+    st[0][2] = 0.0;
+    st[1][0] = sin(gmst);
+    st[1][1] = cos(gmst);
+    st[1][2] = 0.0;
+    st[2][0] = 0.0;
+    st[2][1] = 0.0;
+    st[2][2] = 1.0;
+
+    //Get pseudo earth fixed position vector by multiplying the inverse pef-tod matrix by rteme
+    rpef[0] = st[0][0] * rteme[0] + st[1][0] * rteme[1] + st[2][0] * rteme[2];
+    rpef[1] = st[0][1] * rteme[0] + st[1][1] * rteme[1] + st[2][1] * rteme[2];
+    rpef[2] = st[0][2] * rteme[0] + st[1][2] * rteme[1] + st[2][2] * rteme[2];
+
+    //Get polar motion vector
+    polarm(jdut1, pm);
+
+    //ECEF postion vector is the inverse of the polar motion vector multiplied by rpef
+    recef[0] = pm[0][0] * rpef[0] + pm[1][0] * rpef[1] + pm[2][0] * rpef[2];
+    recef[1] = pm[0][1] * rpef[0] + pm[1][1] * rpef[1] + pm[2][1] * rpef[2];
+    recef[2] = pm[0][2] * rpef[0] + pm[1][2] * rpef[1] + pm[2][2] * rpef[2];
+
+    //Earth's angular rotation vector (omega)
+    //Note: I don't have a good source for LOD. Historically it has been on the order of 2 ms so I'm just using that as a constant. The effect is very small.
+    omegaearth[0] = 0.0;
+    omegaearth[1] = 0.0;
+    omegaearth[2] = 7.29211514670698e-05 * (1.0  - 0.002/86400.0);
+
+    //Pseudo Earth Fixed velocity vector is st'*vteme - omegaearth X rpef
+    vpef[0] = st[0][0] * vteme[0] + st[1][0] * vteme[1] + st[2][0] * vteme[2] - (omegaearth[1]*rpef[2] - omegaearth[2]*rpef[1]);
+    vpef[1] = st[0][1] * vteme[0] + st[1][1] * vteme[1] + st[2][1] * vteme[2] - (omegaearth[2]*rpef[0] - omegaearth[0]*rpef[2]);
+    vpef[2] = st[0][2] * vteme[0] + st[1][2] * vteme[1] + st[2][2] * vteme[2] - (omegaearth[0]*rpef[1] - omegaearth[1]*rpef[0]);
+
+    //ECEF velocty vector is the inverse of the polar motion vector multiplied by vpef
+    vecef[0] = pm[0][0] * vpef[0] + pm[1][0] * vpef[1] + pm[2][0] * vpef[2];
+    vecef[1] = pm[0][1] * vpef[0] + pm[1][1] * vpef[1] + pm[2][1] * vpef[2];
+    vecef[2] = pm[0][2] * vpef[0] + pm[1][2] * vpef[1] + pm[2][2] * vpef[2];
+}
+
+/*------------------------------------------------------------------------------
+*
+*                           procedure rv_razel
+*
+*  this procedure converts range, azimuth, and elevation and their rates with
+*    the geocentric equatorial (ecef) position and velocity vectors.  notice the
+*    value of small as it can affect rate term calculations. uses velocity
+*    vector to find the solution of singular cases.
+*
+*  author        : david vallado                  719-573-2600   22 jun 2002
+*
+*  inputs          description                    range / units
+*    recef       - ecef position vector           km
+*    vecef       - ecef velocity vector           km/s
+*    rsecef      - ecef site position vector      km
+*    latgd       - geodetic latitude              -pi/2 to pi/2 rad
+*    lon         - geodetic longitude             -2pi to pi rad
+*    direct      -  direction to convert          eFrom  eTo
+*
+*  outputs       :
+*    rho         - satellite range from site      km
+*    az          - azimuth                        0.0 to 2pi rad
+*    el          - elevation                      -pi/2 to pi/2 rad
+*    drho        - range rate                     km/s
+*    daz         - azimuth rate                   rad/s
+*    del         - elevation rate                 rad/s
+*
+*  locals        :
+*    rhovecef    - ecef range vector from site    km
+*    drhovecef   - ecef velocity vector from site km/s
+*    rhosez      - sez range vector from site     km
+*    drhosez     - sez velocity vector from site  km
+*    tempvec     - temporary vector
+*    temp        - temporary extended value
+*    temp1       - temporary extended value
+*    i           - index
+*
+*  coupling      :
+*    astMath::mag         - astMath::magnitude of a vector
+*    addvec      - add two vectors
+*    rot3        - rotation about the 3rd axis
+*    rot2        - rotation about the 2nd axis
+*    atan2       - arc tangent function which also resloves quadrants
+*    dot         - dot product of two vectors
+*    rvsez_razel - find r and v from site in topocentric horizon (sez) system
+*    lncom2      - combine two vectors and constants
+*    arcsin      - arc sine function
+*    sgn         - returns the sign of a variable
+*
+*  references    :
+*    vallado       2013, 265, alg 27
+-----------------------------------------------------------------------------*/
+
+void rv_razel
+(
+double recef[3], double vecef[3], double rsecef[3], double latgd, double lon,
+edirection direct,
+double* rho, double* az, double* el, double* drho, double* daz, double* del
+)
+{
+  const double halfpi = pi / 2.0;
+  const double small = 0.0000001;
+
+  double temp, temp1;
+  double rhoecef[3], drhoecef[3], rhosez[3], drhosez[3], tempvec[3];
+
+  if (direct == eFrom)
+  {
+  }
+  else
+  {
+    /* ------- find ecef range vector from site to satellite ----- */
+    addvec(1.0, recef, -1.0, rsecef, rhoecef);
+    drhoecef[0] = vecef[0];
+    drhoecef[1] = vecef[1];
+    drhoecef[2] = vecef[2];
+    *rho = mag(rhoecef);
+
+    /* ------------ convert to sez for calculations ------------- */
+    rot3(rhoecef, lon, tempvec);
+    rot2(tempvec, halfpi - latgd, rhosez);
+    rot3(drhoecef, lon, tempvec);
+    rot2(tempvec, halfpi - latgd, drhosez);
+
+    /* ------------ calculate azimuth and elevation ------------- */
+    temp = sqrt(rhosez[0] * rhosez[0] + rhosez[1] * rhosez[1]);
+    if (fabs(rhosez[1]) < small)
+    if (temp < small)
+    {
+      temp1 = sqrt(drhosez[0] * drhosez[0] +
+        drhosez[1] * drhosez[1]);
+      *az = atan2(drhosez[1] / temp1, -drhosez[0] / temp1);
+    }
+    else
+    if (rhosez[0] > 0.0)
+      *az = pi;
+    else
+      *az = 0.0;
+    else
+      *az = atan2(rhosez[1] / temp, -rhosez[0] / temp);
+
+    if (temp < small)  // directly over the north pole
+      *el = sgn(rhosez[2]) * halfpi; // +- 90
+    else
+      *el = asin(rhosez[2] / mag(rhosez));
+
+    /* ----- calculate range, azimuth and elevation rates ------- */
+    *drho = dot(rhosez, drhosez) / *rho;
+    if (fabs(temp * temp) > small)
+      *daz = (drhosez[0] * rhosez[1] - drhosez[1] * rhosez[0]) /
+      (temp * temp);
+    else
+      *daz = 0.0;
+
+    if (fabs(temp) > 0.00000001)
+      *del = (drhosez[2] - *drho * sin(*el)) / temp;
+    else
+      *del = 0.0;
+  }
+}  // procedure rv_razel
+

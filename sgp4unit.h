@@ -141,5 +141,19 @@ void getgravconst
       double* j3oj2
      );
 
+void teme2ecef(double rteme[3], double vteme[3], double jdut1, double recef[3], double vecef[3]);
+
+void ijk2ll
+     (
+       double recef[3], double jdut1,
+       double* latgc, double* latgd, double* lon, double* hellp
+     );
+
+void rv_razel
+(
+double recef[3], double vecef[3], double rsecef[3], double latgd, double lon,
+edirection direct,
+double* rho, double* az, double* el, double* drho, double* daz, double* del
+);
 
 #endif /* SGP4UNIT_H_ */

@@ -719,7 +719,79 @@ void    invjday
      *sec = *sec - 0.00000086400;
    }  // end invjday
 
+/* -----------------------------------------------------------------------------
+*
+*                           procedure addvec
+*
+*  this procedure adds two vectors possibly multiplied by a constant.
+*
+*  author        : david vallado                  719-573-2600    1 mar 2001
+*
+*  inputs          description                    range / units
+*    a1          - constant multiplier
+*    a2          - constant multiplier
+*    vec1        - vector number 1
+*    vec2        - vector number 2
+*
+*  outputs       :
+*    outvec      - vector result of a + b
+*
+*  locals        :
+*    row         - index
+*
+*  coupling      :
+*     none
+* --------------------------------------------------------------------------- */
 
+void    addvec
+        (
+          double a1, double vec1[3],
+          double a2, double vec2[3],
+          double vec3[3]
+        )
+   {
+     int row;
 
+     for (row = 0; row <= 2; row++)
+       {
+         vec3[row]= 0.0;
+         vec3[row] = a1* vec1[row] + a2* vec2[row];
+       }
+   }
 
+void    rot2
+        (
+          double vec[3],
+          double xval,
+          double outvec[3]
+        )
+   {
+      double c, s, temp;
+
+      temp= vec[2];
+      c= cos( xval );
+      s= sin( xval );
+
+      outvec[2]= c*vec[2] + s*vec[0];
+      outvec[0]= c*vec[0] - s*temp;
+      outvec[1]= vec[1];
+   }
+
+void    rot3
+        (
+          double vec[3],
+          double xval,
+          double outvec[3]
+        )
+   {
+      double c, s, temp;
+
+      temp= vec[1];
+      c= cos( xval );
+      s= sin( xval );
+
+      outvec[1]= c*vec[1] - s*vec[0];
+      outvec[0]= c*vec[0] + s*temp;
+      outvec[2]= vec[2];
+   }
 

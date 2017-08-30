@@ -102,5 +102,25 @@ void    invjday
           int* hr, int* minute, double* sec
         );
 
+void    addvec
+        (
+          double a1, double vec1[3],
+          double a2, double vec2[3],
+          double vec3[3]
+        );
+
+void    rot2
+        (
+          double vec[3],
+          double xval,
+          double outvec[3]
+        );
+
+void    rot3
+        (
+          double vec[3],
+          double xval,
+          double outvec[3]
+        );
 
 #endif /* SGP4EXT_H_ */
