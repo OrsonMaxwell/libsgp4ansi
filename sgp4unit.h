@@ -62,7 +62,7 @@
 #include <stdbool.h>
 #define SGP4Version  "SGP4 Version 2011-12-30"
 
-#define pi M_PI
+#define pi 3.14159265358979323846
 
 // -------------------------- structure declarations ----------------------------
 typedef enum

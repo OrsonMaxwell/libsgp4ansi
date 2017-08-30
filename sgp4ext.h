@@ -35,8 +35,6 @@
 
 #include "sgp4unit.h"
 
-#define pi M_PI
-
 // ------------------------- function declarations -------------------------
 
 double  sgn
