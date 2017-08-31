@@ -6,7 +6,9 @@
 #define TYPES_H_
 
 #include <time.h>
+#include <stdint.h>
 #include <stdbool.h>
+#include "sgp4unit.h"
 
 /*
  * Satellite orbital element set
@@ -32,21 +34,19 @@ typedef struct _orbit
   double       no;            // Mean motion at epoch, rev/day
   unsigned int rev_number;    // Number of revolutions at epoch
   // Standard orbital elements
-  double a,     alta,   altp,    aycof,      C1,
-         C4,    C5,     con41,   delMo,      eta,
-         mdot,  nodecf, nodedot, omegaprime, omgcof,
-         sinMo, t2cof,  x1mth2,  x7thm1,     xlcof,
-         xmcof;
+  double a, alta, altp, aycof, C1, C4, C5, con41, d2, d3, d4, delMo, eta, GSTo,
+         mdot, nodecf, nodedot, omegaprime, omgcof, sinMo, t2cof, t3cof, t4cof,
+         t5cof, x1mth2, x7thm1, xlcof, xmcof;
   // Deep space perturbations elements
   double e3,  ee2,  peo,  pgho, pho,  pinco, plo, se2,
          se3, sgh2, sgh3, sgh4, sh2,  sh3,   si2, si3,
          sl2, sl3,  sl4,  xgh2, xgh3, xgh4,  xh2, xh3,
          xi2, xi3,  xl2,  xl3,  xl4,  zmol,  zmos;
-
-  double gsto;   // GST at epoch, rad
-  // Misc flags
-  bool isdeepspace;
-  bool isimp;    // ???
+  // Flags
+  bool isdeepspace, isloworbit;
 } orbit;
+
+void print_orbit(orbit* sat, char* caption);
+void print_elsetrec(elsetrec* sat, char* caption);
 
 #endif /* TYPES_H_ */

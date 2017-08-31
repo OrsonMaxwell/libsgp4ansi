@@ -52,6 +52,8 @@
 #include "sgp4unit.h"
 #include "sgp4ext.h"
 
+#include "types.h"
+
 const char help = 'n';
 
 /* ----------- local functions - only ever used internally by sgp4 ---------- */
@@ -1515,7 +1517,7 @@ bool sgp4init
          satrec->sinmao  = sin(satrec->mo);
          satrec->x7thm1  = 7.0 * cosio2 - 1.0;
 
-         printf("OLD: no=%f\t sinMo=%f\t x7thm1=%f\n", satrec->no, satrec->sinmao, satrec->x7thm1);
+         print_elsetrec(satrec, "OLD: Pre-deepspace");
 
          /* --------------- deep space initialization ------------- */
          if ((2*pi / satrec->no) >= 225.0)
@@ -1543,6 +1545,7 @@ bool sgp4init
                    &z12, &z13, &z21, &z22, &z23, &z31, &z32, &z33,
                    &satrec->zmol, &satrec->zmos
                  );
+             print_elsetrec(satrec, "OLD: after dscom if ((twopi / sat->no) >= 225.0)");
              dpper
                  (
                    satrec->e3, satrec->ee2, satrec->peo, satrec->pgho,
@@ -1595,6 +1598,7 @@ bool sgp4init
                             12.0 * satrec->cc1 * satrec->d3 +
                             6.0 * satrec->d2 * satrec->d2 +
                             15.0 * cc1sq * (2.0 * satrec->d2 + cc1sq));
+           print_elsetrec(satrec, "OLD: End init  (sat->isimp != 1)");
          }
        } // if omeosq = 0 ...
 

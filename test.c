@@ -36,7 +36,7 @@ main ()
   iss.epoch          = mktime(&epoch_tm);
   iss.nprimediv2     = 0.00016118;
   iss.ndprimediv6    = 0;
-  iss.Bstar          = 25119e-3;
+  iss.Bstar          = 0.25119e-3;
   iss.ephem_type     = 0;
   iss.elset_number   = 999;
   iss.i              = 51.6408;
