@@ -164,7 +164,7 @@ void print_elsetrec(elsetrec* sat, char* caption)
   fprintf(f, "zmol:\t\t%f\n", sat->zmol);
   fprintf(f, "zmos:\t\t%f\n", sat->zmos);
   fprintf(f, "-- Flags\n");
-  fprintf(f, "Deepsp:\t\t%s\n", sat->method);
+  fprintf(f, "Deepsp:\t\t%c\n", sat->method);
   fprintf(f, "Loworb:\t\t%d\n", sat->isimp);
   fclose(f);
 }

@@ -1,5 +1,5 @@
-#ifndef LIBTLE2TCP_H_
-#define LIBTLE2TCP_H_
+#ifndef LIBSGP4ANSI_H_
+#define LIBSGP4ANSI_H_
 
 #include <time.h>
 #include <inttypes.h>
@@ -17,4 +17,4 @@ orbit_init(orbit*);
 extern int
 azel(void);
 
-#endif /* LIBTLE2TCP_H_ */
+#endif /* LIBSGP4ANSI_H_ */

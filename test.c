@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "libtle2tcp.h"
+#include "libsgp4ansi.h"
 
 #include "sgp4unit.h"
 #include "sgp4ext.h"
@@ -131,7 +131,7 @@ void old_test(void){
       &deltamin,
       &satrec
   );
-
+/*
   // Calculating propagation for +1 hour since TLE epoch
   double ro[3], recef[3];
   double vo[3], vecef[3];
@@ -178,5 +178,6 @@ void old_test(void){
   double upshift = (drho / c) * f0up;
 
   //printf("Doppler shifts:\nDownlink:\t%f\nUplink:\t\t%f\n\n", downshift, upshift);
+  */
 }
 
