@@ -18,7 +18,7 @@ void old_test(void);
 int
 main ()
 {
-  sat iss = {0};
+  orbit iss = {0};
 
   struct tm epoch_tm;
 
@@ -36,7 +36,7 @@ main ()
   iss.epoch          = mktime(&epoch_tm);
   iss.nprimediv2     = 0.00016118;
   iss.ndprimediv6    = 0;
-  iss.bstar          = 25119e-3;
+  iss.Bstar          = 25119e-3;
   iss.ephem_type     = 0;
   iss.elset_number   = 999;
   iss.i              = 51.6408;

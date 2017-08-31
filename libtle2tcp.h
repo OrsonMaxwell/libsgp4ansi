@@ -12,7 +12,7 @@
 // ************************************************************************* //
 
 extern int
-orbit_init(sat*);
+orbit_init(orbit*);
 
 extern int
 azel(void);
