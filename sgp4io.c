@@ -191,7 +191,6 @@ void twoline2rv
 
        days2mdhms ( year, satrec->epochdays, &mon, &day, &hr, &minute, &sec );
        jday( year,mon,day,hr,minute,sec, &satrec->jdsatepoch );
-
        // ---- input start stop times manually
        if ((typerun != 'v') && (typerun != 'c'))
          {

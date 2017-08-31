@@ -1515,6 +1515,8 @@ bool sgp4init
          satrec->sinmao  = sin(satrec->mo);
          satrec->x7thm1  = 7.0 * cosio2 - 1.0;
 
+         printf("OLD: no=%f\t sinMo=%f\t x7thm1=%f\n", satrec->no, satrec->sinmao, satrec->x7thm1);
+
          /* --------------- deep space initialization ------------- */
          if ((2*pi / satrec->no) >= 225.0)
            {

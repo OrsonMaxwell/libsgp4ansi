@@ -9,40 +9,47 @@
 #include <string.h>
 #include "libtle2tcp.h"
 
+#include "sgp4unit.h"
+#include "sgp4ext.h"
+#include "sgp4io.h"
+
+void old_test(void);
+
 int
 main ()
 {
-  tle iss_tle;
-  orbit iss_orbit;
+  sat iss = {0};
 
   struct tm epoch_tm;
 
-  epoch_tm.tm_year   = 117;
-  epoch_tm.tm_mon    = 8;
-  epoch_tm.tm_mday   = 29;
-  epoch_tm.tm_hour   = 5;
-  epoch_tm.tm_min    = 1;
-  epoch_tm.tm_sec    = 57;
+  epoch_tm.tm_year       = 117;
+  epoch_tm.tm_mon        = 8;
+  epoch_tm.tm_mday       = 29;
+  epoch_tm.tm_hour       = 5;
+  epoch_tm.tm_min        = 1;
+  epoch_tm.tm_sec        = 57;
 
-  strcpy(iss_tle.name, "ISS");
-  iss_tle.number         = 25544;
-  iss_tle.class          = 'U';
-  strcpy(iss_tle.designator, "98067A");
-  iss_tle.epoch          = mktime(&epoch_tm);
-  iss_tle.ndotdiv2       = 0.00016118;
-  iss_tle.nddotdiv6      = 0;
-  iss_tle.bstar          = 25119e-3;
-  iss_tle.ephem_type     = 0;
-  iss_tle.element_set    = 999;
-  iss_tle.inclination    = 51.6408;
-  iss_tle.right_asc      = 34.2995;
-  iss_tle.eccentricity   = 0.0004424;
-  iss_tle.arg_of_perigee = 198.2687;
-  iss_tle.mean_anomaly   = 159.0461;
-  iss_tle.mean_motion    = 15.54014642;
-  iss_tle.rev_number     = 7310;
+  strcpy(iss.name, "ISS");
+  iss.number         = 25544;
+  iss.class          = 'U';
+  strcpy(iss.designator, "98067A  ");
+  iss.epoch          = mktime(&epoch_tm);
+  iss.nprimediv2     = 0.00016118;
+  iss.ndprimediv6    = 0;
+  iss.bstar          = 25119e-3;
+  iss.ephem_type     = 0;
+  iss.elset_number   = 999;
+  iss.i              = 51.6408;
+  iss.alpha          = 34.2995;
+  iss.e              = 0.0004424;
+  iss.omega          = 198.2687;
+  iss.Mo             = 159.0461;
+  iss.no             = 15.54014642;
+  iss.rev_number     = 7310;
 
-  sgp4_init(&iss_tle, &iss_orbit);
+  orbit_init(&iss);
+
+  old_test();
 
   return 0;
 }
@@ -103,7 +110,8 @@ Downlink Doppler shift 1910Hz @ 145.8MHz
 Uplink Doppler shift -1902Hz @ 145.2MHz
 */
 
-/*
+
+void old_test(void){
   // Parsing TLE and initializing the math constants
   gravconsttype grav = wgs72;
   elsetrec satrec;
@@ -131,8 +139,8 @@ Uplink Doppler shift -1902Hz @ 145.2MHz
   //double tsince = 600.0; // 2017-08-29 15:01:57UTC
   sgp4(grav, &satrec, tsince, ro,  vo);
 
-  printf("TEME vectors:\nX:\t\t%fkm\nY:\t\t%fkm\nZ:\t\t%fkm\nVX:\t\t%fkm/s\nVY:\t\t%fkm/s\nVZ:\t\t%fkm/s\n\n",
-         ro[0],ro[1],ro[2],vo[0],vo[1],vo[2]);
+  //printf("TEME vectors:\nX:\t\t%fkm\nY:\t\t%fkm\nZ:\t\t%fkm\nVX:\t\t%fkm/s\nVY:\t\t%fkm/s\nVZ:\t\t%fkm/s\n\n",
+  //       ro[0],ro[1],ro[2],vo[0],vo[1],vo[2]);
 
   // Rotating TEME to ECEF coordinates
   double jday1 = 0.0;
@@ -141,16 +149,16 @@ Uplink Doppler shift -1902Hz @ 145.2MHz
 
   teme2ecef(ro, vo, jday1, recef, vecef);
 
-  printf("ECEF vectors:\nX:\t\t%fkm\nY:\t\t%fkm\nZ:\t\t%fkm\nVX:\t\t%fkm/s\nVY:\t\t%fkm/s\nVZ:\t\t%fkm/s\n\n",
-         recef[0],recef[1],recef[2],vecef[0],vecef[1],vecef[2]);
+  //printf("ECEF vectors:\nX:\t\t%fkm\nY:\t\t%fkm\nZ:\t\t%fkm\nVX:\t\t%fkm/s\nVY:\t\t%fkm/s\nVZ:\t\t%fkm/s\n\n",
+  //       recef[0],recef[1],recef[2],vecef[0],vecef[1],vecef[2]);
 
   // Converting ECEF coodrinates to latlonalt
   double latgc, latgd, lon, hellp;
 
   ijk2ll(recef, jday1, &latgc, &latgd, &lon, &hellp);
 
-  printf("LATLONALT:\nLat (gd):\t%f\nLat (gc):\t%f\nLon:\t\t%f\nAlt:\t\t%f\n\n",
-         latgc*180/pi,latgd*180/pi,lon*180/pi,hellp);
+  //printf("LATLONALT:\nLat (gd):\t%f\nLat (gc):\t%f\nLon:\t\t%f\nAlt:\t\t%f\n\n",
+  //       latgc*180/pi,latgd*180/pi,lon*180/pi,hellp);
 
   // Calculate range, azimuth, elevation and their respective rates relative to the observer
   double rsecef[3] = {6378.137, 0.0, 0.0}; // observer to sat vector at latlonalt 0,0,0
@@ -159,8 +167,8 @@ Uplink Doppler shift -1902Hz @ 145.2MHz
   rv_razel(recef, vecef, rsecef, latgd, lon, eTo,
            &rho, &az, &el, &drho, &daz, &del);
 
-  printf("RAZEL:\nRange:\t\t%f\nAzimuth:\t%f\nElevation:\t%f\nRRate:\t\t%f\nAZRate:\t\t%f\nELRate:\t\t%f\n\n",
-         rho,(az<0)?((180-az*180)/pi):(az*180/pi),el*180/pi,drho, daz*180/pi, del*180/pi);
+  //printf("RAZEL:\nRange:\t\t%f\nAzimuth:\t%f\nElevation:\t%f\nRRate:\t\t%f\nAZRate:\t\t%f\nELRate:\t\t%f\n\n",
+  //       rho,(az<0)?((180-az*180)/pi):(az*180/pi),el*180/pi,drho, daz*180/pi, del*180/pi);
 
   // Calculate doppler shift
   double c = 299792.458;
@@ -169,5 +177,6 @@ Uplink Doppler shift -1902Hz @ 145.2MHz
   double downshift = (-drho / c) * f0down;
   double upshift = (drho / c) * f0up;
 
-  printf("Doppler shifts:\nDownlink:\t%f\nUplink:\t\t%f\n\n", downshift, upshift);
-*/
+  //printf("Doppler shifts:\nDownlink:\t%f\nUplink:\t\t%f\n\n", downshift, upshift);
+}
+
