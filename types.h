@@ -1,6 +1,8 @@
-// ************************************************************************* //
-//                                CUSTOM TYPES                               //
-// ************************************************************************* //
+/*
+ * types.h - custom types for libsgp4ansi.
+ *
+ * Copyright © 2017 Orson J. Maxwell. Please see LICENSE for details.
+ */
 
 #ifndef TYPES_H_
 #define TYPES_H_
@@ -9,6 +11,28 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "sgp4unit.h"
+
+/*
+ * 3D vector
+ */
+typedef struct _vect
+{
+  union {
+    double x;
+    double i;
+    double lat;
+  };
+  union {
+    double y;
+    double j;
+    double lon;
+  };
+  union {
+    double z;
+    double k;
+    double alt;
+  };
+} vect;
 
 /*
  * Satellite orbital element set

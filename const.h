@@ -1,3 +1,9 @@
+/*
+ * const.h - precomputed mathematical and physical constants for libsgp4ansi.
+ *
+ * Copyright © 2017 Orson J. Maxwell. Please see LICENSE for details.
+ */
+
 #ifndef CONST_H_
 #define CONST_H_
 

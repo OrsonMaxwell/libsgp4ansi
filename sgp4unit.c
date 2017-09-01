@@ -1607,6 +1607,9 @@ bool sgp4init
 //       if(satrec->error == 0)
        sgp4(whichconst, satrec, 0.0, r, v);
 
+       printf("OLD: pos: %f\t\t%f\t\t%f\nOLD: vel: %f\t\t%f\t\t%f\n",
+              r[0], r[1], r[2], v[0], v[1], v[2]);
+
        satrec->init = 'n';
 
 //#include "debug6.cpp"

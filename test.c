@@ -1,5 +1,5 @@
 /*
- * main.c
+ * test.c
  *
  *  Created on: 28 рту. 2017 у.
  *      Author: Orson
