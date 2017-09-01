@@ -13,43 +13,24 @@
 #include "sgp4ext.h"
 #include "sgp4io.h"
 
-void old_test(void);
+void old_test_iss(void);
+void new_test_iss(void);
+
+void old_test_navstar53(void);
+void new_test_navstar53(void);
 
 int
 main ()
 {
-  orbit iss = {0};
 
-  struct tm epoch_tm;
+  printf("-------------- ISS --------------\n");
+  old_test_iss();
+  new_test_iss();
 
-  epoch_tm.tm_year       = 117;
-  epoch_tm.tm_mon        = 8;
-  epoch_tm.tm_mday       = 29;
-  epoch_tm.tm_hour       = 5;
-  epoch_tm.tm_min        = 1;
-  epoch_tm.tm_sec        = 57;
-
-  strcpy(iss.name, "ISS");
-  iss.number         = 25544;
-  iss.class          = 'U';
-  strcpy(iss.designator, "98067A  ");
-  iss.epoch          = mktime(&epoch_tm);
-  iss.nprimediv2     = 0.00016118;
-  iss.ndprimediv6    = 0;
-  iss.Bstar          = 0.25119e-3;
-  iss.ephem_type     = 0;
-  iss.elset_number   = 999;
-  iss.i              = 51.6408;
-  iss.alpha          = 34.2995;
-  iss.e              = 0.0004424;
-  iss.omega          = 198.2687;
-  iss.Mo             = 159.0461;
-  iss.no             = 15.54014642;
-  iss.rev_number     = 7310;
-
-  orbit_init(&iss);
-
-  old_test();
+  //12h non-resonant GPS (ecc < 0.5 ecc)
+  //printf("----------- navstar53 -----------\n");
+  //old_test_navstar53();
+  //new_test_navstar53();
 
   return 0;
 }
@@ -109,9 +90,7 @@ Constellation Dra
 Downlink Doppler shift 1910Hz @ 145.8MHz
 Uplink Doppler shift -1902Hz @ 145.2MHz
 */
-
-
-void old_test(void){
+void old_test_iss(void){
   // Parsing TLE and initializing the math constants
   gravconsttype grav = wgs72;
   elsetrec satrec;
@@ -131,53 +110,95 @@ void old_test(void){
       &deltamin,
       &satrec
   );
-/*
-  // Calculating propagation for +1 hour since TLE epoch
-  double ro[3], recef[3];
-  double vo[3], vecef[3];
-  double tsince = 60.0; // 2017-08-29 06:01:57UTC
-  //double tsince = 600.0; // 2017-08-29 15:01:57UTC
-  sgp4(grav, &satrec, tsince, ro,  vo);
-
-  //printf("TEME vectors:\nX:\t\t%fkm\nY:\t\t%fkm\nZ:\t\t%fkm\nVX:\t\t%fkm/s\nVY:\t\t%fkm/s\nVZ:\t\t%fkm/s\n\n",
-  //       ro[0],ro[1],ro[2],vo[0],vo[1],vo[2]);
-
-  // Rotating TEME to ECEF coordinates
-  double jday1 = 0.0;
-  jday(2017,8,29,6,1,57, &jday1);// 2017-08-29 06:01:57UTC
-  //jday(2017,8,29,15,1,57, &jday1); // 2017-08-29 15:01:57UTC
-
-  teme2ecef(ro, vo, jday1, recef, vecef);
-
-  //printf("ECEF vectors:\nX:\t\t%fkm\nY:\t\t%fkm\nZ:\t\t%fkm\nVX:\t\t%fkm/s\nVY:\t\t%fkm/s\nVZ:\t\t%fkm/s\n\n",
-  //       recef[0],recef[1],recef[2],vecef[0],vecef[1],vecef[2]);
-
-  // Converting ECEF coodrinates to latlonalt
-  double latgc, latgd, lon, hellp;
-
-  ijk2ll(recef, jday1, &latgc, &latgd, &lon, &hellp);
-
-  //printf("LATLONALT:\nLat (gd):\t%f\nLat (gc):\t%f\nLon:\t\t%f\nAlt:\t\t%f\n\n",
-  //       latgc*180/pi,latgd*180/pi,lon*180/pi,hellp);
-
-  // Calculate range, azimuth, elevation and their respective rates relative to the observer
-  double rsecef[3] = {6378.137, 0.0, 0.0}; // observer to sat vector at latlonalt 0,0,0
-  double rho, az, el, drho, daz, del;
-
-  rv_razel(recef, vecef, rsecef, latgd, lon, eTo,
-           &rho, &az, &el, &drho, &daz, &del);
-
-  //printf("RAZEL:\nRange:\t\t%f\nAzimuth:\t%f\nElevation:\t%f\nRRate:\t\t%f\nAZRate:\t\t%f\nELRate:\t\t%f\n\n",
-  //       rho,(az<0)?((180-az*180)/pi):(az*180/pi),el*180/pi,drho, daz*180/pi, del*180/pi);
-
-  // Calculate doppler shift
-  double c = 299792.458;
-  double f0down = 145800000;
-  double f0up = 145200000;
-  double downshift = (-drho / c) * f0down;
-  double upshift = (drho / c) * f0up;
-
-  //printf("Doppler shifts:\nDownlink:\t%f\nUplink:\t\t%f\n\n", downshift, upshift);
-  */
 }
 
+void old_test_navstar53(void){
+  // Parsing TLE and initializing the math constants
+  gravconsttype grav = wgs72;
+  elsetrec satrec;
+
+  double startmfe, stopmfe, deltamin;
+
+  char longstr1[130] = "1 28129U 03058A   06175.57071136 -.00000104  00000-0  10000-3 0   459";
+  char longstr2[130] = "2 28129  54.7298 324.8098 0048506 266.2640  93.1663  2.00562768 18443";
+
+  twoline2rv
+  (
+      longstr1,
+      longstr2,
+      'm',  'c', 'i', grav,
+      &startmfe,
+      &stopmfe,
+      &deltamin,
+      &satrec
+  );
+}
+
+void new_test_iss(void)
+{
+  orbit iss = {0};
+
+  struct tm epoch_tm;
+
+  epoch_tm.tm_year       = 117;
+  epoch_tm.tm_mon        = 8;
+  epoch_tm.tm_mday       = 29;
+  epoch_tm.tm_hour       = 5;
+  epoch_tm.tm_min        = 1;
+  epoch_tm.tm_sec        = 57;
+
+  strcpy(iss.name, "ISS");
+  iss.number         = 25544;
+  iss.class          = 'U';
+  strcpy(iss.designator, "98067A  ");
+  iss.epoch          = mktime(&epoch_tm);
+  iss.nprimediv2     = 0.00016118;
+  iss.ndprimediv6    = 0;
+  iss.Bstar          = 0.25119e-3;
+  iss.ephem_type     = 0;
+  iss.elset_number   = 999;
+  iss.i              = 51.6408;
+  iss.alpha          = 34.2995;
+  iss.e              = 0.0004424;
+  iss.omega          = 198.2687;
+  iss.Mo             = 159.0461;
+  iss.no             = 15.54014642;
+  iss.rev_number     = 7310;
+
+  orbit_init(&iss);
+}
+
+void new_test_navstar53(void)
+{
+  orbit navstar53 = {0};
+
+  struct tm epoch_tm;
+
+  // 175.57071136
+  epoch_tm.tm_year       = 106;
+  epoch_tm.tm_mon        = 6;
+  epoch_tm.tm_mday       = 24;
+  epoch_tm.tm_hour       = 13;
+  epoch_tm.tm_min        = 41;
+  epoch_tm.tm_sec        = 50;
+
+  strcpy(navstar53.name, "NAVSTAR 53");
+  navstar53.number         = 28129;
+  navstar53.class          = 'U';
+  strcpy(navstar53.designator, "03058A  ");
+  navstar53.epoch          = mktime(&epoch_tm);
+  navstar53.nprimediv2     = -0.00000104;
+  navstar53.ndprimediv6    = 0;
+  navstar53.Bstar          = 1.0e-4;
+  navstar53.ephem_type     = 0;
+  navstar53.elset_number   = 459;
+  navstar53.i              = 54.7298;
+  navstar53.alpha          = 324.8098;
+  navstar53.e              = 0.0048506;
+  navstar53.omega          = 266.2640;
+  navstar53.Mo             = 93.1663;
+  navstar53.no             = 2.00562768;
+  navstar53.rev_number     = 1844;
+
+  orbit_init(&navstar53);
+}

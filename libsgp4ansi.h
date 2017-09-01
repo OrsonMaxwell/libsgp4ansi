@@ -14,22 +14,6 @@
 
 #include "types.h"
 
-// ************************************************************************* //
-//                             PRIVATE FUNCTIONS                             //
-// ************************************************************************* //
-
-// SGP4 propagation function implementation
-int
-orbit_sgp4(orbit*, double, unsigned int, double, vect*, vect*);
-
-// SDP4 propagation function implementation
-int
-orbit_sdp4(orbit*, double, unsigned int, double, vect*, vect*);
-
-// ************************************************************************* //
-//                                 INTERFACE                                 //
-// ************************************************************************* //
-
 // SGP4/SDP4 math engine initialization
 extern int
 orbit_init(orbit*);

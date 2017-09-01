@@ -9,6 +9,7 @@ void print_orbit(orbit* sat, char* caption)
   fprintf(f, "-- TLE portion\n");
   fprintf(f, "number:\t\t%d\n", sat->number);
   fprintf(f, "epoch:\t\t%f\n\n", ctime(&sat->epoch));
+  fprintf(f, "julepoch:\t%f\n", sat->julepoch);
   fprintf(f, "nprimediv2:\t%f\n", sat->nprimediv2);
   fprintf(f, "ndprimediv6:\t%f\n", sat->ndprimediv6);
   fprintf(f, "Bstar:\t\t%f\n", sat->Bstar);
@@ -93,6 +94,7 @@ void print_elsetrec(elsetrec* sat, char* caption)
   fprintf(f, "number:\t\t%d\n", sat->satnum);
   fprintf(f, "epochyr:\t%d\n", sat->epochyr);
   fprintf(f, "epochdays:\t%f\n", sat->epochdays);
+  fprintf(f, "jdsatepoch:\t%f\n", sat->jdsatepoch);
   fprintf(f, "nprimediv2:\t%f\n", sat->ndot);
   fprintf(f, "ndprimediv6:\t%f\n", sat->nddot);
   fprintf(f, "Bstar:\t\t%f\n", sat->bstar);

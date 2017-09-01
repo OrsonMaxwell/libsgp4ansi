@@ -461,7 +461,8 @@ static void dscom
      *plo    = 0.0;
      *pgho   = 0.0;
      *pho    = 0.0;
-     *day    = epoch + 18261.5 + tc / 1440.0;
+     *day    = epoch + 18261.5;// + tc / 1440.0;
+     printf("OLD: epoch=%d,\t\tday=%f\n\n", epoch, *day);
      xnodce = fmod(4.5236020 - 9.2422029e-4 * *day, twopi);
      stem   = sin(xnodce);
      ctem   = cos(xnodce);

@@ -12,6 +12,21 @@
 #include "const.h"
 
 // ************************************************************************* //
+//                            PRIVATE PROTOTYPES                             //
+// ************************************************************************* //
+
+// SGP4 propagation function implementation
+int
+orbit_sgp4(orbit*, double, unsigned int, double, vect*, vect*);
+
+// SDP4 propagation function implementation
+int
+orbit_sdp4(orbit*, double, unsigned int, double, vect*, vect*);
+
+// Convert epoch to Julian date
+double time2jul(time_t*);
+
+// ************************************************************************* //
 //                             PRIVATE FUNCTIONS                             //
 // ************************************************************************* //
 
@@ -529,6 +544,18 @@ orbit_sdp4
   return 0;
 }
 
+double time2jul(time_t* time)
+{
+  struct tm* t;
+  t = localtime(time);
+
+  return 367.0 * (t->tm_year + 1900)
+  - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 9) / 12.0))) * 0.25)
+  + floor(275 * t->tm_mon / 9.0 )
+  + t->tm_mday + 1721013.5
+  + ((t->tm_sec / 60.0L + t->tm_min) / 60.0 + t->tm_hour) / 24.0;
+}
+
 // ************************************************************************* //
 //                                 INTERFACE                                 //
 // ************************************************************************* //
@@ -560,6 +587,7 @@ orbit_init(orbit* sat)
   sat->cosi    = cos(sat->i);
 
   // Aux epoch quantities
+  sat->julepoch = time2jul(&sat->epoch);
   double esq     = pow(sat->e, 2);
   double omegasq = 1.0 - esq;
   double rteosq  = sqrt(omegasq);
@@ -713,6 +741,7 @@ orbit_init(orbit* sat)
 
       // Initialize lunar and solar terms
       double day    = sat->epoch + 18261.5 + tc / 1440.0;
+      printf("NEW: epoch=%d,\t\tday=%d\n\n", sat->epoch, day);
       double xnodce = fmod(4.5236020 - 9.2422029e-4 * day, twopi);
       double stem   = sin(xnodce);
       double ctem   = cos(xnodce);

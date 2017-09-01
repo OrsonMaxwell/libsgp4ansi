@@ -57,8 +57,10 @@ typedef struct _orbit
   double       Mo;            // Mean anomaly at epoch, 0..360deg
   double       no;            // Mean motion at epoch, rev/day
   unsigned int rev_number;    // Number of revolutions at epoch
+  // Time
+  double julepoch, GSTo;
   // Standard orbital elements
-  double a, altapoR, altperR, aycof, C1, C4, C5, con41, cosi, d2, d3, d4, delMo, eta, GSTo,
+  double a, altapoR, altperR, aycof, C1, C4, C5, con41, cosi, d2, d3, d4, delMo, eta,
          mdot, nodecf, nodedot, omegaprime, omgcof, sinMo, sini, t2cof, t3cof, t4cof,
          t5cof, x1mth2, x7thm1, xlcof, xmcof;
   // Deep space perturbations elements
