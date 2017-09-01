@@ -23,8 +23,11 @@ orbit_sgp4(orbit*, double, unsigned int, double, vect*, vect*);
 int
 orbit_sdp4(orbit*, double, unsigned int, double, vect*, vect*);
 
-// Convert epoch to Julian date
-double time2jul(time_t*);
+// Convert unix time to Julian date
+double unix2jul(time_t*, , unsigned int);
+
+// Convert Julian date to Greenwich Sidereal Time
+double jul2gst(double);
 
 // ************************************************************************* //
 //                             PRIVATE FUNCTIONS                             //
@@ -52,6 +55,7 @@ orbit_prop
 (
     orbit* sat,
     time_t* time,
+    unsigned int msec,
     unsigned int iter,
     double thresh,
     vect* pos,
@@ -60,6 +64,7 @@ orbit_prop
 {
   if ((sat == NULL) ||
       (time == NULL) ||
+      (msec >= 1000) ||
       (iter < 1) ||
       (thresh <= 0.0) ||
       (pos == NULL) ||
@@ -68,7 +73,8 @@ orbit_prop
     return -1;
   }
 
-  double tdelta = difftime(*time, sat->epoch) / 60.0L;
+  double tdelta = difftime(*time + msec / 1000,
+                           sat->epoch + sat->epoch_ms) / 60.0L;
 
   if (sat->isdeepspace == true)
   {
@@ -544,7 +550,13 @@ orbit_sdp4
   return 0;
 }
 
-double time2jul(time_t* time)
+/*
+ * Convert unix time to Julian date
+ *
+ * Inputs:  time - Timestamp in unix time
+ * Returns: Julian date
+ */
+double unix2jul(time_t* time, unsigned int msec)
 {
   struct tm* t;
   t = localtime(time);
@@ -553,7 +565,31 @@ double time2jul(time_t* time)
   - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 9) / 12.0))) * 0.25)
   + floor(275 * t->tm_mon / 9.0 )
   + t->tm_mday + 1721013.5
-  + ((t->tm_sec / 60.0L + t->tm_min) / 60.0 + t->tm_hour) / 24.0;
+  + ((((double)t->tm_sec + msec / 1000) / 60.0L + t->tm_min) / 60.0
+  + t->tm_hour) / 24.0;
+}
+
+/*
+ * Convert Julian date to Greenwich Sidereal Time
+ *
+ * Inputs:  julian - Julian date
+ * Returns: GST time, rad
+ */
+double jul2gst(double julian)
+{
+  double result, tempUT1;
+
+  tempUT1 = (julian - 2451545.0) / 36525.0;
+  result = -6.2e-6* tempUT1 * tempUT1 * tempUT1 + 0.093104 * tempUT1 * tempUT1 +
+      (876600.0*3600 + 8640184.812866) * tempUT1 + 67310.54841;
+
+  result = fmod(result * deg2rad / 240.0, twopi);
+
+  // Check quadrants
+  if (result < 0.0)
+    result += twopi;
+
+  return result;
 }
 
 // ************************************************************************* //
@@ -575,6 +611,8 @@ orbit_init(orbit* sat)
   sat->a           = pow(sat->no * tumin, (-2.0L / 3.0L));
   sat->nprimediv2  = sat->nprimediv2  / (rpd2radmin * 1440);
   sat->ndprimediv6 = sat->ndprimediv6 / (rpd2radmin * 1440 * 1440);
+  sat->julepoch    = unix2jul(&sat->epoch, sat->epoch_ms);
+  sat->GSTo        = jul2gst(sat->julepoch);
 
   // Standard orbital elements
   sat->i       = sat->i * deg2rad;
@@ -587,7 +625,6 @@ orbit_init(orbit* sat)
   sat->cosi    = cos(sat->i);
 
   // Aux epoch quantities
-  sat->julepoch = time2jul(&sat->epoch);
   double esq     = pow(sat->e, 2);
   double omegasq = 1.0 - esq;
   double rteosq  = sqrt(omegasq);
@@ -610,9 +647,6 @@ orbit_init(orbit* sat)
 
   double ainv  = 1.0 / sat->a;
   double posq  = pow(po, 2);
-
-  // TODO: Sidereal time at epoch
-  sat->GSTo = 0;
 
   if ((omegasq >= 0.0 ) || (sat->no >= 0.0))
   {
@@ -722,8 +756,6 @@ orbit_init(orbit* sat)
       sat->isdeepspace = true;
       sat->islowperigee       = true;
 
-      double tc      =  0.0;
-
       // Constants
       double zes     =  0.01675;
       double zel     =  0.05490;
@@ -740,8 +772,7 @@ orbit_init(orbit* sat)
       double rtemsq    = sqrt(betasq);
 
       // Initialize lunar and solar terms
-      double day    = sat->epoch + 18261.5 + tc / 1440.0;
-      printf("NEW: epoch=%d,\t\tday=%d\n\n", sat->epoch, day);
+      double day    = sat->julepoch + 18261.5;
       double xnodce = fmod(4.5236020 - 9.2422029e-4 * day, twopi);
       double stem   = sin(xnodce);
       double ctem   = cos(xnodce);

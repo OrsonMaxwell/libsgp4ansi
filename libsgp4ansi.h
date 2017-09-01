@@ -20,6 +20,6 @@ orbit_init(orbit*);
 
 // SGP4/SDP4 propagation function wrapper
 extern int
-orbit_prop(orbit*, time_t*, unsigned int, double, vect*, vect*);
+orbit_prop(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
 
 #endif /* LIBSGP4ANSI_H_ */
