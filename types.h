@@ -58,8 +58,8 @@ typedef struct _orbit
   double       no;            // Mean motion at epoch, rev/day
   unsigned int rev_number;    // Number of revolutions at epoch
   // Standard orbital elements
-  double a, alta, altp, aycof, C1, C4, C5, con41, d2, d3, d4, delMo, eta, GSTo,
-         mdot, nodecf, nodedot, omegaprime, omgcof, sinMo, t2cof, t3cof, t4cof,
+  double a, altapoR, altperR, aycof, C1, C4, C5, con41, cosi, d2, d3, d4, delMo, eta, GSTo,
+         mdot, nodecf, nodedot, omegaprime, omgcof, sinMo, sini, t2cof, t3cof, t4cof,
          t5cof, x1mth2, x7thm1, xlcof, xmcof;
   // Deep space perturbations elements
   double e3,  ee2,  peo,  pgho, pho,  pinco, plo, se2,
@@ -67,7 +67,7 @@ typedef struct _orbit
          sl2, sl3,  sl4,  xgh2, xgh3, xgh4,  xh2, xh3,
          xi2, xi3,  xl2,  xl3,  xl4,  zmol,  zmos;
   // Flags
-  bool isdeepspace, isloworbit;
+  bool isdeepspace, islowperigee;
 } orbit;
 
 void print_orbit(orbit* sat, char* caption);

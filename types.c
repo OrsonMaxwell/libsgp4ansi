@@ -20,8 +20,8 @@ void print_orbit(orbit* sat, char* caption)
   fprintf(f, "no:\t\t%f\n", sat->no);
   fprintf(f, "-- Standard elements\n");
   fprintf(f, "a:\t\t%f\n", sat->a);
-  fprintf(f, "alta:\t\t%f\n", sat->alta);
-  fprintf(f, "altp:\t\t%f\n", sat->altp);
+  fprintf(f, "altapoR:\t\t%f\n", sat->altapoR);
+  fprintf(f, "altperR:\t\t%f\n", sat->altperR);
   fprintf(f, "aycof:\t\t%f\n", sat->aycof);
   fprintf(f, "C1:\t\t%f\n", sat->C1);
   fprintf(f, "C4:\t\t%f\n", sat->C4);
@@ -81,7 +81,7 @@ void print_orbit(orbit* sat, char* caption)
   fprintf(f, "zmos:\t\t%f\n", sat->zmos);
   fprintf(f, "-- Flags\n");
   fprintf(f, "Deepsp:\t\t%d\n", sat->isdeepspace);
-  fprintf(f, "Loworb:\t\t%d\n", sat->isloworbit);
+  fprintf(f, "Loworb:\t\t%d\n", sat->islowperigee);
   fclose(f);
 }
 
@@ -104,8 +104,8 @@ void print_elsetrec(elsetrec* sat, char* caption)
   fprintf(f, "no:\t\t%f\n", sat->no);
   fprintf(f, "-- Standard elements\n");
   fprintf(f, "a:\t\t%f\n", sat->a);
-  fprintf(f, "alta:\t\t%f\n", sat->alta);
-  fprintf(f, "altp:\t\t%f\n", sat->altp);
+  fprintf(f, "altapoR:\t\t%f\n", sat->alta);
+  fprintf(f, "altperR:\t\t%f\n", sat->altp);
   fprintf(f, "aycof:\t\t%f\n", sat->aycof);
   fprintf(f, "C1:\t\t%f\n", sat->cc1);
   fprintf(f, "C4:\t\t%f\n", sat->cc4);

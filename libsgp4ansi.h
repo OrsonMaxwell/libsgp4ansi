@@ -18,10 +18,6 @@
 //                             PRIVATE FUNCTIONS                             //
 // ************************************************************************* //
 
-// SGP4/SDP4 propagation function wrapper
-int
-orbit_prop(orbit*, time_t*, unsigned int, double, vect*, vect*);
-
 // SGP4 propagation function implementation
 int
 orbit_sgp4(orbit*, double, unsigned int, double, vect*, vect*);
@@ -37,5 +33,9 @@ orbit_sdp4(orbit*, double, unsigned int, double, vect*, vect*);
 // SGP4/SDP4 math engine initialization
 extern int
 orbit_init(orbit*);
+
+// SGP4/SDP4 propagation function wrapper
+extern int
+orbit_prop(orbit*, time_t*, unsigned int, double, vect*, vect*);
 
 #endif /* LIBSGP4ANSI_H_ */
