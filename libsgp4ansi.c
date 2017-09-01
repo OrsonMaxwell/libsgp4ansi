@@ -16,54 +16,106 @@
 // ************************************************************************* //
 
 /*
- * SGP4/SDP4 propagation function implementation
+ * SGP4/SDP4 propagation function wrapper
+ *
+ * Inputs:  sat    - orbit struct pointer with initialized orbital data
+ *          time   - UTC time to find satellite data at
+ *          iter   - Kepler's equation maximum iteration count
+ *          thresh - Kepler's equation desired precision threshold
+ * Outputs: pos    - 3D position vector in TEME frame in km
+ *          vel    - 3D velocity vector in TEME frame in km/sec
+ * Returns: 0      - Success
+ *         -1      - Invalid inputs
+ *          1      - Mean motion zero or less
+ *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
+ *          3      - Long periodics result error
+ *          4      - Short period preliminary quantities error
+ *          5      - Decaying satellite
  */
 int
-orbit_prop(orbit* sat, double tdelta, vect* pos, vect* vel)
-/*(
-    gravconsttype whichconst, elsetrec* satrec,  double tsince,
-    double r[3],  double v[3]
-)*/
+orbit_prop
+(
+    orbit* sat,
+    time_t* time,
+    unsigned int iter,
+    double thresh,
+    vect* pos,
+    vect* vel
+)
 {
-  double am   , axnl  , aynl , betal ,  cosim , cnod  ,
-  cos2u, coseo1, cosi , cosip ,  cosisq, cossu , cosu,
-  delm , delomg, em   , emsq  ,  ecose , el2   , eo1 ,
-  ep   , esine , argpm, argpp ,  argpdf, pl,     mrt = 0.0,
-  mvt  , rdotl , rl   , rvdot ,  rvdotl, sinim ,
-  sin2u, sineo1, sini , sinip ,  sinsu , sinu  ,
-  snod , su    , t2   , t3    ,  t4    , tem5  , temp,
-  temp1, temp2 , tempa, tempe ,  templ , u     , ux  ,
-  uy   , uz    , vx   , vy    ,  vz    , inclm , mm  ,
-  nm   , nodem, xinc , xincp ,  xl    , xlm   , mp  ,
-  xmdf , xmx   , xmy  , nodedf, xnode , nodep, tc  , dndt,
-  x2o3  , vkmpersec, delmtemp;
-  int ktr;
+  if ((sat == NULL) ||
+      (time == NULL) ||
+      (iter < 1) ||
+      (thresh <= 0.0) ||
+      (pos == NULL) ||
+      (vel == NULL))
+  {
+    return -1;
+  }
 
-  // ------------------ set mathematical constants ---------------
-  // sgp4fix divisor for divide by zero check on inclination
-  // the old check used 1.0 + cos(pi-1.0e-9), but then compared it to
-  // 1.5 e-12, so the threshold was changed to 1.5e-12 for consistency
-  const double temp4 =   1.5e-12;
-  x2o3  = 2.0 / 3.0;
+  double tdelta = difftime(*time, sat->epoch) / 60.0L;
 
-  vkmpersec     = Re * xke/60.0;
+  if (sat->isdeepspace == true)
+  {
+    return orbit_sdp4(sat, tdelta, iter, thresh, pos, vel);
+  }
+  else
+  {
+    return orbit_sgp4(sat, tdelta, iter, thresh, pos, vel);
+  }
+}
 
-  // ------- update for secular gravity and atmospheric drag -----
-  xmdf    = sat->Mo + sat->mdot * tdelta;
-  argpdf  = sat->omega + sat->omegaprime * tdelta;
-  nodedf  = sat->alpha + sat->nodedot * tdelta;
-  argpm   = argpdf;
-  mm      = xmdf;
-  t2      = tdelta * tdelta;
-  nodem   = nodedf + sat->nodecf * t2;
-  tempa   = 1.0 - sat->C1 * tdelta;
-  tempe   = sat->Bstar * sat->C4 * tdelta;
-  templ   = sat->t2cof * t2;
+/*
+ * SGP4 propagation function implementation
+ *
+ * Inputs:  sat    - orbit struct pointer with initialized orbital data
+ *          tdelta - Time since epoch, minutes
+ *          iter   - Kepler's equation maximum iteration count
+ *          thresh - Kepler's equation desired precision threshold
+ * Outputs: pos    - 3D position vector in TEME frame in km
+ *          vel    - 3D velocity vector in TEME frame in km/sec
+ * Returns: 0      - Success
+ *          1      - Mean motion zero or less
+ *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
+ *          3      - Long periodics result error
+ *          4      - Short period preliminary quantities error
+ *          5      - Decaying satellite
+ */
+int
+orbit_sgp4
+(
+    orbit* sat,
+    double tdelta,
+    unsigned int iter,
+    double thresh,
+    vect* pos,
+    vect* vel
+)
+{
+  double vkmpersec = Re * xke / 60.0;
+
+  // Update for secular gravity and atmospheric drag
+  double xmdf    = sat->Mo + sat->mdot * tdelta;
+  double argpdf  = sat->omega + sat->omegaprime * tdelta;
+  double nodedf  = sat->alpha + sat->nodedot * tdelta;
+  double argpm   = argpdf;
+  double mm      = xmdf;
+  double t2      = tdelta * tdelta;
+  double nodem   = nodedf + sat->nodecf * t2;
+  double tempa   = 1.0 - sat->C1 * tdelta;
+  double tempe   = sat->Bstar * sat->C4 * tdelta;
+  double templ   = sat->t2cof * t2;
+
+  double delomg;
+  double delmtemp;
+  double delm;
+  double temp;
+  double t3;
+  double t4;
 
   if (sat->isloworbit != true)
   {
     delomg = sat->omgcof * tdelta;
-    // sgp4fix use mutliply for speed instead of pow
     delmtemp =  1.0 + sat->eta * cos(xmdf);
     delm   = sat->xmcof *
         (delmtemp * delmtemp * delmtemp -
@@ -81,12 +133,12 @@ orbit_prop(orbit* sat, double tdelta, vect* pos, vect* vel)
         tdelta * sat->t5cof);
   }
 
-  nm    = sat->no;
-  em    = sat->e;
-  inclm = sat->i;
+  double nm    = sat->no;
+  double em    = sat->e;
+  double inclm = sat->i;
   if (sat->isdeepspace == true)
   {
-    tc = tdelta;
+    double tc = tdelta;
     /*dspace
     (
         sat->irez,
@@ -106,31 +158,26 @@ orbit_prop(orbit* sat, double tdelta, vect* pos, vect* vel)
 
   if (nm <= 0.0)
   {
-    //         printf("# error nm %f\n", nm);
-    //sat->error = 2;
-    // sgp4fix add return
-    return 2;
+    return 1;
   }
 
-  am = pow((xke / nm),x2o3) * tempa * tempa;
+  double am = pow((xke / nm), 2.0L / 3.0L) * tempa * tempa;
   nm = xke / pow(am, 1.5);
   em = em - tempe;
 
   // fix tolerance for error recognition
-  // sgp4fix am is fixed from the previous nm check
-  if ((em >= 1.0) || (em < -0.001))// || (am < 0.95) )
+  if ((em >= 1.0) || (em < -0.00001))
   {
-    //         printf("# error em %f\n", em);
-    //sat->error = 1;
-    // sgp4fix to return if there is an error in eccentricity
-    return 1;
+    return 2;
   }
-  // sgp4fix fix tolerance to avoid a divide by zero
+
+  // Tolerance to avoid a division by zero
   if (em < 1.0e-6)
     em  = 1.0e-6;
+
   mm     = mm + sat->no * templ;
-  xlm    = mm + argpm + nodem;
-  emsq   = em * em;
+  double xlm    = mm + argpm + nodem;
+  double emsq   = em * em;
   temp   = 1.0 - emsq;
 
   nodem  = fmod(nodem, twopi);
@@ -138,18 +185,18 @@ orbit_prop(orbit* sat, double tdelta, vect* pos, vect* vel)
   xlm    = fmod(xlm, twopi);
   mm     = fmod(xlm - argpm - nodem, twopi);
 
-  // ----------------- compute extra mean quantities -------------
-  sinim = sin(inclm);
-  cosim = cos(inclm);
+  // Compute extra mean quantities
+  double sinim = sin(inclm);
+  double cosim = cos(inclm);
 
-  // -------------------- add lunar-solar periodics --------------
-  ep     = em;
-  xincp  = inclm;
-  argpp  = argpm;
-  nodep  = nodem;
-  mp     = mm;
-  sinip  = sinim;
-  cosip  = cosim;
+  // Add lunar-solar
+  double ep     = em;
+  double xincp  = inclm;
+  double argpp  = argpm;
+  double nodep  = nodem;
+  double mp     = mm;
+  double sinip  = sinim;
+  double cosip  = cosim;
   if (sat->isdeepspace == true)
   {
     /*dpper
@@ -173,62 +220,92 @@ orbit_prop(orbit* sat, double tdelta, vect* pos, vect* vel)
       nodep = nodep + pi;
       argpp  = argpp - pi;
     }
+
     if ((ep < 0.0 ) || ( ep > 1.0))
     {
-      //            printf("# error ep %f\n", ep);
-      //sat->error = 3;
-      // sgp4fix add return
       return 3;
     }
-  } // if method = d
+  }
 
-  // -------------------- long period periodics ------------------
+  // Long period periodics
   if (sat->isdeepspace == true)
   {
     sinip =  sin(xincp);
     cosip =  cos(xincp);
     sat->aycof = -0.5*j3divj2*sinip;
-    // sgp4fix for divide by zero for xincp = 180 deg
+
+    // Division by zero check for xincp = 180 deg
     if (fabs(cosip+1.0) > 1.5e-12)
       sat->xlcof = -0.25 * j3divj2 * sinip * (3.0 + 5.0 * cosip) / (1.0 + cosip);
     else
-      sat->xlcof = -0.25 * j3divj2 * sinip * (3.0 + 5.0 * cosip) / temp4;
+      sat->xlcof = -0.25 * j3divj2 * sinip * (3.0 + 5.0 * cosip) / 1.5e-12;
   }
 
-  axnl = ep * cos(argpp);
+  double axnl = ep * cos(argpp);
   temp = 1.0 / (am * (1.0 - ep * ep));
-  aynl = ep* sin(argpp) + temp * sat->aycof;
-  xl   = mp + argpp + nodep + temp * sat->xlcof * axnl;
+  double aynl = ep* sin(argpp) + temp * sat->aycof;
+  double xl   = mp + argpp + nodep + temp * sat->xlcof * axnl;
 
   // Kepler's equation
-  u    = fmod(xl - nodep, twopi);
-  eo1  = u;
-  tem5 = 9999.9;
-  ktr = 1;
+  double u    = fmod(xl - nodep, twopi);
+  double eo1  = u;
+  double temp5 = 9999.9;
+  unsigned int ktr = 0;
 
-  // TODO: requires better corrections limits
-  while (( fabs(tem5) >= 1.0e-12) && (ktr <= 10) )
+  double sineo1;
+  double coseo1;
+
+  while ((fabs(temp5) >= thresh) && (ktr < iter))
   {
     sineo1 = sin(eo1);
     coseo1 = cos(eo1);
-    tem5   = 1.0 - coseo1 * axnl - sineo1 * aynl;
-    tem5   = (u - aynl * coseo1 + axnl * sineo1 - eo1) / tem5;
-    if(fabs(tem5) >= 0.95)
-      tem5 = tem5 > 0.0 ? 0.95 : -0.95;
-    eo1    = eo1 + tem5;
-    ktr = ktr + 1;
+    temp5   = 1.0 - coseo1 * axnl - sineo1 * aynl;
+    temp5   = (u - aynl * coseo1 + axnl * sineo1 - eo1) / temp5;
+    if (fabs(temp5) >= 0.95)
+      temp5 = temp5 > 0.0 ? 0.95 : -0.95;
+    eo1    = eo1 + temp5;
+    ktr++;
   }
 
-  // ------------- short period preliminary quantities -----------
-  ecose = axnl * coseo1 + aynl * sineo1;
-  esine = axnl * sineo1 - aynl * coseo1;
-  el2   = axnl * axnl + aynl * aynl;
-  pl    = am * (1.0 - el2);
+  // Short period preliminary quantities
+  double ecose = axnl * coseo1 + aynl * sineo1;
+  double esine = axnl * sineo1 - aynl * coseo1;
+  double el2   = axnl * axnl + aynl * aynl;
+  double pl    = am * (1.0 - el2);
+  double mrt = 0.0;
+
+  double betal;
+  double rl;
+  double rdotl;
+  double rvdotl;
+  double sinu;
+  double cosu;
+  double su;
+  double sin2u;
+  double cos2u;
+  double temp1;
+  double temp2;
+  double cosisq;
+  double xnode;
+  double xinc;
+  double mvt;
+  double rvdot;
+  double sinsu;
+  double cossu;
+  double snod;
+  double cnod;
+  double sini;
+  double cosi;
+  double xmx;
+  double xmy;
+  double ux;
+  double uy;
+  double uz;
+  double vx;
+  double vy;
+  double vz;
   if (pl < 0.0)
   {
-    //         printf("# error pl %f\n", pl);
-    //sat->error = 4;
-    // sgp4fix add return
     return 4;
   }
   else
@@ -247,10 +324,10 @@ orbit_prop(orbit* sat, double tdelta, vect* pos, vect* vel)
     temp1  = 0.5 * j2 * temp;
     temp2  = temp1 * temp;
 
-    // -------------- update for short period periodics ------------
+    // Update for short period periodics
     if (sat->isdeepspace == true)
     {
-      cosisq                 = cosip * cosip;
+      cosisq      = cosip * cosip;
       sat->con41  = 3.0*cosisq - 1.0;
       sat->x1mth2 = 1.0 - cosisq;
       sat->x7thm1 = 7.0*cosisq - 1.0;
@@ -264,7 +341,7 @@ orbit_prop(orbit* sat, double tdelta, vect* pos, vect* vel)
     rvdot = rvdotl + nm * temp1 * (sat->x1mth2 * cos2u +
         1.5 * sat->con41) / xke;
 
-    // --------------------- orientation vectors -------------------
+    // Orientation vectors
     sinsu =  sin(su);
     cossu =  cos(su);
     snod  =  sin(xnode);
@@ -280,25 +357,51 @@ orbit_prop(orbit* sat, double tdelta, vect* pos, vect* vel)
     vy    =  xmy * cossu - snod * sinsu;
     vz    =  sini * cossu;
 
-    // --------- position and velocity (in km and km/sec) ----------
+    // Position and velocity vectors
     pos->x = (mrt * ux)* Re;
     pos->y = (mrt * uy)* Re;
     pos->z = (mrt * uz)* Re;
     vel->x = (mvt * ux + rvdot * vx) * vkmpersec;
     vel->y = (mvt * uy + rvdot * vy) * vkmpersec;
     vel->z = (mvt * uz + rvdot * vz) * vkmpersec;
-  }  // if pl > 0
+  }
 
-  // sgp4fix for decaying satellites
+  // Decaying satellites
   if (mrt < 1.0)
   {
-    //         printf("# decay condition %11.6f \n",mrt);
-    //sat->error = 6;
-    return 6;
+    return 5;
   }
 
   return 0;
 }
+
+/*
+ * SGP4 propagation function implementation
+ *
+ * Inputs:  sat    - orbit struct pointer with initialized orbital data
+ *          tdelta - Time since epoch, minutes
+ *          iter   - Kepler's equation maximum iteration count
+ *          thresh - Kepler's equation desired precision threshold
+ * Outputs: pos    - 3D position vector in TEME frame in km
+ *          vel    - 3D velocity vector in TEME frame in km/sec
+ * Returns: 0      - Success
+ *          1      - Mean motion zero or less
+ *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
+ *          3      - Long periodics result error
+ *          4      - Short period preliminary quantities error
+ *          5      - Decaying satellite
+ */
+int
+orbit_sdp4
+(
+    orbit* sat,
+    double tdelta,
+    unsigned int iter,
+    double thresh,
+    vect* pos,
+    vect* vel
+)
+{ return 0; };
 
 // ************************************************************************* //
 //                                 INTERFACE                                 //
@@ -306,6 +409,10 @@ orbit_prop(orbit* sat, double tdelta, vect* pos, vect* vel)
 
 /*
  * Initialize SGP4 orbit propagation modelfrom a TLE representation
+ *
+ * Inputs:  sat    - orbit struct pointer with TLE data
+ * Outputs: sat    - orbit struct pointer with full orbital data
+ * Returns: None
  */
 int
 orbit_init(orbit* sat)
@@ -645,7 +752,10 @@ orbit_init(orbit* sat)
     }
 
   vect pos = {0}, vel = {0};
-  orbit_prop(sat, 0.0L, &pos, &vel);
+  if (sat->isdeepspace == true)
+    orbit_sgp4(sat, 0.0L, 5, 1.0e-12, &pos, &vel);
+  else
+    orbit_sgp4(sat, 0.0L, 5, 1.0e-12, &pos, &vel);
 
   print_orbit(sat, "NEW: End init");
   printf("NEW: pos: %f\t\t%f\t\t%f\nNEW: vel: %f\t\t%f\t\t%f\n",
