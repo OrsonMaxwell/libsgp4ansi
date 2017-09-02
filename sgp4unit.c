@@ -1517,8 +1517,6 @@ bool sgp4init
          satrec->sinmao  = sin(satrec->mo);
          satrec->x7thm1  = 7.0 * cosio2 - 1.0;
 
-         print_elsetrec(satrec, "OLD: Pre-deepspace");
-
          /* --------------- deep space initialization ------------- */
          if ((2*pi / satrec->no) >= 225.0)
            {
@@ -1599,14 +1597,15 @@ bool sgp4init
                             12.0 * satrec->cc1 * satrec->d3 +
                             6.0 * satrec->d2 * satrec->d2 +
                             15.0 * cc1sq * (2.0 * satrec->d2 + cc1sq));
-           print_elsetrec(satrec, "OLD: End init  (sat->isimp != 1)");
          }
        } // if omeosq = 0 ...
 
        /* finally propogate to zero epoch to initialize all others. */
        // sgp4fix take out check to let satellites process until they are actually below earth surface
 //       if(satrec->error == 0)
+       print_elsetrec(satrec, "OLD INIT: Before initial SGP4");
        sgp4(whichconst, satrec, 0.0, r, v);
+       print_elsetrec(satrec, "OLD INIT: After initial SGP4");
 
        printf("OLD: pos: %f\t\t%f\t\t%f\nOLD: vel: %f\t\t%f\t\t%f\n",
               r[0], r[1], r[2], v[0], v[1], v[2]);

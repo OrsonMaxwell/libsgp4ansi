@@ -9,7 +9,7 @@ void print_orbit(orbit* sat, char* caption)
   fprintf(f, "-- TLE portion\n");
   fprintf(f, "number:\t\t%d\n", sat->number);
   fprintf(f, "epoch:\t\t%10lf\n", ctime(&sat->epoch));
-  fprintf(f, "epoch_us:\t%d\n", sat->epoch_us);
+  fprintf(f, "epoch_ms:\t%d\n", sat->epoch_ms);
   fprintf(f, "julepoch:\t%10lf\n", sat->julepoch);
   fprintf(f, "nprimediv2:\t%10lf\n", sat->nprimediv2);
   fprintf(f, "ndprimediv6:\t%10lf\n", sat->ndprimediv6);

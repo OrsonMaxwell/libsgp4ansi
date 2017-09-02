@@ -23,14 +23,14 @@ int
 main ()
 {
 
-  //printf("-------------- ISS --------------\n");
-  //old_test_iss();
-  //new_test_iss();
+  printf("-------------- ISS --------------\n");
+  old_test_iss();
+  new_test_iss();
 
   //12h non-resonant GPS (ecc < 0.5 ecc)
-  printf("----------- navstar53 -----------\n");
-  old_test_navstar53();
-  new_test_navstar53();
+  //printf("----------- navstar53 -----------\n");
+  //old_test_navstar53();
+  //new_test_navstar53();
 
   return 0;
 }
@@ -138,7 +138,8 @@ void new_test_iss(void)
 {
   orbit iss = {0};
 
-  struct tm epoch_tm;
+  struct tm epoch_tm, prop_tm;
+  time_t prop_time;
 
   epoch_tm.tm_year       = 117;
   epoch_tm.tm_mon        = 8;
@@ -147,12 +148,19 @@ void new_test_iss(void)
   epoch_tm.tm_min        = 1;
   epoch_tm.tm_sec        = 57;
 
+  prop_tm.tm_year        = 117;
+  prop_tm.tm_mon         = 8;
+  prop_tm.tm_mday        = 29;
+  prop_tm.tm_hour        = 6;
+  prop_tm.tm_min         = 1;
+  prop_tm.tm_sec         = 57;
+
   strcpy(iss.name, "ISS");
   iss.number         = 25544;
-  iss.class          = 'U';
+  iss.sec_class      = 'U';
   strcpy(iss.designator, "98067A  ");
   iss.epoch          = mktime(&epoch_tm);
-  iss.epoch_us       = 0;
+  iss.epoch_ms       = 0;
   iss.nprimediv2     = 0.00016118;
   iss.ndprimediv6    = 0;
   iss.Bstar          = 0.25119e-3;
@@ -167,6 +175,7 @@ void new_test_iss(void)
   iss.rev_number     = 7310;
 
   orbit_init(&iss);
+  orbit_prop(&iss);
 }
 
 void new_test_navstar53(void)
@@ -185,10 +194,10 @@ void new_test_navstar53(void)
 
   strcpy(navstar53.name, "NAVSTAR 53");
   navstar53.number         = 28129;
-  navstar53.class          = 'U';
+  navstar53.sec_class          = 'U';
   strcpy(navstar53.designator, "03058A  ");
   navstar53.epoch          = mktime(&epoch_tm);
-  navstar53.epoch_us       = 461504;
+  navstar53.epoch_ms       = 461504;
   navstar53.nprimediv2     = -0.00000104;
   navstar53.ndprimediv6    = 0;
   navstar53.Bstar          = 1.0e-4;
