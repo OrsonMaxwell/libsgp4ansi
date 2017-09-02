@@ -645,6 +645,9 @@ void    days2mdhms
      temp = (temp - *hr) * 60.0;
      *minute  = (int)floor(temp);
      *sec  = (temp - *minute) * 60.0;
+
+     printf("%d %d %d %d %f\n\n",
+            *mon, *day, *hr, *minute, *sec);
    }  // end days2mdhms
 
 /* -----------------------------------------------------------------------------

@@ -148,26 +148,26 @@ void new_test_iss(void)
   time_t prop_time;
 
   epoch_tm.tm_year       = 117;
-  epoch_tm.tm_mon        = 8;
+  epoch_tm.tm_mon        = 7;
   epoch_tm.tm_mday       = 29;
   epoch_tm.tm_hour       = 5;
   epoch_tm.tm_min        = 1;
   epoch_tm.tm_sec        = 57;
 
   prop_tm.tm_year        = 117;
-  prop_tm.tm_mon         = 8;
+  prop_tm.tm_mon         = 7;
   prop_tm.tm_mday        = 29;
   prop_tm.tm_hour        = 5;
   prop_tm.tm_min         = 2;
   prop_tm.tm_sec         = 57;
 
-  prop_time = mktime(&prop_tm);
+  prop_time = mktime(&prop_tm) - timezone;
 
   strcpy(iss.name, "ISS");
   iss.number         = 25544;
   iss.sec_class      = 'U';
   strcpy(iss.designator, "98067A  ");
-  iss.epoch          = mktime(&epoch_tm);
+  iss.epoch          = mktime(&epoch_tm) - timezone;
   iss.epoch_ms       = 0;
   iss.nprimediv2     = 0.00016118;
   iss.ndprimediv6    = 0;

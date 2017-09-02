@@ -700,11 +700,11 @@ void orbit_dslongper
 double unix2jul(time_t* time, unsigned int usec)
 {
   struct tm* t;
-  t = localtime(time);
+  t = gmtime(time);
 
   return 367.0 * (t->tm_year + 1900)
-  - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 9) / 12.0))) * 0.25)
-  + floor(275 * t->tm_mon / 9.0 )
+  - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 10) / 12.0))) * 0.25)
+  + floor(275 * (t->tm_mon + 1) / 9.0 )
   + t->tm_mday + 1721013.5
   + ((((double)t->tm_sec + usec / 1000) / 60.0L + t->tm_min) / 60.0
   + t->tm_hour) / 24.0;
