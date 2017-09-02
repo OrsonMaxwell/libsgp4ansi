@@ -15,6 +15,10 @@
 //                            PRIVATE PROTOTYPES                             //
 // ************************************************************************* //
 
+// SGP4/SDP4 function wrapper with argument checking
+int
+orbit_prop(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
+
 // SGP4 propagation function implementation
 int
 orbit_sgp4(orbit*, double, unsigned int, double, vect*, vect*);
@@ -28,17 +32,27 @@ void
 orbit_dslongper(orbit*, double, double*, double*, double*, double*, double*);
 
 // Convert unix time to Julian date
-double unix2jul(time_t*, unsigned int);
+//double
+//unix2jul(time_t*, unsigned int);
 
 // Convert Julian date to Greenwich Sidereal Time
-double jul2gst(double);
+double
+jul2gst(double);
+
+// Predict polar motion at given time
+void
+polarmotion(double jdut1, double pm[3][3]);
+
+// Convert position and velocity vectors from TEME to ECEF frame of reference
+//void
+//teme2ecef(vect*, vect*, double, vect*, vect*);
 
 // ************************************************************************* //
 //                             PRIVATE FUNCTIONS                             //
 // ************************************************************************* //
 
 /*
- * SGP4/SDP4 propagation function wrapper
+ * SGP4/SDP4 function wrapper with argument checking
  *
  * Inputs:  sat    - orbit struct pointer with initialized orbital data
  *          time   - UTC time to find satellite data at
@@ -733,57 +747,111 @@ double jul2gst(double julian)
   return result;
 }
 
-void teme2ecef(double* rteme, double* vteme, double julian, double* recef, double* vecef)
+/*
+polarm
+This function calulates the transformation matrix that accounts for polar
+motion. Polar motion coordinates are estimated using IERS Bulletin
+rather than directly input for simplicity.
+Author: David Vallado, 2007
+Ported to C++ by Grady Hillhouse with some modifications, July 2015.
+INPUTS          DESCRIPTION                     RANGE/UNITS
+jdut1           Julian date                     days
+OUTPUTS         DESCRIPTION
+pm              Transformation matrix for ECEF - PEF
+*/
+
+void polarmotion(double jdut1, double pm[3][3])
 {
-    double GST;
-    double peftod[3][3];
-    double rpef[3];
-    double vpef[3];
-    double pm[3][3];
-    double omegaearth[3];
+  double MJD; //Julian Date - 2,400,000.5 days
+  double A;
+  double C;
+  double xp; //Polar motion coefficient in radians
+  double yp; //Polar motion coefficient in radians
 
-    //Get Greenwich mean sidereal time
-    GST = jul2gst(julian);
+  //Predict polar motion coefficients using IERS Bulletin - A (Vol. XXVIII No. 030)
+  MJD = jdut1 - 2400000.5;
+  A = 2 * pi * (MJD - 57226) / 365.25;
+  C = 2 * pi * (MJD - 57226) / 435;
 
-    //st is the pef - tod matrix
-    peftod[0][0] = cos(GST);
-    peftod[0][1] = -sin(GST);
-    peftod[0][2] = 0.0;
-    peftod[1][0] = sin(GST);
-    peftod[1][1] = cos(GST);
-    peftod[1][2] = 0.0;
-    peftod[2][0] = 0.0;
-    peftod[2][1] = 0.0;
-    peftod[2][2] = 1.0;
+  xp = (0.1033 + 0.0494*cos(A) + 0.0482*sin(A) + 0.0297*cos(C) + 0.0307*sin(C)) * 4.84813681e-6;
+  yp = (0.3498 + 0.0441*cos(A) - 0.0393*sin(A) + 0.0307*cos(C) - 0.0297*sin(C)) * 4.84813681e-6;
 
-    //Get pseudo earth fixed position vector by multiplying the inverse pef-tod matrix by rteme
-    rpef[0] = peftod[0][0] * rteme[0] + peftod[1][0] * rteme[1] + peftod[2][0] * rteme[2];
-    rpef[1] = peftod[0][1] * rteme[0] + peftod[1][1] * rteme[1] + peftod[2][1] * rteme[2];
-    rpef[2] = peftod[0][2] * rteme[0] + peftod[1][2] * rteme[1] + peftod[2][2] * rteme[2];
+  pm[0][0] = cos(xp);
+  pm[0][1] = 0.0;
+  pm[0][2] = -sin(xp);
+  pm[1][0] = sin(xp) * sin(yp);
+  pm[1][1] = cos(yp);
+  pm[1][2] = cos(xp) * sin(yp);
+  pm[2][0] = sin(xp) * cos(yp);
+  pm[2][1] = -sin(yp);
+  pm[2][2] = cos(xp) * cos(yp);
+}
 
-    //Get polar motion vector
-    polarm(julian, pm);
+/*
+teme2ecef
+This function transforms a vector from a true equator mean equinox (TEME)
+frame to an earth-centered, earth-fixed (ECEF) frame.
+Author: David Vallado, 2007
+Ported to C++ by Grady Hillhouse with some modifications, July 2015.
+INPUTS          DESCRIPTION                     RANGE/UNITS
+rteme           Position vector (TEME)          km
+vteme           Velocity vector (TEME)          km/s
+jdut1           Julian date                     days
+OUTPUTS         DESCRIPTION                     RANGE/UNITS
+recef           Position vector (ECEF)          km
+vecef           Velocity vector (ECEF)          km/s
+*/
+void teme2ecef(vect* posteme, vect* velteme, double julian, vect* posecef, vect* velecef)
+{
+  double GST;
+  double pef_tod[3][3];
+  double rpef[3];
+  double vpef[3];
+  double pm[3][3];
+  double omegaearth[3];
 
-    //ECEF postion vector is the inverse of the polar motion vector multiplied by rpef
-    recef[0] = pm[0][0] * rpef[0] + pm[1][0] * rpef[1] + pm[2][0] * rpef[2];
-    recef[1] = pm[0][1] * rpef[0] + pm[1][1] * rpef[1] + pm[2][1] * rpef[2];
-    recef[2] = pm[0][2] * rpef[0] + pm[1][2] * rpef[1] + pm[2][2] * rpef[2];
+  //Get Greenwich mean sidereal time
+  GST = jul2gst(julian);
 
-    //Earth's angular rotation vector (omega)
-    //Note: I don't have a good source for LOD. Historically it has been on the order of 2 ms so I'm just using that as a constant. The effect is very small.
-    omegaearth[0] = 0.0;
-    omegaearth[1] = 0.0;
-    omegaearth[2] = 7.29211514670698e-05 * (1.0  - 0.002/86400.0);
+  //st is the pef - tod matrix
+  pef_tod[0][0] = cos(GST);
+  pef_tod[0][1] = -sin(GST);
+  pef_tod[0][2] = 0.0;
+  pef_tod[1][0] = sin(GST);
+  pef_tod[1][1] = cos(GST);
+  pef_tod[1][2] = 0.0;
+  pef_tod[2][0] = 0.0;
+  pef_tod[2][1] = 0.0;
+  pef_tod[2][2] = 1.0;
 
-    //Pseudo Earth Fixed velocity vector is st'*vteme - omegaearth X rpef
-    vpef[0] = peftod[0][0] * vteme[0] + peftod[1][0] * vteme[1] + peftod[2][0] * vteme[2] - (omegaearth[1]*rpef[2] - omegaearth[2]*rpef[1]);
-    vpef[1] = peftod[0][1] * vteme[0] + peftod[1][1] * vteme[1] + peftod[2][1] * vteme[2] - (omegaearth[2]*rpef[0] - omegaearth[0]*rpef[2]);
-    vpef[2] = peftod[0][2] * vteme[0] + peftod[1][2] * vteme[1] + peftod[2][2] * vteme[2] - (omegaearth[0]*rpef[1] - omegaearth[1]*rpef[0]);
+  //Get pseudo earth fixed position vector by multiplying the inverse pef-tod matrix by rteme
+  rpef[0] = pef_tod[0][0] * posteme->x + pef_tod[1][0] * posteme->y + pef_tod[2][0] * posteme->z;
+  rpef[1] = pef_tod[0][1] * posteme->x + pef_tod[1][1] * posteme->y + pef_tod[2][1] * posteme->z;
+  rpef[2] = pef_tod[0][2] * posteme->x + pef_tod[1][2] * posteme->y + pef_tod[2][2] * posteme->z;
 
-    //ECEF velocty vector is the inverse of the polar motion vector multiplied by vpef
-    vecef[0] = pm[0][0] * vpef[0] + pm[1][0] * vpef[1] + pm[2][0] * vpef[2];
-    vecef[1] = pm[0][1] * vpef[0] + pm[1][1] * vpef[1] + pm[2][1] * vpef[2];
-    vecef[2] = pm[0][2] * vpef[0] + pm[1][2] * vpef[1] + pm[2][2] * vpef[2];
+  //Get polar motion vector
+  //polarmotion(julian, pm);
+
+  //ECEF postion vector is the inverse of the polar motion vector multiplied by rpef
+  posecef->x = pm[0][0] * rpef[0] + pm[1][0] * rpef[1] + pm[2][0] * rpef[2];
+  posecef->y = pm[0][1] * rpef[0] + pm[1][1] * rpef[1] + pm[2][1] * rpef[2];
+  posecef->z = pm[0][2] * rpef[0] + pm[1][2] * rpef[1] + pm[2][2] * rpef[2];
+
+  //Earth's angular rotation vector (omega)
+  //Note: I don't have a good source for LOD. Historically it has been on the order of 2 ms so I'm just using that as a constant. The effect is very small.
+  omegaearth[0] = 0.0;
+  omegaearth[1] = 0.0;
+  omegaearth[2] = 7.29211514670698e-05 * (1.0  - 0.002/86400.0);
+
+  //Pseudo Earth Fixed velocity vector is st'*vteme - omegaearth X rpef
+  vpef[0] = pef_tod[0][0] * velteme->x + pef_tod[1][0] * velteme->y + pef_tod[2][0] * velteme->z - (omegaearth[1]*rpef[2] - omegaearth[2]*rpef[1]);
+  vpef[1] = pef_tod[0][1] * velteme->x + pef_tod[1][1] * velteme->y + pef_tod[2][1] * velteme->z - (omegaearth[2]*rpef[0] - omegaearth[0]*rpef[2]);
+  vpef[2] = pef_tod[0][2] * velteme->x + pef_tod[1][2] * velteme->y + pef_tod[2][2] * velteme->z - (omegaearth[0]*rpef[1] - omegaearth[1]*rpef[0]);
+
+  //ECEF velocty vector is the inverse of the polar motion vector multiplied by vpef
+  velecef->x = pm[0][0] * vpef[0] + pm[1][0] * vpef[1] + pm[2][0] * vpef[2];
+  velecef->y = pm[0][1] * vpef[0] + pm[1][1] * vpef[1] + pm[2][1] * vpef[2];
+  velecef->z = pm[0][2] * vpef[0] + pm[1][2] * vpef[1] + pm[2][2] * vpef[2];
 }
 
 
@@ -1151,3 +1219,78 @@ orbit_init(orbit* sat)
   return 0;
 }
 
+/*
+ * Get position and velocity vectors at given time in TEME frame of reference
+ *
+ * Inputs:  sat    - orbit struct pointer with initialized orbital data
+ *          time   - UTC time to find satellite data at
+ *          msec   - Millisecond portion of time
+ *          iter   - Kepler's equation maximum iteration count
+ *          thresh - Kepler's equation desired precision threshold
+ * Outputs: pos    - 3D position vector in TEME frame in km
+ *          vel    - 3D velocity vector in TEME frame in km/sec
+ * Returns: 0      - Success
+ *         -1      - Invalid inputs or parametres
+ *          1      - Mean motion zero or less
+ *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
+ *          3      - Long periodics result error
+ *          4      - Short period preliminary quantities error
+ *          5      - Decaying satellite
+ */
+int
+posvel_teme
+(
+    orbit* sat,
+    time_t* time,
+    unsigned int msec,
+    unsigned int iter,
+    double thresh,
+    vect* pos,
+    vect* vel
+)
+{
+  // SGP4 native frame of reference is TEME
+  return orbit_prop(sat, time, msec, iter, thresh, pos, vel);
+}
+
+/*
+ * Get position and velocity vectors at given time in ECEF frame of reference
+ *
+ * Inputs:  sat    - orbit struct pointer with initialized orbital data
+ *          time   - UTC time to find satellite data at
+ *          msec   - Millisecond portion of time
+ *          iter   - Kepler's equation maximum iteration count
+ *          thresh - Kepler's equation desired precision threshold
+ * Outputs: pos    - 3D position vector in ECEF frame in km
+ *          vel    - 3D velocity vector in ECEF frame in km/sec
+ * Returns: 0      - Success
+ *         -1      - Invalid inputs or parametres
+ *          1      - Mean motion zero or less
+ *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
+ *          3      - Long periodics result error
+ *          4      - Short period preliminary quantities error
+ *          5      - Decaying satellite
+ */
+int
+posvel_ecef
+(
+    orbit* sat,
+    time_t* time,
+    unsigned int msec,
+    unsigned int iter,
+    double thresh,
+    vect* pos,
+    vect* vel
+)
+{
+  // Get TEME vectors
+  vect posteme, velteme;
+  int exit_code = orbit_prop(sat, time, msec, iter, thresh, &posteme, &velteme);
+
+  if (exit_code == 0)
+  {
+    teme2ecef(&posteme, &velteme, 0, pos, vel);
+  }
+
+  return exit_code;
+}

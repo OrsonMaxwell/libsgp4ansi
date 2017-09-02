@@ -141,7 +141,6 @@ void getgravconst
       double* j3oj2
      );
 
-void teme2ecef(double rteme[3], double vteme[3], double jdut1, double recef[3], double vecef[3]);
 
 void ijk2ll
      (

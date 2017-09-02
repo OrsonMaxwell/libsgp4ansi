@@ -18,8 +18,16 @@
 extern int
 orbit_init(orbit*);
 
-// SGP4/SDP4 propagation function wrapper
+// Get position and velocity vectors of the satellite at given time in TEME frame
 extern int
-orbit_prop(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
+posvel_teme(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
+
+// Get position and velocity vectors of the satellite at given time in ECEF frame
+extern int
+posvel_ecef(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
+
+// TODO: Make private!
+void teme2ecef(vect*, vect*, double, vect*, vect*);
+double unix2jul(time_t*, unsigned int);
 
 #endif /* LIBSGP4ANSI_H_ */
