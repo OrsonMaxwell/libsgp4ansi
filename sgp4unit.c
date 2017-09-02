@@ -1548,17 +1548,18 @@ bool sgp4init
              print_elsetrec(satrec, "OLD: after dscom if ((twopi / sat->no) >= 225.0)");
              dpper
                  (
-                   satrec->e3, satrec->ee2, satrec->peo, satrec->pgho,
-                   satrec->pho, satrec->pinco, satrec->plo, satrec->se2,
+                   satrec->e3,  satrec->ee2,  satrec->peo,  satrec->pgho,
+                   satrec->pho, satrec->pinco,satrec->plo,  satrec->se2,
                    satrec->se3, satrec->sgh2, satrec->sgh3, satrec->sgh4,
-                   satrec->sh2, satrec->sh3, satrec->si2,  satrec->si3,
-                   satrec->sl2, satrec->sl3, satrec->sl4,  satrec->t,
-                   satrec->xgh2,satrec->xgh3,satrec->xgh4, satrec->xh2,
-                   satrec->xh3, satrec->xi2, satrec->xi3,  satrec->xl2,
-                   satrec->xl3, satrec->xl4, satrec->zmol, satrec->zmos, inclm, satrec->init,
+                   satrec->sh2, satrec->sh3,  satrec->si2,  satrec->si3,
+                   satrec->sl2, satrec->sl3,  satrec->sl4,  satrec->t,
+                   satrec->xgh2,satrec->xgh3, satrec->xgh4, satrec->xh2,
+                   satrec->xh3, satrec->xi2,  satrec->xi3,  satrec->xl2,
+                   satrec->xl3, satrec->xl4,  satrec->zmol, satrec->zmos, inclm, satrec->init,
                    &satrec->ecco, &satrec->inclo, &satrec->nodeo, &satrec->argpo, &satrec->mo,
                    satrec->operationmode
                  );
+             print_elsetrec(satrec, "OLD: after dpper");
 
              argpm  = 0.0;
              nodem  = 0.0;
