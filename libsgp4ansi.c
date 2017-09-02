@@ -22,10 +22,6 @@
 //                            PRIVATE PROTOTYPES                             //
 // ************************************************************************* //
 
-// SGP4/SDP4 function wrapper with argument checking
-int
-orbit_prop(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
-
 // SGP4 propagation function implementation
 int
 orbit_sgp4(orbit*, double, unsigned int, double, vect*, vect*);
@@ -43,22 +39,22 @@ orbit_dslongper(orbit*, double, double*, double*, double*, double*, double*);
 // ************************************************************************* //
 
 /*
- * SGP4/SDP4 function wrapper with argument checking
+ * Get position and velocity vectors in the TEME frame at given time
  *
- * Inputs:  sat    - orbit struct pointer with initialized orbital data
- *          time   - UTC time to find satellite data at
- *          msec   - Millisecond portion of time
- *          iter   - Kepler's equation maximum iteration count
- *          thresh - Kepler's equation desired precision threshold
- * Outputs: pos    - 3D position vector in TEME frame in km
- *          vel    - 3D velocity vector in TEME frame in km/sec
- * Returns: 0      - Success
- *         -1      - Invalid inputs or parametres
- *          1      - Mean motion zero or less
- *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
- *          3      - Long periodics result error
- *          4      - Short period preliminary quantities error
- *          5      - Decaying satellite
+ * Inputs:  sat       - orbit struct pointer with initialized orbital data
+ *          time      - UTC time to find satellite data at
+ *          msec      - Millisecond portion of time
+ *          maxiter   - Kepler's equation maximum iteration count
+ *          tolerance - Kepler's equation desired precision threshold
+ * Outputs: pos       - 3D position vector in TEME frame in km
+ *          vel       - 3D velocity vector in TEME frame in km/sec
+ * Returns: 0         - Success
+ *         -1         - Invalid inputs or parametres
+ *          1         - Mean motion zero or less
+ *          2         - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
+ *          3         - Long periodics result error
+ *          4         - Short period preliminary quantities error
+ *          5         - Decaying satellite
  */
 int
 orbit_prop
@@ -66,8 +62,8 @@ orbit_prop
     orbit* sat,
     time_t* time,
     unsigned int msec,
-    unsigned int iter,
-    double thresh,
+    unsigned int maxiter,
+    double tolerance,
     vect* pos,
     vect* vel
 )
@@ -75,8 +71,8 @@ orbit_prop
   if ((sat == NULL) ||
       (time == NULL) ||
       (msec >= 1000) ||
-      (iter < 1) ||
-      (thresh <= 0.0) ||
+      (maxiter < 1) ||
+      (tolerance <= 0.0) ||
       (pos == NULL) ||
       (vel == NULL))
   {
@@ -88,28 +84,29 @@ orbit_prop
 
   if (sat->isdeepspace == true)
   {
-    return orbit_sdp4(sat, tdelta, iter, thresh, pos, vel);
+    return orbit_sdp4(sat, tdelta, maxiter, tolerance, pos, vel);
   }
   else
   {
-    return orbit_sgp4(sat, tdelta, iter, thresh, pos, vel);
+    return orbit_sgp4(sat, tdelta, maxiter, tolerance, pos, vel);
   }
 }
 
 /*
  * SGP4 propagation function implementation
  *
- * Inputs:  sat    - orbit struct pointer with initialized orbital data
- *          tdelta - Time since epoch, minutes
- *          iter   - Kepler's equation maximum iteration count
- *          thresh - Kepler's equation desired precision threshold
- * Outputs: pos    - 3D position vector in TEME frame in km
- *          vel    - 3D velocity vector in TEME frame in km/sec
- * Returns: 0      - Success
- *          1      - Mean motion zero or less
- *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
- *          4      - Short period preliminary quantities error
- *          5      - Decaying satellite
+ * Inputs:  sat       - orbit struct pointer with initialized orbital data
+ *          tdelta    - Time since epoch, minutes
+ *          maxiter   - Kepler's equation maximum iteration count
+ *          tolerance - Kepler's equation desired precision threshold
+ * Outputs: pos       - 3D position vector in TEME frame in km
+ *          vel       - 3D velocity vector in TEME frame in km/sec
+ * Returns: 0         - Success
+ *          1         - Mean motion zero or less
+ *          2         - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
+ *          3         - Long periodics result error
+ *          4         - Short period preliminary quantities error
+ *          5         - Decaying satellite
  */
 int
 orbit_sgp4
@@ -293,18 +290,18 @@ orbit_sgp4
 /*
  * SDP4 propagation function implementation
  *
- * Inputs:  sat    - orbit struct pointer with initialized orbital data
- *          tdelta - Time since epoch, minutes
- *          iter   - Kepler's equation maximum iteration count
- *          thresh - Kepler's equation desired precision threshold
- * Outputs: pos    - 3D position vector in TEME frame in km
- *          vel    - 3D velocity vector in TEME frame in km/sec
- * Returns: 0      - Success
- *          1      - Mean motion zero or less
- *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
- *          3      - Long periodics result error
- *          4      - Short period preliminary quantities error
- *          5      - Decaying satellite
+ * Inputs:  sat       - orbit struct pointer with initialized orbital data
+ *          tdelta    - Time since epoch, minutes
+ *          maxiter   - Kepler's equation maximum iteration count
+ *          tolerance - Kepler's equation desired precision threshold
+ * Outputs: pos       - 3D position vector in TEME frame in km
+ *          vel       - 3D velocity vector in TEME frame in km/sec
+ * Returns: 0         - Success
+ *          1         - Mean motion zero or less
+ *          2         - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
+ *          3         - Long periodics result error
+ *          4         - Short period preliminary quantities error
+ *          5         - Decaying satellite
  */
 int
 orbit_sdp4
@@ -1058,80 +1055,4 @@ orbit_init(orbit* sat)
   }
 
   return 0;
-}
-
-/*
- * Get position and velocity vectors at given time in TEME frame of reference
- *
- * Inputs:  sat    - orbit struct pointer with initialized orbital data
- *          time   - UTC time to find satellite data at
- *          msec   - Millisecond portion of time
- *          iter   - Kepler's equation maximum iteration count
- *          thresh - Kepler's equation desired precision threshold
- * Outputs: pos    - 3D position vector in TEME frame in km
- *          vel    - 3D velocity vector in TEME frame in km/sec
- * Returns: 0      - Success
- *         -1      - Invalid inputs or parametres
- *          1      - Mean motion zero or less
- *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
- *          3      - Long periodics result error
- *          4      - Short period preliminary quantities error
- *          5      - Decaying satellite
- */
-int
-posvel_teme
-(
-    orbit* sat,
-    time_t* time,
-    unsigned int msec,
-    unsigned int iter,
-    double thresh,
-    vect* pos,
-    vect* vel
-)
-{
-  // SGP4 native frame of reference is TEME
-  return orbit_prop(sat, time, msec, iter, thresh, pos, vel);
-}
-
-/*
- * Get position and velocity vectors at given time in ECEF frame of reference
- *
- * Inputs:  sat    - orbit struct pointer with initialized orbital data
- *          time   - UTC time to find satellite data at
- *          msec   - Millisecond portion of time
- *          iter   - Kepler's equation maximum iteration count
- *          thresh - Kepler's equation desired precision threshold
- * Outputs: pos    - 3D position vector in ECEF frame in km
- *          vel    - 3D velocity vector in ECEF frame in km/sec
- * Returns: 0      - Success
- *         -1      - Invalid inputs or parametres
- *          1      - Mean motion zero or less
- *          2      - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
- *          3      - Long periodics result error
- *          4      - Short period preliminary quantities error
- *          5      - Decaying satellite
- */
-int
-posvel_ecef
-(
-    orbit* sat,
-    time_t* time,
-    unsigned int msec,
-    unsigned int iter,
-    double thresh,
-    vect* pos,
-    vect* vel
-)
-{
-  // Get TEME vectors
-  vect posteme, velteme;
-  int exit_code = orbit_prop(sat, time, msec, iter, thresh, &posteme, &velteme);
-
-  if (exit_code == 0)
-  {
-    teme2ecef(&posteme, &velteme, 0, pos, vel);
-  }
-
-  return exit_code;
 }

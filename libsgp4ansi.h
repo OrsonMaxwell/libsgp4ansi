@@ -93,13 +93,9 @@ typedef struct _orbit
 extern int
 orbit_init(orbit*);
 
-// Get position and velocity vectors of the satellite at given time in TEME frame
-extern int
-posvel_teme(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
-
-// Get position and velocity vectors of the satellite at given time in ECEF frame
-extern int
-posvel_ecef(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
+// Get position and velocity vectors in the TEME frame at given time
+int
+orbit_prop(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
 
 // TODO: Make private!
 extern void

@@ -105,7 +105,7 @@ main ()
   iss.rev_number     = 7310;
 
   orbit_init(&iss);
-  posvel_teme(&iss, &prop_time, 0, 10, 1.0e-12, &newposteme, &newvelteme);
+  orbit_prop(&iss, &prop_time, 0, 10, 1.0e-12, &newposteme, &newvelteme);
   // ***************************************************************************
 
   printf("TEME -----------------------------------------------\n");
@@ -123,8 +123,8 @@ main ()
   printf("OLD vel: %12.8f\t%12.8f\t%12.8f\nNEW vel: %12.8f\t%12.8f\t%12.8f\n",
          oldvelecef.i, oldvelecef.j, oldvelecef.k, newvelecef.i, newvelecef.j, newvelecef.k);
 
-  ecef2latlonalt(&oldposecef, unix2jul(&prop_time, 0), &oldlatlonalt);
-  ecef2latlonalt(&newposecef, unix2jul(&prop_time, 0), &newlatlonalt);
+  ecef2latlonalt(&oldposecef, unix2jul(&prop_time, 0), 10, 1.0e-12, &oldlatlonalt);
+  ecef2latlonalt(&newposecef, unix2jul(&prop_time, 0), 10, 1.0e-12, &newlatlonalt);
 
   printf("LATLONALT -------------------------------------------\n");
   printf("OLD lla: %12.8f\t%12.8f\t%12.8f\nNEW lla: %12.8f\t%12.8f\t%12.8f\n",

@@ -33,6 +33,6 @@ void
 teme2ecef(vect*, vect*, double, vect*, vect*);
 
 // Transform ECEF position to geodetic latitude, longitude, and altitude
-void ecef2latlonalt(vect*, double, vect*);
+void ecef2latlonalt(vect*, double, unsigned int, double, vect*);
 
 #endif /* TRANSFORM_H_ */

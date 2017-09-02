@@ -167,7 +167,7 @@ teme2ecef
   // Earth angular rotation vector
   omegaearth[0] = 0.0;
   omegaearth[1] = 0.0;
-  omegaearth[2] = 7.29211514670698e-05 * (1.0  - 0.002/86400.0);
+  omegaearth[2] = 7.29211514670698e-05 * (1.0  - 0.002 / 86400.0);
 
   // Pseudo Earth Fixed velocity vector
   double vpef[3];
@@ -198,10 +198,19 @@ teme2ecef
  * Returns: None
  */
 void
-ecef2latlonalt(vect* posecef, double julian, vect* latlonalt)
+ecef2latlonalt
+(
+    vect* posecef,
+    double julian,
+    unsigned int maxiter,
+    double tolerance,
+    vect* latlonalt
+    )
 {
-  const double tolerance = 1.0e-12;
-  const double eesqrd    = 0.006694385000; // Earth eccentricity squared
+  if ((tolerance >= 10.0) || (tolerance < 0.0))
+  {
+    tolerance = 1.0e-6; // Default tolerance
+  }
 
   // Longitude
   double ijsq = sqrt(posecef->i * posecef->i + posecef->j * posecef->j);
@@ -232,11 +241,12 @@ ecef2latlonalt(vect* posecef, double julian, vect* latlonalt)
   latlonalt->lat = asin(posecef->k / posmag);
 
   // Converge latitude to a geodetic ellipsoid over 10 iterations or less
+  const double eesqrd = 0.006694385000; // Earth eccentricity squared
   double c, latsine;
   int i = 1;
   double delta = latlonalt->lat + 10.0;
 
-  while ((fabs(delta - latlonalt->lat) >= tolerance) && (i < 10))
+  while ((fabs(delta - latlonalt->lat) >= tolerance) && (i < maxiter))
   {
     delta   = latlonalt->lat;
     latsine = sin(latlonalt->lat);
@@ -246,7 +256,7 @@ ecef2latlonalt(vect* posecef, double julian, vect* latlonalt)
   }
 
   // Altitude
-  if ((pidiv2 - fabs(latlonalt->lat)) > pi / 180.0)
+  if ((pidiv2 - fabs(latlonalt->lat)) > deg2rad)
   {
     latlonalt->alt = (ijsq / cos(latlonalt->lat)) - c;
   }
