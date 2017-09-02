@@ -114,7 +114,7 @@ void old_test_iss(void){
   double r[3], v[3];
 
   sgp4(wgs72, &satrec, 1.0, r, v);
-  printf("OLD: prop pos: %f\t\t%f\t\t%f\nOLD: vel: %f\t\t%f\t\t%f\n",
+  printf("OLD: prop pos: %f\t\t%f\t\t%f\nOLD: prop vel: %f\t\t%f\t\t%f\n",
          r[0], r[1], r[2], v[0], v[1], v[2]);
 }
 
@@ -185,7 +185,7 @@ void new_test_iss(void)
   orbit_init(&iss);
   orbit_prop(&iss, &prop_time, 0, 10, 1.0e-12, &pos, &vel);
 
-  printf("NEW: prop pos: %f\t\t%f\t\t%f\nNEW: vel: %f\t\t%f\t\t%f\n",
+  printf("NEW: prop pos: %f\t\t%f\t\t%f\nNEW: init vel: %f\t\t%f\t\t%f\n",
          pos.x, pos.y, pos.z, vel.x, vel.y, vel.z);
 }
 

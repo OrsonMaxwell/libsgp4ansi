@@ -1607,7 +1607,7 @@ bool sgp4init
        sgp4(whichconst, satrec, 0.0, r, v);
        print_elsetrec(satrec, "OLD INIT: After initial SGP4");
 
-       printf("OLD: init pos: %f\t\t%f\t\t%f\nOLD: vel: %f\t\t%f\t\t%f\n",
+       printf("OLD: init pos: %f\t\t%f\t\t%f\nOLD: init vel: %f\t\t%f\t\t%f\n",
               r[0], r[1], r[2], v[0], v[1], v[2]);
 
        satrec->init = 'n';

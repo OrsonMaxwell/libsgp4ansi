@@ -889,8 +889,6 @@ orbit_init(orbit* sat)
     sat->sinMo   = sin(sat->Mo);
     sat->x7thm1  = 7.0 * cosi2 - 1.0;
 
-    print_orbit(sat, "NEW: Pre-deepspace");
-
     //*************************** DEEP SPACE ***********************************
     // TODO: Deepspace routines give me headaches
     // Local variables for deep space and resonance perturbations
@@ -1099,7 +1097,7 @@ orbit_init(orbit* sat)
   }
 
   print_orbit(sat, "NEW INIT: After initial SGP4");
-  printf("NEW: init pos: %f\t\t%f\t\t%f\nNEW: vel: %f\t\t%f\t\t%f\n",
+  printf("NEW: init pos: %f\t\t%f\t\t%f\nNEW: init vel: %f\t\t%f\t\t%f\n",
          pos.x, pos.y, pos.z, vel.x, vel.y, vel.z);
 
   return 0;
