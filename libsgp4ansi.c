@@ -45,7 +45,7 @@ orbit_dslongper(orbit*, double, double*, double*, double*, double*, double*);
  *          time      - UTC time to find satellite data at
  *          msec      - Millisecond portion of time
  *          maxiter   - Kepler's equation maximum iteration count
- *          tolerance - Kepler's equation desired precision threshold
+ *          tolerance - Kepler's equation desired precision tolerance
  * Outputs: pos       - 3D position vector in TEME frame in km
  *          vel       - 3D velocity vector in TEME frame in km/sec
  * Returns: 0         - Success
@@ -98,7 +98,7 @@ orbit_prop
  * Inputs:  sat       - orbit struct pointer with initialized orbital data
  *          tdelta    - Time since epoch, minutes
  *          maxiter   - Kepler's equation maximum iteration count
- *          tolerance - Kepler's equation desired precision threshold
+ *          tolerance - Kepler's equation desired precision tolerance
  * Outputs: pos       - 3D position vector in TEME frame in km
  *          vel       - 3D velocity vector in TEME frame in km/sec
  * Returns: 0         - Success
@@ -113,8 +113,8 @@ orbit_sgp4
 (
     orbit* sat,
     double tdelta,
-    unsigned int iter,
-    double thresh,
+    unsigned int maxiter,
+    double tolerance,
     vect* pos,
     vect* vel
 )
@@ -197,7 +197,7 @@ orbit_sgp4
 
   double sineo1, coseo1;
 
-  while ((fabs(temp5) >= thresh) && (kiter < iter))
+  while ((fabs(temp5) >= tolerance) && (kiter < maxiter))
   {
     sineo1  = sin(eo1);
     coseo1  = cos(eo1);
@@ -484,7 +484,9 @@ orbit_sdp4
   double mrt = 0.0;
   double vkmpersec = Re * xke / 60.0;
 
-  double betal, rl, rdotl, rvdotl, sinu, cosu, su, sin2u, cos2u, temp1, temp2, cosisq, xnode, xinc, mvt, rvdot, sinsu, cossu, snod, cnod, sini, cosi, xmx, xmy, ux, uy, uz, vx, vy, vz;
+  double betal, rl, rdotl, rvdotl, sinu, cosu, su, sin2u, cos2u, temp1, temp2,
+  cosisq, xnode, xinc, mvt, rvdot, sinsu, cossu, snod, cnod, sini, cosi, xmx,
+  xmy, ux, uy, uz, vx, vy, vz;
 
   if (pl < 0.0)
   {

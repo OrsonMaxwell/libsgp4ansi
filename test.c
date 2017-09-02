@@ -132,13 +132,6 @@ main ()
          newlatlonalt.lat * rad2deg, newlatlonalt.lon * rad2deg, newlatlonalt.alt);
 
   /*
-  // Converting ECEF coodrinates to latlonalt
-  double latgc, latgd, lon, hellp;
-
-  ijk2ll(recef, jday1, &latgc, &latgd, &lon, &hellp);
-
-  printf("LATLONALT:\nLat (gd):\t%f\nLat (gc):\t%f\nLon:\t\t%f\nAlt:\t\t%f\n\n",
-         latgc*180/pi,latgd*180/pi,lon*180/pi,hellp);
 
   // Calculate range, azimuth, elevation and their respective rates relative to the observer
   double rsecef[3] = {6378.137, 0.0, 0.0}; // observer to sat vector at latlonalt 0,0,0

@@ -190,11 +190,12 @@ teme2ecef
 /*
  * Transform ECEF position to geodetic latitude, longitude, and altitude
  *
- * Inputs:  posecef - Position vector in TEME frame, km
- *          velteme - Velocity vector in TEME frame, km/s
- *          julian  - Julian time of interest
- * Outputs: posteme - Position vector in ECEF frame, km
- *          velteme - Velocity vector in ECEF frame, km/s
+ * Inputs:  posecef   - Position vector in TEME frame, km
+ *          velteme   - Velocity vector in TEME frame, km/s
+ *          julian    - Julian time of interest
+ *          maxiter   - Maximum iteration count for geodetic latitude
+ *          tolerance - Desired precision threshold for geodetic latitude
+ * Outputs: latlonalt - Position vector in ECEF frame, rad
  * Returns: None
  */
 void
