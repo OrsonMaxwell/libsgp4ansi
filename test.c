@@ -110,6 +110,12 @@ void old_test_iss(void){
       &deltamin,
       &satrec
   );
+
+  double r[3], v[3];
+
+  sgp4(wgs72, &satrec, 1.0, r, v);
+  printf("OLD: prop pos: %f\t\t%f\t\t%f\nOLD: vel: %f\t\t%f\t\t%f\n",
+         r[0], r[1], r[2], v[0], v[1], v[2]);
 }
 
 void old_test_navstar53(void){
@@ -137,7 +143,7 @@ void old_test_navstar53(void){
 void new_test_iss(void)
 {
   orbit iss = {0};
-
+  vect pos = {0}, vel = {0};
   struct tm epoch_tm, prop_tm;
   time_t prop_time;
 
@@ -151,9 +157,11 @@ void new_test_iss(void)
   prop_tm.tm_year        = 117;
   prop_tm.tm_mon         = 8;
   prop_tm.tm_mday        = 29;
-  prop_tm.tm_hour        = 6;
-  prop_tm.tm_min         = 1;
+  prop_tm.tm_hour        = 5;
+  prop_tm.tm_min         = 2;
   prop_tm.tm_sec         = 57;
+
+  prop_time = mktime(&prop_tm);
 
   strcpy(iss.name, "ISS");
   iss.number         = 25544;
@@ -175,7 +183,10 @@ void new_test_iss(void)
   iss.rev_number     = 7310;
 
   orbit_init(&iss);
-  orbit_prop(&iss);
+  orbit_prop(&iss, &prop_time, 0, 10, 1.0e-12, &pos, &vel);
+
+  printf("NEW: prop pos: %f\t\t%f\t\t%f\nNEW: vel: %f\t\t%f\t\t%f\n",
+         pos.x, pos.y, pos.z, vel.x, vel.y, vel.z);
 }
 
 void new_test_navstar53(void)

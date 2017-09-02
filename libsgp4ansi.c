@@ -1099,7 +1099,7 @@ orbit_init(orbit* sat)
   }
 
   print_orbit(sat, "NEW INIT: After initial SGP4");
-  printf("NEW: pos: %f\t\t%f\t\t%f\nNEW: vel: %f\t\t%f\t\t%f\n",
+  printf("NEW: init pos: %f\t\t%f\t\t%f\nNEW: vel: %f\t\t%f\t\t%f\n",
          pos.x, pos.y, pos.z, vel.x, vel.y, vel.z);
 
   return 0;
