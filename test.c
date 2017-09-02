@@ -7,26 +7,30 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "libsgp4ansi.h"
+#include <time.h>
 
 #include "sgp4unit.h"
 #include "sgp4ext.h"
 #include "sgp4io.h"
+
+#include "libsgp4ansi.h"
+#include "const.h"
+#include "transform.h"
 
 int
 main ()
 {
   vect oldposteme;
   vect oldvelteme;
+  vect oldposecef;
+  vect oldvelecef;
+  vect oldlatlonalt;
 
   vect newposteme;
   vect newvelteme;
-
-  vect oldposecef;
-  vect oldvelecef;
-
   vect newposecef;
   vect newvelecef;
+  vect newlatlonalt;
 
   //******************************* O-L-D **************************************
   // Parsing TLE and initializing the math constants
@@ -104,18 +108,57 @@ main ()
   posvel_teme(&iss, &prop_time, 0, 10, 1.0e-12, &newposteme, &newvelteme);
   // ***************************************************************************
 
-  printf("OLD TEME pos: %f\t\t%f\t\t%f\nOLD TEME vel: %f\t\t%f\t\t%f\n",
-         oldposteme.x, oldposteme.y, oldposteme.z, oldvelteme.x, oldvelteme.y, oldvelteme.z);
-  printf("NEW TEME pos: %f\t\t%f\t\t%f\nNEW TEME vel: %f\t\t%f\t\t%f\n",
-         newposteme.x, newposteme.y, newposteme.z, newvelteme.x, newvelteme.y, newvelteme.z);
+  printf("TEME -----------------------------------------------\n");
+  printf("OLD pos: %12.8f\t%12.8f\t%12.8f\nNEW pos: %12.8f\t%12.8f\t%12.8f\n",
+         oldposteme.x, oldposteme.y, oldposteme.z, newposteme.x, newposteme.y, newposteme.z);
+  printf("OLD vel: %12.8f\t%12.8f\t%12.8f\nNEW vel: %12.8f\t%12.8f\t%12.8f\n",
+         oldvelteme.x, oldvelteme.y, oldvelteme.z, newvelteme.x, newvelteme.y, newvelteme.z);
 
   teme2ecef(&oldposteme, &oldposteme, unix2jul(&prop_time, 0), &oldposecef, &oldvelecef);
   teme2ecef(&newposteme, &newposteme, unix2jul(&prop_time, 0), &newposecef, &newvelecef);
 
-  printf("OLD ECEF pos: %f\t\t%f\t\t%f\nOLD ECEF vel: %f\t\t%f\t\t%f\n",
-         oldposecef.x, oldposecef.y, oldposecef.z, oldvelecef.x, oldvelecef.y, oldvelecef.z);
-  printf("NEW ECEF pos: %f\t\t%f\t\t%f\nNEW ECEF vel: %f\t\t%f\t\t%f\n",
-         newposecef.x, newposecef.y, newposecef.z, newvelecef.x, newvelecef.y, newvelecef.z);
+  printf("ECEF -----------------------------------------------\n");
+  printf("OLD pos: %12.8f\t%12.8f\t%12.8f\nNEW pos: %12.8f\t%12.8f\t%12.8f\n",
+         oldposecef.i, oldposecef.j, oldposecef.k, newposecef.i, newposecef.j, newposecef.k);
+  printf("OLD vel: %12.8f\t%12.8f\t%12.8f\nNEW vel: %12.8f\t%12.8f\t%12.8f\n",
+         oldvelecef.i, oldvelecef.j, oldvelecef.k, newvelecef.i, newvelecef.j, newvelecef.k);
+
+  ecef2latlonalt(&oldposecef, unix2jul(&prop_time, 0), &oldlatlonalt);
+  ecef2latlonalt(&newposecef, unix2jul(&prop_time, 0), &newlatlonalt);
+
+  printf("LATLONALT -------------------------------------------\n");
+  printf("OLD lla: %12.8f\t%12.8f\t%12.8f\nNEW lla: %12.8f\t%12.8f\t%12.8f\n",
+         oldlatlonalt.lat * rad2deg, oldlatlonalt.lon * rad2deg, oldlatlonalt.alt,
+         newlatlonalt.lat * rad2deg, newlatlonalt.lon * rad2deg, newlatlonalt.alt);
+
+  /*
+  // Converting ECEF coodrinates to latlonalt
+  double latgc, latgd, lon, hellp;
+
+  ijk2ll(recef, jday1, &latgc, &latgd, &lon, &hellp);
+
+  printf("LATLONALT:\nLat (gd):\t%f\nLat (gc):\t%f\nLon:\t\t%f\nAlt:\t\t%f\n\n",
+         latgc*180/pi,latgd*180/pi,lon*180/pi,hellp);
+
+  // Calculate range, azimuth, elevation and their respective rates relative to the observer
+  double rsecef[3] = {6378.137, 0.0, 0.0}; // observer to sat vector at latlonalt 0,0,0
+  double rho, az, el, drho, daz, del;
+
+  rv_razel(recef, vecef, rsecef, latgd, lon, eTo,
+           &rho, &az, &el, &drho, &daz, &del);
+
+  printf("RAZEL:\nRange:\t\t%f\nAzimuth:\t%f\nElevation:\t%f\nRRate:\t\t%f\nAZRate:\t\t%f\nELRate:\t\t%f\n\n",
+         rho,(az<0)?((180-az*180)/pi):(az*180/pi),el*180/pi,drho, daz*180/pi, del*180/pi);
+
+  // Calculate doppler shift
+  double c = 299792.458;
+  double f0down = 145800000;
+  double f0up = 145200000;
+  double downshift = (-drho / c) * f0down;
+  double upshift = (drho / c) * f0up;
+
+  printf("Doppler shifts:\nDownlink:\t%f\nUplink:\t\t%f\n\n", downshift, upshift);
+  */
 
   return 0;
 }

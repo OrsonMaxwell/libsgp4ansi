@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <time.h>
-#include "types.h"
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "sgp4unit.h"
+#include "libsgp4ansi.h"
 
 void print_orbit(orbit* sat, char* caption)
 {

@@ -155,4 +155,6 @@ edirection direct,
 double* rho, double* az, double* el, double* drho, double* daz, double* del
 );
 
+void print_elsetrec(elsetrec* sat, char* caption);
+
 #endif /* SGP4UNIT_H_ */

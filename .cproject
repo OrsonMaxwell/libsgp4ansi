@@ -6,8 +6,11 @@
 				<externalSettings>
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libtle2tcp"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/libsgp4ansi"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libtle2tcp/Debug"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/libsgp4ansi/Debug"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="libtle2tcp" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="libsgp4ansi" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -40,6 +43,7 @@
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1369736128" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="USE_WGS72"/>
 								</option>
+								<option id="gnu.c.compiler.option.warnings.allwarn.2097274895" name="All warnings (-Wall)" superClass="gnu.c.compiler.option.warnings.allwarn" useByScannerDiscovery="false" value="false" valueType="boolean"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1199938450" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.so.debug.1489247025" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.so.debug">
@@ -55,6 +59,7 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1201458331" name="transform.h" rcbsApplicability="disable" resourcePath="transform.h" toolsToInvoke=""/>
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.740866642" name="testcpp.cpp" rcbsApplicability="disable" resourcePath="testcpp.cpp" toolsToInvoke=""/>
 					<sourceEntries>
 						<entry excluding="testcpp.cpp|sgp4unit.cpp|sgp4io.cpp|sgp4ext.cpp|test.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
@@ -129,9 +134,10 @@
 							<outputType id="org.eclipse.cdt.managedbuilder.ui.rcbs.outputtype.1960115753" name="Resource Custom Build Step Output Type"/>
 						</tool>
 					</fileInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1829866660.2000214599" name="transform.h" rcbsApplicability="disable" resourcePath="transform.h" toolsToInvoke=""/>
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1829866660.21846513" name="testcpp.cpp" rcbsApplicability="disable" resourcePath="testcpp.cpp" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="libsgp4ansi.h|libsgp4ansi.c|ttt.c|ttt.h|sgp4unit.c|sgp4io.c|sgp4ext.c|testcpp.cpp|sgp4unit.h|sgp4unit.cpp|sgp4ext.h|sgp4io.cpp|sgp4ext.cpp|libtle2tcp.h|libtle2tcp.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="transform.c|transform.h|libsgp4ansi.h|libsgp4ansi.c|ttt.c|ttt.h|sgp4unit.c|sgp4io.c|sgp4ext.c|testcpp.cpp|sgp4unit.h|sgp4unit.cpp|sgp4ext.h|sgp4io.cpp|sgp4ext.cpp|libtle2tcp.h|libtle2tcp.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

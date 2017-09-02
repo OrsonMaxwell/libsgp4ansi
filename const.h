@@ -17,8 +17,9 @@
 #define pidiv2      1.57079632679489661923
 
 #define deg2rad     0.01745329251994329576 // Degrees to radians coefficient
-#define rpd2radmin  229.183118052329283507 // Revolutions per day to radians
-                                           // per minute conversion
+#define rad2deg     57.2957795130823208767 // Radians to degrees coefficient
+#define rpd2radmin  229.183118052329283507 // Revolutions per day
+                                           // to radians per minute coefficient
 
 // ************************************************************************* //
 //                                   PHYSICS                                 //

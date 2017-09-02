@@ -52,8 +52,6 @@
 #include "sgp4unit.h"
 #include "sgp4ext.h"
 
-#include "types.h"
-
 const char help = 'n';
 
 /* ----------- local functions - only ever used internally by sgp4 ---------- */
