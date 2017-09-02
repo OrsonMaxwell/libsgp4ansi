@@ -13,8 +13,8 @@
 #include "sgp4ext.h"
 #include "sgp4io.h"
 
-void old_test_iss(void);
-void new_test_iss(void);
+void old_test_iss(double*, double*);
+void new_test_iss(double*, double*);
 
 void old_test_navstar53(void);
 void new_test_navstar53(void);
@@ -22,15 +22,59 @@ void new_test_navstar53(void);
 int
 main ()
 {
+  double oldr[3];
+  double oldv[3];
+
+  double newr[3];
+  double newv[3];
 
   printf("-------------- ISS --------------\n");
-  old_test_iss();
-  new_test_iss();
+  old_test_iss(oldr, oldv);
+  new_test_iss(newr, newv);
 
   //12h non-resonant GPS (ecc < 0.5 ecc)
   //printf("----------- navstar53 -----------\n");
   //old_test_navstar53();
   //new_test_navstar53();
+/*
+  teme2ecef(ro, vo, jday1, recef, vecef);
+
+    printf("ECEF vectors:\nX:\t\t%fkm\nY:\t\t%fkm\nZ:\t\t%fkm\nVX:\t\t%fkm/s\nVY:\t\t%fkm/s\nVZ:\t\t%fkm/s\n\n",
+           recef[0],recef[1],recef[2],vecef[0],vecef[1],vecef[2]);
+
+    // Converting ECEF coodrinates to latlonalt
+    double latgc, latgd, lon, hellp;
+
+    ijk2ll(recef, jday1, &latgc, &latgd, &lon, &hellp);
+
+    printf("LATLONALT:\nLat (gd):\t%f\nLat (gc):\t%f\nLon:\t\t%f\nAlt:\t\t%f\n\n",
+           latgc*180/pi,latgd*180/pi,lon*180/pi,hellp);
+
+    // Calculate range, azimuth, elevation and their respective rates relative to the observer
+    double rsecef[3] = {6378.137, 0.0, 0.0}; // observer to sat vector at latlonalt 0,0,0
+    double rho, az, el, drho, daz, del;
+
+    rv_razel(recef, vecef, rsecef, latgd, lon, eTo,
+             &rho, &az, &el, &drho, &daz, &del);
+
+    printf("RAZEL:\nRange:\t\t%f\nAzimuth:\t%f\nElevation:\t%f\nRRate:\t\t%f\nAZRate:\t\t%f\nELRate:\t\t%f\n\n",
+           rho,(az<0)?((180-az*180)/pi):(az*180/pi),el*180/pi,drho, daz*180/pi, del*180/pi);
+
+    // Calculate doppler shift
+    double c = 299792.458;
+    double f0down = 145800000;
+    double f0up = 145200000;
+    double downshift = (-drho / c) * f0down;
+    double upshift = (drho / c) * f0up;
+
+    printf("Doppler shifts:\nDownlink:\t%f\nUplink:\t\t%f\n\n", downshift, upshift);
+
+*/
+
+  printf("OLD pos: %f\t\t%f\t\t%f\nOLD vel: %f\t\t%f\t\t%f\n",
+         oldr[0], oldr[1], oldr[2], oldv[0], oldv[1], oldv[2]);
+  printf("NEW pos: %f\t\t%f\t\t%f\nNEW vel: %f\t\t%f\t\t%f\n",
+           newr[0], newr[1], newr[2], newv[0], newv[1], newv[2]);
 
   return 0;
 }
@@ -90,7 +134,7 @@ Constellation Dra
 Downlink Doppler shift 1910Hz @ 145.8MHz
 Uplink Doppler shift -1902Hz @ 145.2MHz
 */
-void old_test_iss(void){
+void old_test_iss(double* r, double* v){
   // Parsing TLE and initializing the math constants
   gravconsttype grav = wgs72;
   elsetrec satrec;
@@ -111,11 +155,7 @@ void old_test_iss(void){
       &satrec
   );
 
-  double r[3], v[3];
-
-  sgp4(wgs72, &satrec, 1.0, r, v);
-  printf("OLD: prop pos: %f\t\t%f\t\t%f\nOLD: prop vel: %f\t\t%f\t\t%f\n",
-         r[0], r[1], r[2], v[0], v[1], v[2]);
+  sgp4(wgs72, &satrec, 600.0, r, v);
 }
 
 void old_test_navstar53(void){
@@ -140,7 +180,7 @@ void old_test_navstar53(void){
   );
 }
 
-void new_test_iss(void)
+void new_test_iss(double* r, double* v)
 {
   orbit iss = {0};
   vect pos = {0}, vel = {0};
@@ -157,8 +197,8 @@ void new_test_iss(void)
   prop_tm.tm_year        = 117;
   prop_tm.tm_mon         = 7;
   prop_tm.tm_mday        = 29;
-  prop_tm.tm_hour        = 5;
-  prop_tm.tm_min         = 2;
+  prop_tm.tm_hour        = 15;
+  prop_tm.tm_min         = 1;
   prop_tm.tm_sec         = 57;
 
   prop_time = mktime(&prop_tm) - timezone;
@@ -185,8 +225,12 @@ void new_test_iss(void)
   orbit_init(&iss);
   orbit_prop(&iss, &prop_time, 0, 10, 1.0e-12, &pos, &vel);
 
-  printf("NEW: prop pos: %f\t\t%f\t\t%f\nNEW: init vel: %f\t\t%f\t\t%f\n",
-         pos.x, pos.y, pos.z, vel.x, vel.y, vel.z);
+  r[0] = pos.x;
+  r[1] = pos.y;
+  r[2] = pos.z;
+  v[0] = vel.x;
+  v[1] = vel.y;
+  v[2] = vel.z;
 }
 
 void new_test_navstar53(void)

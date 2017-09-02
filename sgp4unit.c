@@ -1543,7 +1543,7 @@ bool sgp4init
                    &z12, &z13, &z21, &z22, &z23, &z31, &z32, &z33,
                    &satrec->zmol, &satrec->zmos
                  );
-             print_elsetrec(satrec, "OLD: after dscom if ((twopi / sat->no) >= 225.0)");
+             //print_elsetrec(satrec, "OLD: after dscom if ((twopi / sat->no) >= 225.0)");
              dpper
                  (
                    satrec->e3,  satrec->ee2,  satrec->peo,  satrec->pgho,
@@ -1557,7 +1557,7 @@ bool sgp4init
                    &satrec->ecco, &satrec->inclo, &satrec->nodeo, &satrec->argpo, &satrec->mo,
                    satrec->operationmode
                  );
-             print_elsetrec(satrec, "OLD: after dpper");
+             //print_elsetrec(satrec, "OLD: after dpper");
 
              argpm  = 0.0;
              nodem  = 0.0;
@@ -1603,12 +1603,9 @@ bool sgp4init
        /* finally propogate to zero epoch to initialize all others. */
        // sgp4fix take out check to let satellites process until they are actually below earth surface
 //       if(satrec->error == 0)
-       print_elsetrec(satrec, "OLD INIT: Before initial SGP4");
+       //print_elsetrec(satrec, "OLD INIT: Before initial SGP4");
        sgp4(whichconst, satrec, 0.0, r, v);
-       print_elsetrec(satrec, "OLD INIT: After initial SGP4");
-
-       printf("OLD: init pos: %f\t\t%f\t\t%f\nOLD: init vel: %f\t\t%f\t\t%f\n",
-              r[0], r[1], r[2], v[0], v[1], v[2]);
+       //print_elsetrec(satrec, "OLD INIT: After initial SGP4");
 
        satrec->init = 'n';
 
