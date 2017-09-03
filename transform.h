@@ -18,7 +18,7 @@ signof(double);
 
 // Find magnitude of a 3D vector
 double
-magnitude(vect*);
+mag(vect*);
 
 // Copy a 3D vector
 void
@@ -56,8 +56,12 @@ latlonalt2ecef(vect*, vect*);
 double
 ecef2range(vect*, vect*);
 
-void
-ecef2azel(vect*, vect*, vect*, double, double, double*, double*, double*,
-          double*, double*, double*);
+void rv_tradec
+(
+vect* rijk, vect* vijk, vect* rsijk,
+int direct,
+double* rho, double* trtasc, double* tdecl,
+double* drho, double* dtrtasc, double* dtdecl
+);
 
 #endif /* TRANSFORM_H_ */

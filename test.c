@@ -132,21 +132,34 @@ main ()
          newlatlonalt.lat * rad2deg, newlatlonalt.lon * rad2deg, newlatlonalt.alt);
 
   vect obsposlla = {0};  // observer lla vector at latlonalt 0,0,0
+  /*
   vect dacha;
   dacha.lat = 54.924551 * deg2rad;
   dacha.lon = 38.047505 * deg2rad;
   dacha.alt = 0.180;
+  */
   vect obsposecef; // observer ECEF vector at latlonalt 0,0,0
   //obsposecef.x = 6378.137;
   //obsposecef.y = 0;
   //obsposecef.z = 0;
 
-  latlonalt2ecef(&dacha, &obsposecef);
+  latlonalt2ecef(&obsposlla, &obsposecef);
 
   printf("OBSECEF ----------------------------------------------\n");
   printf("NEW obp: %12.8f\t%12.8f\t%12.8f\n",
          obsposecef.i, obsposecef.j, obsposecef.k);
   printf("NEW rng: %12.8f\n", ecef2range(&obsposecef, &newposecef));
+
+  double orho, ortasc, odecl, odrho, odrtasc, oddecl;
+  double nrho, nrtasc, ndecl, ndrho, ndrtasc, nddecl;
+
+  rv_tradec(&oldposecef, &oldvelecef, &obsposecef, 0, &orho, &ortasc, &odecl, &odrho, &odrtasc, &oddecl);
+  rv_tradec(&oldposecef, &oldvelecef, &obsposecef, 0, &nrho, &nrtasc, &ndecl, &ndrho, &ndrtasc, &nddecl);
+
+  printf("RADEC ------------------------------------------------\n");
+  printf("OLD rra: %12.8f\t%12.8f\t%12.8f\nNEW rra: %12.8f\t%12.8f\t%12.8f\n",
+         orho, ortasc * rad2deg, odecl * rad2deg,
+         nrho, nrtasc * rad2deg, ndecl * rad2deg);
 
 /*
   double orange, oaz, oel, orrate, oazrate, oelrate;

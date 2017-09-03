@@ -42,16 +42,6 @@ double  sgn
           double x
         );
 
-double  mag
-        (
-          double x[3]
-        );
-
-void    cross
-        (
-          double vec1[3], double vec2[3], double outvec[3]
-        );
-
 double  dot2
         (
           double x[3], double y[3]

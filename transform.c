@@ -40,7 +40,7 @@ signof(double arg)
  * Returns: vector arg magnitude
  */
 double
-magnitude(vect* arg)
+mag(vect* arg)
 {
   return sqrt(arg->x * arg->x + arg->y * arg->y + arg->z * arg->z);
 }
@@ -90,6 +90,24 @@ double
 dot(vect* vect1, vect* vect2)
 {
   return vect1->x * vect2->x + vect1->y * vect2->y + vect1->z * vect2->z;
+}
+
+/*
+ * Crossing of two 3D vectors
+ *
+ * Inputs:  vect1  - 1st vector
+ *          vect2  - 2nd vector
+ * Outputs: result - Resulting vector
+ * Returns: None
+ */
+void cross
+(
+    vect* vect1, vect* vect2, vect* result
+)
+{
+  result->x= vect1->y * vect2->z - vect1->z * vect2->y;
+  result->y= vect1->z * vect2->x - vect1->x * vect2->z;
+  result->z= vect1->x * vect2->y - vect1->y * vect2->x;
 }
 
 void rotate2(vect* src, double angle, vect* result)
@@ -308,7 +326,7 @@ ecef2latlonalt
   }
 
   // Latitude
-  double posmag = magnitude(posecef);
+  double posmag = mag(posecef);
   latlonalt->lat = asin(posecef->k / posmag);
 
   // Converge latitude to the goid over 10 iterations or less
@@ -366,6 +384,120 @@ latlonalt2ecef
   posecef->k = rsurf * sin(gclat) + latlonalt->alt * sin (latlonalt->lat);
 }
 
+/*------------------------------------------------------------------------------
+*
+*                           procedure rv_tradec
+*
+*  this procedure converts topocentric right-ascension declination with
+*    position and velocity vectors. uses velocity vector to find the
+*    solution of singular cases.
+*
+*  author        : david vallado                  719-573-2600   22 jun 2002
+*
+*  inputs          description                    range / units
+*    rijk        - ijk position vector            er
+*    vijk        - ijk velocity vector            er/tu
+*    rsijk       - ijk site position vector       er
+*    direct      -  direction to convert          eFrom  eTo
+*
+*  outputs       :
+*    rho         - top radius of the sat          er
+*    trtasc      - top right ascension            rad
+*    tdecl       - top declination                rad
+*    drho        - top radius of the sat rate     er/tu
+*    tdrtasc     - top right ascension rate       rad/tu
+*    tddecl      - top declination rate           rad/tu
+*
+*  locals        :
+*    rhov        - ijk range vector from site     er
+*    drhov       - ijk velocity vector from site  er / tu
+*    temp        - temporary extended value
+*    temp1       - temporary extended value
+*    i           - index
+*
+*  coupling      :
+*    astMath::mag         - astMath::magnitude of a vector
+*    atan2       - arc tangent function that resolves the quadrant ambiguities
+*    arcsin      - arc sine function
+*    lncom2      - linear combination of 2 vectors
+*    addvec      - add two vectors
+*    dot         - dot product of two vectors
+*
+*  references    :
+*    vallado       2013, 260, alg 26
+-----------------------------------------------------------------------------*/
+
+void rv_tradec
+(
+vect* rijk, vect* vijk, vect* rsijk,
+int direct,
+double* rho, double* trtasc, double* tdecl,
+double* drho, double* dtrtasc, double* dtdecl
+)
+{
+  const double small = 0.00000001;
+  const double omegaearth = 0.05883359221938136;  // earth rot rad/tu
+
+  vect earthrate, rhov, drhov, vsijk;
+  double   latgc, temp, temp1;
+
+  latgc = asin(rsijk->k / mag(rsijk));
+  earthrate.x = 0.0;
+  earthrate.y = 0.0;
+  earthrate.z = omegaearth;
+  cross(&earthrate, rsijk, &vsijk);
+
+/*  if (direct == 1) //from
+  {
+    // --------  calculate topocentric vectors ------------------
+    rhov.x = (*rho * cos(*tdecl) * cos(*trtasc));
+    rhov.y = (*rho * cos(*tdecl) * sin(*trtasc));
+    rhov.z = (*rho * sin(*tdecl));
+
+    drhov.x = (*drho * cos(*tdecl) * cos(*trtasc) -
+      *rho * sin(*tdecl) * cos(*trtasc) * *dtdecl -
+      *rho * cos(*tdecl) * sin(*trtasc) * *dtrtasc);
+    drhov.y = (*drho * cos(*tdecl) * sin(*trtasc) -
+      *rho * sin(*tdecl) * sin(*trtasc) * *dtdecl +
+      *rho * cos(*tdecl) * cos(*trtasc) * *dtrtasc);
+    drhov.z = (*drho * sin(*tdecl) + *rho * cos(*tdecl) * *dtdecl);
+
+    // ------ find ijk range vector from site to satellite ------
+    addvect(1.0, &rhov, 1.0, rsijk, rijk);
+    addvect(1.0, &drhov, cos(latgc), &vsijk, vijk);
+  }
+  else //to
+  {*/
+    /* ------ find ijk range vector from site to satellite ------ */
+    addvect(1.0, rijk, -1.0, rsijk, &rhov);
+    addvect(1.0, vijk, -cos(latgc), &vsijk, &drhov);
+
+    /* -------- calculate topocentric angle and rate values ----- */
+    *rho = mag(&rhov);
+    temp = sqrt(rhov.x * rhov.x + rhov.y * rhov.y);
+    if (temp < small)
+    {
+      temp1 = sqrt(drhov.x * drhov.x + drhov.y * drhov.y);
+      *trtasc = atan2(drhov.y / temp1, drhov.x / temp1);
+    }
+    else
+      *trtasc = atan2(rhov.y / temp, rhov.x / temp);
+
+    *tdecl = asin(rhov.z / mag(&rhov));
+
+    temp1 = -rhov.y * rhov.y - rhov.x * rhov.x;
+    *drho = dot(&rhov, &drhov) / *rho;
+    if (fabs(temp1) > small)
+      *dtrtasc = (drhov.x * rhov.y - drhov.y * rhov.x) / temp1;
+    else
+      *dtrtasc = 0.0;
+    if (fabs(temp) > small)
+      *dtdecl = (drhov.z - *drho * sin(*tdecl)) / temp;
+    else
+      *dtdecl = 0.0;
+//  }
+}
+
 double
 ecef2range(vect* obsposecef, vect* satposecef)
 {
@@ -373,7 +505,7 @@ ecef2range(vect* obsposecef, vect* satposecef)
   vect obs2sat;
   addvect(1.0, satposecef, -1.0, obsposecef, &obs2sat);
 
-  return magnitude(&obs2sat);
+  return mag(&obs2sat);
 }
 
 void ecef2azel
@@ -391,59 +523,6 @@ void ecef2azel
     double* elrate
 )
 {
-  const double small = 0.0000001;
 
-  double temp, temp1;
-  double drhoecef[3];
-
-  // ECEF range vector from observer to satellite
-  vect obs2sat;
-  vect rrateecef;
-  addvect(1.0, posecef, -1.0, obsecef, &obs2sat);
-  copyvect(vecef, &rrateecef);
-  *range = magnitude(&obs2sat);
-
-  // ------------ convert to sez for calculations -------------
-  vect tempvec, rangesez, rratesez;
-  rotate3(&obs2sat, lon, &tempvec);
-  rotate2(&tempvec, pidiv2 - lat, &rangesez);
-
-  rotate3(&rrateecef, lon, &tempvec);
-  rotate2(&tempvec, pidiv2 - lat, &rratesez);
-
-  // ------------ calculate azimuth and elevation -------------
-  temp = sqrt(rangesez.x * rangesez.x + rangesez.y * rangesez.y);
-  if (fabs(rangesez.y) < small)
-    if (temp < small)
-    {
-      temp1 = sqrt(rratesez.x * rratesez.x +
-                   rratesez.y * rratesez.y);
-      *az = atan2(rratesez.y / temp1, -rratesez.x / temp1);
-    }
-    else
-      if (rangesez.x > 0.0)
-        *az = pi;
-      else
-        *az = 0.0;
-  else
-    *az = atan2(rangesez.y / temp, -rangesez.x / temp);
-
-  if (temp < small)  // directly over the north pole
-    *el = signof(rangesez.z) * pidiv2; // +- 90
-  else
-    *el = asin(rangesez.z / magnitude(&rangesez));
-
-  // ----- calculate range, azimuth and elevation rates -------
-  *rrate = dot(&rangesez, &rratesez) / *range;
-  if (fabs(temp * temp) > small)
-    *azrate = (rratesez.x * rangesez.y - rratesez.y * rangesez.x) /
-    (temp * temp);
-  else
-    *azrate = 0.0;
-
-  if (fabs(temp) > 0.00000001)
-    *elrate = (rratesez.z - *rrate * sin(*el)) / temp;
-  else
-    *elrate = 0.0;
 }
 

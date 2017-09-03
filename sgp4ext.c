@@ -42,68 +42,6 @@ double  sgn
 
    }  // end sgn
 
-/* -----------------------------------------------------------------------------
-*
-*                           function mag
-*
-*  this procedure finds the magnitude of a vector.  the tolerance is set to
-*    0.000001, thus the 1.0e-12 for the squared test of underflows.
-*
-*  author        : david vallado                  719-573-2600    1 mar 2001
-*
-*  inputs          description                    range / units
-*    vec         - vector
-*
-*  outputs       :
-*    vec         - answer stored in fourth component
-*
-*  locals        :
-*    none.
-*
-*  coupling      :
-*    none.
-* --------------------------------------------------------------------------- */
-
-double  mag
-        (
-          double x[3]
-        )
-   {
-     return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
-   }  // end mag
-
-/* -----------------------------------------------------------------------------
-*
-*                           procedure cross
-*
-*  this procedure crosses two vectors.
-*
-*  author        : david vallado                  719-573-2600    1 mar 2001
-*
-*  inputs          description                    range / units
-*    vec1        - vector number 1
-*    vec2        - vector number 2
-*
-*  outputs       :
-*    outvec      - vector result of a x b
-*
-*  locals        :
-*    none.
-*
-*  coupling      :
-*    mag           magnitude of a vector
- ---------------------------------------------------------------------------- */
-
-void    cross
-        (
-          double vec1[3], double vec2[3], double outvec[3]
-        )
-   {
-     outvec[0]= vec1[1]*vec2[2] - vec1[2]*vec2[1];
-     outvec[1]= vec1[2]*vec2[0] - vec1[0]*vec2[2];
-     outvec[2]= vec1[0]*vec2[1] - vec1[1]*vec2[0];
-   }  // end cross
-
 
 /* -----------------------------------------------------------------------------
 *
