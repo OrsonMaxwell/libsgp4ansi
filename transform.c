@@ -140,7 +140,7 @@ unix2jul(time_t* time, unsigned int usec)
 }
 
 /*
- * Convert Julian date to Greenwich Sidereal Time
+ * Convert Julian date to Greenwich Siderial Time
  *
  * Inputs:  julian - Julian date
  * Returns: GST time, rad
@@ -187,7 +187,7 @@ teme2ecef
     vect* velecef
 )
 {
-  // Greenwich Sidereal Time, rad
+  // Greenwich Siderial Time, rad
   double GST = jul2gst(julian);
 
   // Pef - tod matrix
@@ -294,6 +294,7 @@ ecef2latlonalt
     latlonalt->lon= atan2( posecef->j, posecef->i );
   }
 
+  // Wrap around
   if (fabs(latlonalt->lon) >= pi)
   {
     if (latlonalt->lon < 0.0)
@@ -310,7 +311,7 @@ ecef2latlonalt
   double posmag = magnitude(posecef);
   latlonalt->lat = asin(posecef->k / posmag);
 
-  // Converge latitude to a geodetic ellipsoid over 10 iterations or less
+  // Converge latitude to the goid over 10 iterations or less
   const double eesqrd = 0.006694385000; // Earth eccentricity squared
   double c, latsine;
   int i = 1;
@@ -336,58 +337,44 @@ ecef2latlonalt
   }
 }
 
-/*------------------------------------------------------------------------------
-*
-*                           procedure rv_razel
-*
-*  this procedure converts range, azimuth, and elevation and their rates with
-*    the geocentric equatorial (ecef) position and velocity vectors.  notice the
-*    value of small as it can affect rate term calculations. uses velocity
-*    vector to find the solution of singular cases.
-*
-*  author        : david vallado                  719-573-2600   22 jun 2002
-*
-*  inputs          description                    range / units
-*    recef       - ecef position vector           km
-*    vecef       - ecef velocity vector           km/s
-*    rsecef      - ecef site position vector      km
-*    latgd       - geodetic latitude              -pi/2 to pi/2 rad
-*    lon         - geodetic longitude             -2pi to pi rad
-*    direct      -  direction to convert          eFrom  eTo
-*
-*  outputs       :
-*    rho         - satellite range from site      km
-*    az          - azimuth                        0.0 to 2pi rad
-*    el          - elevation                      -pi/2 to pi/2 rad
-*    drho        - range rate                     km/s
-*    daz         - azimuth rate                   rad/s
-*    del         - elevation rate                 rad/s
-*
-*  locals        :
-*    rhovecef    - ecef range vector from site    km
-*    drhovecef   - ecef velocity vector from site km/s
-*    rhosez      - sez range vector from site     km
-*    drhosez     - sez velocity vector from site  km
-*    tempvec     - temporary vector
-*    temp        - temporary extended value
-*    temp1       - temporary extended value
-*    i           - index
-*
-*  coupling      :
-*    astMath::mag         - astMath::magnitude of a vector
-*    addvec      - add two vectors
-*    rot3        - rotation about the 3rd axis
-*    rot2        - rotation about the 2nd axis
-*    atan2       - arc tangent function which also resloves quadrants
-*    dot         - dot product of two vectors
-*    rvsez_razel - find r and v from site in topocentric horizon (sez) system
-*    lncom2      - combine two vectors and constants
-*    arcsin      - arc sine function
-*    sgn         - returns the sign of a variable
-*
-*  references    :
-*    vallado       2013, 265, alg 27
------------------------------------------------------------------------------*/
+/*
+ * Transform geodetic latitude, longitude, and altitude to ECEF position vector
+ *
+ * Inputs:  latlonalt - Geodetic latitude, longitude and altitude vector
+ * Outputs: posecef   - Position vector in ECEF frame, rad
+ * Returns: None
+ */
+void
+latlonalt2ecef
+(
+    vect* latlonalt,
+    vect* posecef
+)
+{
+  // Geocentric latitude
+  double gclat = atan(pow(1 - flatt, 2) * tan(latlonalt->lat));
+
+  // Radius of Earth ad surface point
+  double rsurf = sqrt(pow(Re, 2) / ((1 / pow(1.0 - flatt, 2) - 1) *
+                 pow(sin(gclat), 2) + 1));
+
+  // ECEF vector
+  posecef->i = rsurf * cos(gclat) * cos(latlonalt->lon)
+             + latlonalt->alt * cos(latlonalt->lat) * cos(latlonalt->lon);
+  posecef->j = rsurf * cos(gclat) * sin(latlonalt->lon)
+             + latlonalt->alt * cos(latlonalt->lat) * sin(latlonalt->lon);
+  posecef->k = rsurf * sin(gclat) + latlonalt->alt * sin (latlonalt->lat);
+}
+
+double
+ecef2range(vect* obsposecef, vect* satposecef)
+{
+  // Observer to satellite vector
+  vect obs2sat;
+  addvect(1.0, satposecef, -1.0, obsposecef, &obs2sat);
+
+  return magnitude(&obs2sat);
+}
 
 void ecef2azel
 (

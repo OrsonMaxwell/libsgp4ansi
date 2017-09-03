@@ -22,7 +22,7 @@ magnitude(vect*);
 
 // Copy a 3D vector
 void
-copyvect(vect* from, vect* to);
+copyvect(vect*, vect*);
 
 // Add two 3D vectors with coefficients
 void
@@ -47,6 +47,14 @@ teme2ecef(vect*, vect*, double, vect*, vect*);
 // Transform ECEF position to geodetic latitude, longitude, and altitude
 void
 ecef2latlonalt(vect*, double, unsigned int, double, vect*);
+
+// Transform geodetic latitude, longitude, and altitude to ECEF position vector
+void
+latlonalt2ecef(vect*, vect*);
+
+// Calculate range between observer and satellite from their ECEF vectors
+double
+ecef2range(vect*, vect*);
 
 void
 ecef2azel(vect*, vect*, vect*, double, double, double*, double*, double*,

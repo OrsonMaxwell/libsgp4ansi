@@ -26,21 +26,24 @@ typedef struct _vect
 {
   union {
     double i;
-    double lat;
+    double l;
     double u;
     double x;
+    double lat;
   };
   union {
     double j;
-    double lon;
+    double m;
     double v;
     double y;
+    double lon;
   };
   union {
     double k;
-    double alt;
+    double n;
     double w;
     double z;
+    double alt;
   };
 } vect;
 

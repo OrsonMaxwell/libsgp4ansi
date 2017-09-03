@@ -34,8 +34,11 @@
 // ************************************************************************* //
 
 #ifdef USE_WGS72  // WGS 72
-#define mu        398600.8               // km3/s2
-#define Re        6378.135               // Earth radius, km
+#define GM        398600.8               // km3/s2
+#define Re        6378.135               // Equatorial Earth radius, km
+#define ecc       0.0818188              // Eccentricity
+#define omegaE    7.292115147e-5         // Angular velocity, rad/sec
+#define flatt     0.00335277945416750486 // Flattening
 #define xke       0.07436691613317341324
 #define tumin     13.4468396969593099729
 #define j2        0.001082616            // 2nd grav zonal harmonic of the Earth
@@ -45,8 +48,11 @@
 #endif /* USE_WGS72 */
 
 #ifdef USE_WGS84  // WGS 84
-#define mu        398600.5               // km3 / s2
+#define GM        398600.5               // km3 / s2
 #define Re        6378.137               // Earth radius, km
+#define ecc       0.0818188              // Eccentricity
+#define omegaE    7.292115e-5            // Angular velocity, rad/sec
+#define flatt     0.00335281066478120473 // Flattening
 #define xke       0.07436685316871384602
 #define tumin     13.4468510820449809410
 #define j2        0.00108262998905       // 2nd grav zonal harmonic of the Earth

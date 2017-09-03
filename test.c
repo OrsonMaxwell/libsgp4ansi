@@ -69,26 +69,26 @@ main ()
   struct tm epoch_tm, prop_tm;
   time_t prop_time;
 
-  epoch_tm.tm_year       = 117;
-  epoch_tm.tm_mon        = 7;
-  epoch_tm.tm_mday       = 29;
-  epoch_tm.tm_hour       = 5;
-  epoch_tm.tm_min        = 1;
-  epoch_tm.tm_sec        = 57;
+  epoch_tm.tm_year   = 117;
+  epoch_tm.tm_mon    = 7;
+  epoch_tm.tm_mday   = 29;
+  epoch_tm.tm_hour   = 5;
+  epoch_tm.tm_min    = 1;
+  epoch_tm.tm_sec    = 57;
 
-  prop_tm.tm_year        = 117;
-  prop_tm.tm_mon         = 7;
-  prop_tm.tm_mday        = 29;
-  prop_tm.tm_hour        = 6;
-  prop_tm.tm_min         = 1;
-  prop_tm.tm_sec         = 57;
+  prop_tm.tm_year    = 117;
+  prop_tm.tm_mon     = 7;
+  prop_tm.tm_mday    = 29;
+  prop_tm.tm_hour    = 6;
+  prop_tm.tm_min     = 1;
+  prop_tm.tm_sec     = 57;
 
   prop_time = mktime(&prop_tm) - timezone;
 
   strcpy(iss.name, "ISS");
+  strcpy(iss.designator, "98067A  ");
   iss.number         = 25544;
   iss.sec_class      = 'U';
-  strcpy(iss.designator, "98067A  ");
   iss.epoch          = mktime(&epoch_tm) - timezone;
   iss.epoch_ms       = 0;
   iss.nprimediv2     = 0.00016118;
@@ -108,7 +108,7 @@ main ()
   orbit_prop(&iss, &prop_time, 0, 10, 1.0e-12, &newposteme, &newvelteme);
   // ***************************************************************************
 
-  printf("TEME -----------------------------------------------\n");
+  printf("TEME -------------------------------------------------\n");
   printf("OLD pos: %12.8f\t%12.8f\t%12.8f\nNEW pos: %12.8f\t%12.8f\t%12.8f\n",
          oldposteme.x, oldposteme.y, oldposteme.z, newposteme.x, newposteme.y, newposteme.z);
   printf("OLD vel: %12.8f\t%12.8f\t%12.8f\nNEW vel: %12.8f\t%12.8f\t%12.8f\n",
@@ -117,7 +117,7 @@ main ()
   teme2ecef(&oldposteme, &oldposteme, unix2jul(&prop_time, 0), &oldposecef, &oldvelecef);
   teme2ecef(&newposteme, &newposteme, unix2jul(&prop_time, 0), &newposecef, &newvelecef);
 
-  printf("ECEF -----------------------------------------------\n");
+  printf("ECEF -------------------------------------------------\n");
   printf("OLD pos: %12.8f\t%12.8f\t%12.8f\nNEW pos: %12.8f\t%12.8f\t%12.8f\n",
          oldposecef.i, oldposecef.j, oldposecef.k, newposecef.i, newposecef.j, newposecef.k);
   printf("OLD vel: %12.8f\t%12.8f\t%12.8f\nNEW vel: %12.8f\t%12.8f\t%12.8f\n",
@@ -126,16 +126,29 @@ main ()
   ecef2latlonalt(&oldposecef, unix2jul(&prop_time, 0), 10, 1.0e-12, &oldlatlonalt);
   ecef2latlonalt(&newposecef, unix2jul(&prop_time, 0), 10, 1.0e-12, &newlatlonalt);
 
-  printf("LATLONALT ------------------------------------------\n");
+  printf("LATLONALT --------------------------------------------\n");
   printf("OLD lla: %12.8f\t%12.8f\t%12.8f\nNEW lla: %12.8f\t%12.8f\t%12.8f\n",
          oldlatlonalt.lat * rad2deg, oldlatlonalt.lon * rad2deg, oldlatlonalt.alt,
          newlatlonalt.lat * rad2deg, newlatlonalt.lon * rad2deg, newlatlonalt.alt);
 
+  vect obsposlla = {0};  // observer lla vector at latlonalt 0,0,0
+  vect dacha;
+  dacha.lat = 54.924551 * deg2rad;
+  dacha.lon = 38.047505 * deg2rad;
+  dacha.alt = 0.180;
   vect obsposecef; // observer ECEF vector at latlonalt 0,0,0
-  obsposecef.x = 6378.137;
-  obsposecef.y = 0;
-  obsposecef.z = 0;
+  //obsposecef.x = 6378.137;
+  //obsposecef.y = 0;
+  //obsposecef.z = 0;
 
+  latlonalt2ecef(&dacha, &obsposecef);
+
+  printf("OBSECEF ----------------------------------------------\n");
+  printf("NEW obp: %12.8f\t%12.8f\t%12.8f\n",
+         obsposecef.i, obsposecef.j, obsposecef.k);
+  printf("NEW rng: %12.8f\n", ecef2range(&obsposecef, &newposecef));
+
+/*
   double orange, oaz, oel, orrate, oazrate, oelrate;
   double nrange, naz, nel, nrrate, nazrate, nelrate;
 
@@ -144,25 +157,16 @@ main ()
   ecef2azel(&newposecef, &newvelecef, &obsposecef, newlatlonalt.lat, newlatlonalt.lon,
             &nrange, &naz, &nel, &nrrate, &nazrate, &nelrate);
 
-  printf("AZELRANGE ------------------------------------------\n");
+  printf("AZELRANGE --------------------------------------------\n");
   printf("OLD aer: %12.8f\t%12.8f\t%12.8f\nNEW aer: %12.8f\t%12.8f\t%12.8f\n",
          oaz * rad2deg, oel * rad2deg, orange, naz * rad2deg, nel * rad2deg, nrange);
-  printf("AZELRANGERATE---------------------------------------\n");
+  printf("AZELRANGERATE ----------------------------------------\n");
   printf("OLD aer: %12.8f\t%12.8f\t%12.8f\nNEW aer: %12.8f\t%12.8f\t%12.8f\n",
          oazrate * rad2deg, oelrate * rad2deg, orrate, nazrate * rad2deg, nelrate * rad2deg, nrrate);
+*/
 
-  /*
 
-  // Calculate range, azimuth, elevation and their respective rates relative to the observer
-  double rsecef[3] = {6378.137, 0.0, 0.0}; // observer to sat vector at latlonalt 0,0,0
-  double rho, az, el, drho, daz, del;
-
-  rv_razel(recef, vecef, rsecef, latgd, lon, eTo,
-           &rho, &az, &el, &drho, &daz, &del);
-
-  printf("RAZEL:\nRange:\t\t%f\nAzimuth:\t%f\nElevation:\t%f\nRRate:\t\t%f\nAZRate:\t\t%f\nELRate:\t\t%f\n\n",
-         rho,(az<0)?((180-az*180)/pi):(az*180/pi),el*180/pi,drho, daz*180/pi, del*180/pi);
-
+/*
   // Calculate doppler shift
   double c = 299792.458;
   double f0down = 145800000;
@@ -171,7 +175,7 @@ main ()
   double upshift = (drho / c) * f0up;
 
   printf("Doppler shifts:\nDownlink:\t%f\nUplink:\t\t%f\n\n", downshift, upshift);
-  */
+*/
 
   return 0;
 }
