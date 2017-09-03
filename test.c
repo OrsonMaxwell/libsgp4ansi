@@ -55,7 +55,7 @@ main ()
 
   double r[3], v[3];
 
-  sgp4(wgs72, &satrec, 600.0, r, v);
+  sgp4(wgs72, &satrec, 60.0, r, v);
 
   oldposteme.x = r[0];
   oldposteme.y = r[1];
@@ -79,7 +79,7 @@ main ()
   prop_tm.tm_year        = 117;
   prop_tm.tm_mon         = 7;
   prop_tm.tm_mday        = 29;
-  prop_tm.tm_hour        = 15;
+  prop_tm.tm_hour        = 6;
   prop_tm.tm_min         = 1;
   prop_tm.tm_sec         = 57;
 
@@ -126,10 +126,30 @@ main ()
   ecef2latlonalt(&oldposecef, unix2jul(&prop_time, 0), 10, 1.0e-12, &oldlatlonalt);
   ecef2latlonalt(&newposecef, unix2jul(&prop_time, 0), 10, 1.0e-12, &newlatlonalt);
 
-  printf("LATLONALT -------------------------------------------\n");
+  printf("LATLONALT ------------------------------------------\n");
   printf("OLD lla: %12.8f\t%12.8f\t%12.8f\nNEW lla: %12.8f\t%12.8f\t%12.8f\n",
          oldlatlonalt.lat * rad2deg, oldlatlonalt.lon * rad2deg, oldlatlonalt.alt,
          newlatlonalt.lat * rad2deg, newlatlonalt.lon * rad2deg, newlatlonalt.alt);
+
+  vect obsposecef; // observer ECEF vector at latlonalt 0,0,0
+  obsposecef.x = 6378.137;
+  obsposecef.y = 0;
+  obsposecef.z = 0;
+
+  double orange, oaz, oel, orrate, oazrate, oelrate;
+  double nrange, naz, nel, nrrate, nazrate, nelrate;
+
+  ecef2azel(&oldposecef, &oldvelecef, &obsposecef, oldlatlonalt.lat, oldlatlonalt.lon,
+            &orange, &oaz, &oel, &orrate, &oazrate, &oelrate);
+  ecef2azel(&newposecef, &newvelecef, &obsposecef, newlatlonalt.lat, newlatlonalt.lon,
+            &nrange, &naz, &nel, &nrrate, &nazrate, &nelrate);
+
+  printf("AZELRANGE ------------------------------------------\n");
+  printf("OLD aer: %12.8f\t%12.8f\t%12.8f\nNEW aer: %12.8f\t%12.8f\t%12.8f\n",
+         oaz * rad2deg, oel * rad2deg, orange, naz * rad2deg, nel * rad2deg, nrange);
+  printf("AZELRANGERATE---------------------------------------\n");
+  printf("OLD aer: %12.8f\t%12.8f\t%12.8f\nNEW aer: %12.8f\t%12.8f\t%12.8f\n",
+         oazrate * rad2deg, oelrate * rad2deg, orrate, nazrate * rad2deg, nelrate * rad2deg, nrrate);
 
   /*
 

@@ -45,6 +45,75 @@ magnitude(vect* arg)
   return sqrt(arg->x * arg->x + arg->y * arg->y + arg->z * arg->z);
 }
 
+/*
+ * Copy a 3D vector
+ *
+ * Inputs:  from - Source vector
+ * Outputs: to   - Destination vector
+ * Returns: None
+ */
+void
+copyvect(vect* from, vect* to)
+{
+  to->x = from->x;
+  to->y = from->y;
+  to->z = from->z;
+}
+
+/*
+ * Add two 3D vectors with coefficients
+ *
+ * Inputs:  c1     - 1st vector coefficient
+ *          vect1  - 1st vector
+ *          c2     - 2nd vector coefficient
+ *          vect2  - 2nd vector
+ * Outputs: result - Resulting vector
+ * Returns: None
+ */
+void
+addvect(double c1, vect* vect1, double c2, vect* vect2, vect* result)
+{
+  result->x = c1 * vect1->x + c2 * vect2->x;
+  result->y = c1 * vect1->y + c2 * vect2->y;
+  result->z = c1 * vect1->z + c2 * vect2->z;
+}
+
+/*
+ * Dot product of two 3D vectors
+ *
+ * Inputs:  vect1  - 1st vector
+ *          vect2  - 2nd vector
+ * Outputs: None
+ * Returns: dot product
+ */
+double
+dot(vect* vect1, vect* vect2)
+{
+  return vect1->x * vect2->x + vect1->y * vect2->y + vect1->z * vect2->z;
+}
+
+void rotate2(vect* src, double angle, vect* result)
+{
+  double tempz = src->z;
+  double s     = sin(angle);
+  double c     = cos(angle);
+
+  result->x = src->x * c - tempz * s;
+  result->y = src->y;
+  result->z = src->z * c + src->x * s;
+}
+
+void rotate3(vect* src, double angle, vect* result)
+{
+  double tempy  = src->y;
+  double sine   = sin(angle);
+  double cosine = cos(angle);
+
+  result->y = src->y * cosine - src->x * sine;
+  result->x = src->x * cosine + tempy * sine;
+  result->z = src->z;
+}
+
 // ************************************************************************* //
 //                                   TIME                                    //
 // ************************************************************************* //
@@ -206,7 +275,7 @@ ecef2latlonalt
     unsigned int maxiter,
     double tolerance,
     vect* latlonalt
-    )
+)
 {
   if ((tolerance >= 10.0) || (tolerance < 0.0))
   {
@@ -266,3 +335,128 @@ ecef2latlonalt
     latlonalt->alt = posecef->k / sin(latlonalt->lat) - c * (1.0 - eesqrd);
   }
 }
+
+/*------------------------------------------------------------------------------
+*
+*                           procedure rv_razel
+*
+*  this procedure converts range, azimuth, and elevation and their rates with
+*    the geocentric equatorial (ecef) position and velocity vectors.  notice the
+*    value of small as it can affect rate term calculations. uses velocity
+*    vector to find the solution of singular cases.
+*
+*  author        : david vallado                  719-573-2600   22 jun 2002
+*
+*  inputs          description                    range / units
+*    recef       - ecef position vector           km
+*    vecef       - ecef velocity vector           km/s
+*    rsecef      - ecef site position vector      km
+*    latgd       - geodetic latitude              -pi/2 to pi/2 rad
+*    lon         - geodetic longitude             -2pi to pi rad
+*    direct      -  direction to convert          eFrom  eTo
+*
+*  outputs       :
+*    rho         - satellite range from site      km
+*    az          - azimuth                        0.0 to 2pi rad
+*    el          - elevation                      -pi/2 to pi/2 rad
+*    drho        - range rate                     km/s
+*    daz         - azimuth rate                   rad/s
+*    del         - elevation rate                 rad/s
+*
+*  locals        :
+*    rhovecef    - ecef range vector from site    km
+*    drhovecef   - ecef velocity vector from site km/s
+*    rhosez      - sez range vector from site     km
+*    drhosez     - sez velocity vector from site  km
+*    tempvec     - temporary vector
+*    temp        - temporary extended value
+*    temp1       - temporary extended value
+*    i           - index
+*
+*  coupling      :
+*    astMath::mag         - astMath::magnitude of a vector
+*    addvec      - add two vectors
+*    rot3        - rotation about the 3rd axis
+*    rot2        - rotation about the 2nd axis
+*    atan2       - arc tangent function which also resloves quadrants
+*    dot         - dot product of two vectors
+*    rvsez_razel - find r and v from site in topocentric horizon (sez) system
+*    lncom2      - combine two vectors and constants
+*    arcsin      - arc sine function
+*    sgn         - returns the sign of a variable
+*
+*  references    :
+*    vallado       2013, 265, alg 27
+-----------------------------------------------------------------------------*/
+
+void ecef2azel
+(
+    vect* posecef,
+    vect* vecef,
+    vect* obsecef,
+    double lat,
+    double lon,
+    double* range,
+    double* az,
+    double* el,
+    double* rrate,
+    double* azrate,
+    double* elrate
+)
+{
+  const double small = 0.0000001;
+
+  double temp, temp1;
+  double drhoecef[3];
+
+  // ECEF range vector from observer to satellite
+  vect obs2sat;
+  vect rrateecef;
+  addvect(1.0, posecef, -1.0, obsecef, &obs2sat);
+  copyvect(vecef, &rrateecef);
+  *range = magnitude(&obs2sat);
+
+  // ------------ convert to sez for calculations -------------
+  vect tempvec, rangesez, rratesez;
+  rotate3(&obs2sat, lon, &tempvec);
+  rotate2(&tempvec, pidiv2 - lat, &rangesez);
+
+  rotate3(&rrateecef, lon, &tempvec);
+  rotate2(&tempvec, pidiv2 - lat, &rratesez);
+
+  // ------------ calculate azimuth and elevation -------------
+  temp = sqrt(rangesez.x * rangesez.x + rangesez.y * rangesez.y);
+  if (fabs(rangesez.y) < small)
+    if (temp < small)
+    {
+      temp1 = sqrt(rratesez.x * rratesez.x +
+                   rratesez.y * rratesez.y);
+      *az = atan2(rratesez.y / temp1, -rratesez.x / temp1);
+    }
+    else
+      if (rangesez.x > 0.0)
+        *az = pi;
+      else
+        *az = 0.0;
+  else
+    *az = atan2(rangesez.y / temp, -rangesez.x / temp);
+
+  if (temp < small)  // directly over the north pole
+    *el = signof(rangesez.z) * pidiv2; // +- 90
+  else
+    *el = asin(rangesez.z / magnitude(&rangesez));
+
+  // ----- calculate range, azimuth and elevation rates -------
+  *rrate = dot(&rangesez, &rratesez) / *range;
+  if (fabs(temp * temp) > small)
+    *azrate = (rratesez.x * rangesez.y - rratesez.y * rangesez.x) /
+    (temp * temp);
+  else
+    *azrate = 0.0;
+
+  if (fabs(temp) > 0.00000001)
+    *elrate = (rratesez.z - *rrate * sin(*el)) / temp;
+  else
+    *elrate = 0.0;
+}
+

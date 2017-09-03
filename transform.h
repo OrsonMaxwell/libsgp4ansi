@@ -20,6 +20,18 @@ signof(double);
 double
 magnitude(vect*);
 
+// Copy a 3D vector
+void
+copyvect(vect* from, vect* to);
+
+// Add two 3D vectors with coefficients
+void
+addvect(double, vect*, double, vect*, vect*);
+
+// Dot product of two 3D vectors
+double
+dot(vect*, vect*);
+
 // Convert unix time to Julian date
 double
 unix2jul(time_t*, unsigned int);
@@ -33,6 +45,11 @@ void
 teme2ecef(vect*, vect*, double, vect*, vect*);
 
 // Transform ECEF position to geodetic latitude, longitude, and altitude
-void ecef2latlonalt(vect*, double, unsigned int, double, vect*);
+void
+ecef2latlonalt(vect*, double, unsigned int, double, vect*);
+
+void
+ecef2azel(vect*, vect*, vect*, double, double, double*, double*, double*,
+          double*, double*, double*);
 
 #endif /* TRANSFORM_H_ */

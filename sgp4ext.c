@@ -128,7 +128,7 @@ void    cross
 *
 * --------------------------------------------------------------------------- */
 
-double  dot
+double  dot2
         (
           double x[3], double y[3]
         )
@@ -175,7 +175,7 @@ double  angle
 
      if (magv1*magv2 > small*small)
        {
-         temp= dot(vec1,vec2) / (magv1*magv2);
+         temp= dot2(vec1,vec2) / (magv1*magv2);
          if (fabs( temp ) > 1.0)
              temp= sgn(temp) * 1.0;
          return acos( temp );
@@ -398,7 +398,7 @@ void rv2coe
          nbar[2]=   0.0;
          magn = mag( nbar );
          c1 = magv*magv - mu /magr;
-         rdotv = dot( r,v );
+         rdotv = dot2( r,v );
          for (i= 0; i <= 2; i++)
              ebar[i]= (c1*r[i] - rdotv*v[i])/mu;
          *ecc = mag( ebar );
