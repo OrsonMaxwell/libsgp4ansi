@@ -5,6 +5,52 @@
  *      Author: Orson
  */
 
+//ISS (ZARYA)
+//1 25544U 98067A   17246.76764087  .00004029  00000-0  68274-4 0  9991
+//2 25544  51.6442   6.5972 0004102 223.1972 288.5525 15.54044462 73972
+
+// Orbitron simulation from site 54.9246, 38.0475, 180m
+/* -- 2017-09-04 04:45:55
+Lon 47.3990° E
+Lat 45.1120° N
+Alt (km)  412.076
+Azm 144.8°
+Elv 11.6°
+RA  84.1638°
+Decl  -17.1536°
+Range (km)  1 379.692
+RRt (km/s)  -0.236
+Vel (km/s)  7.668
+Direction Ascending
+Eclipse No
+MA (phase)  200.0° (142)
+TA  200.0°
+Orbit # 7 402
+Mag (illum) 1.1 (55%)
+Constellation Lep
+*/
+
+/* -- 2017-09-04 05:45:55
+1ISS
+Lon 69.9492° W
+Lat 44.1932° S
+Alt (km)  418.842
+Azm 252.6°
+Elv -66.3°
+RA  284.8039°
+Decl  -54.9371°
+Range (km)  12 109.854
+RRt (km/s)  -2.745
+Vel (km/s)  7.660
+Direction Ascending
+Eclipse Umbral
+MA (phase)  73.1° (52)
+TA  73.1°
+Orbit # 7 403
+Mag (illum) Not visible
+Constellation Tel
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -16,6 +62,11 @@
 #include "libsgp4ansi.h"
 #include "const.h"
 #include "transform.h"
+
+void printdiff(char* caption, double old, double new)
+{
+  printf("| %-17s | %13.7lf | %13.7lf | %.13lf\% |\n", caption, old, new, (old == 0)?0:fabs((new - old) / old) * 100);
+}
 
 int
 main ()
@@ -39,8 +90,8 @@ main ()
 
   double startmfe, stopmfe, deltamin;
 
-  char longstr1[130] = "1 25544U 98067A   17241.20968750  .00016118  00000-0  25119-3 0  9990";
-  char longstr2[130] = "2 25544  51.6408  34.2995 0004424 198.2687 159.0461 15.54014642 73102";
+  char longstr1[130] = "1 25544U 98067A   17246.76764087  .00004029  00000-0  68274-4 0  9991";
+  char longstr2[130] = "2 25544  51.6442   6.5972 0004102 223.1972 288.5525 15.54044462 73972";
 
   twoline2rv
   (
@@ -55,7 +106,7 @@ main ()
 
   double r[3], v[3];
 
-  sgp4(wgs72, &satrec, 60.0, r, v);
+  sgp4(wgs72, &satrec, 560.516666666, r, v); //9h 20m 31s
 
   oldposteme.x = r[0];
   oldposteme.y = r[1];
@@ -70,18 +121,18 @@ main ()
   time_t prop_time;
 
   epoch_tm.tm_year   = 117;
-  epoch_tm.tm_mon    = 7;
-  epoch_tm.tm_mday   = 29;
-  epoch_tm.tm_hour   = 5;
-  epoch_tm.tm_min    = 1;
-  epoch_tm.tm_sec    = 57;
+  epoch_tm.tm_mon    = 8;
+  epoch_tm.tm_mday   = 3;
+  epoch_tm.tm_hour   = 18;
+  epoch_tm.tm_min    = 25;
+  epoch_tm.tm_sec    = 24;// 117ms
 
   prop_tm.tm_year    = 117;
-  prop_tm.tm_mon     = 7;
-  prop_tm.tm_mday    = 29;
-  prop_tm.tm_hour    = 6;
-  prop_tm.tm_min     = 1;
-  prop_tm.tm_sec     = 57;
+  prop_tm.tm_mon     = 8;
+  prop_tm.tm_mday    = 4;
+  prop_tm.tm_hour    = 4;
+  prop_tm.tm_min     = 45;
+  prop_tm.tm_sec     = 55;
 
   prop_time = mktime(&prop_tm) - timezone;
 
@@ -90,54 +141,37 @@ main ()
   iss.number         = 25544;
   iss.sec_class      = 'U';
   iss.epoch          = mktime(&epoch_tm) - timezone;
-  iss.epoch_ms       = 0;
-  iss.nprimediv2     = 0.00016118;
+  iss.epoch_ms       = 117;
+  iss.nprimediv2     = 0.00004029;
   iss.ndprimediv6    = 0;
-  iss.Bstar          = 0.25119e-3;
+  iss.Bstar          = 0.68274e-4;
   iss.ephem_type     = 0;
   iss.elset_number   = 999;
-  iss.i              = 51.6408;
-  iss.alpha          = 34.2995;
-  iss.e              = 0.0004424;
-  iss.omega          = 198.2687;
-  iss.Mo             = 159.0461;
-  iss.no             = 15.54014642;
-  iss.rev_number     = 7310;
+  iss.i              = 51.6442;
+  iss.alpha          = 6.5972;
+  iss.e              = 0.0004102;
+  iss.omega          = 223.1972;
+  iss.Mo             = 288.5525;
+  iss.no             = 15.54044462;
+  iss.rev_number     = 7397;
 
   orbit_init(&iss);
   orbit_prop(&iss, &prop_time, 0, 10, 1.0e-12, &newposteme, &newvelteme);
   // ***************************************************************************
 
-  printf("TEME -------------------------------------------------\n");
-  printf("OLD pos: %12.8f\t%12.8f\t%12.8f\nNEW pos: %12.8f\t%12.8f\t%12.8f\n",
-         oldposteme.x, oldposteme.y, oldposteme.z, newposteme.x, newposteme.y, newposteme.z);
-  printf("OLD vel: %12.8f\t%12.8f\t%12.8f\nNEW vel: %12.8f\t%12.8f\t%12.8f\n",
-         oldvelteme.x, oldvelteme.y, oldvelteme.z, newvelteme.x, newvelteme.y, newvelteme.z);
-
   teme2ecef(&oldposteme, &oldposteme, unix2jul(&prop_time, 0), &oldposecef, &oldvelecef);
   teme2ecef(&newposteme, &newposteme, unix2jul(&prop_time, 0), &newposecef, &newvelecef);
-
-  printf("ECEF -------------------------------------------------\n");
-  printf("OLD pos: %12.8f\t%12.8f\t%12.8f\nNEW pos: %12.8f\t%12.8f\t%12.8f\n",
-         oldposecef.i, oldposecef.j, oldposecef.k, newposecef.i, newposecef.j, newposecef.k);
-  printf("OLD vel: %12.8f\t%12.8f\t%12.8f\nNEW vel: %12.8f\t%12.8f\t%12.8f\n",
-         oldvelecef.i, oldvelecef.j, oldvelecef.k, newvelecef.i, newvelecef.j, newvelecef.k);
 
   ecef2latlonalt(&oldposecef, unix2jul(&prop_time, 0), 10, 1.0e-12, &oldlatlonalt);
   ecef2latlonalt(&newposecef, unix2jul(&prop_time, 0), 10, 1.0e-12, &newlatlonalt);
 
-  printf("LATLONALT --------------------------------------------\n");
-  printf("OLD lla: %12.8f\t%12.8f\t%12.8f\nNEW lla: %12.8f\t%12.8f\t%12.8f\n",
-         oldlatlonalt.lat * rad2deg, oldlatlonalt.lon * rad2deg, oldlatlonalt.alt,
-         newlatlonalt.lat * rad2deg, newlatlonalt.lon * rad2deg, newlatlonalt.alt);
-
   vect obsposlla = {0};  // observer lla vector at latlonalt 0,0,0
-  /*
-  vect dacha;
-  dacha.lat = 54.924551 * deg2rad;
-  dacha.lon = 38.047505 * deg2rad;
-  dacha.alt = 0.180;
-  */
+
+  // Dacha
+  obsposlla.lat = 54.9246 * deg2rad;
+  obsposlla.lon = 38.0475 * deg2rad;
+  obsposlla.alt = 0.180;
+
   vect obsposecef; // observer ECEF vector at latlonalt 0,0,0
   //obsposecef.x = 6378.137;
   //obsposecef.y = 0;
@@ -145,39 +179,39 @@ main ()
 
   latlonalt2ecef(&obsposlla, &obsposecef);
 
-  printf("OBSECEF ----------------------------------------------\n");
-  printf("NEW obp: %12.8f\t%12.8f\t%12.8f\n",
-         obsposecef.i, obsposecef.j, obsposecef.k);
-  printf("NEW rng: %12.8f\n", ecef2range(&obsposecef, &newposecef));
-
   double orho, ortasc, odecl, odrho, odrtasc, oddecl;
   double nrho, nrtasc, ndecl, ndrho, ndrtasc, nddecl;
 
   rv_tradec(&oldposecef, &oldvelecef, &obsposecef, 0, &orho, &ortasc, &odecl, &odrho, &odrtasc, &oddecl);
-  rv_tradec(&oldposecef, &oldvelecef, &obsposecef, 0, &nrho, &nrtasc, &ndecl, &ndrho, &ndrtasc, &nddecl);
+  rv_tradec(&newposecef, &newvelecef, &obsposecef, 0, &nrho, &nrtasc, &ndecl, &ndrho, &ndrtasc, &nddecl);
 
-  printf("RADEC ------------------------------------------------\n");
-  printf("OLD rra: %12.8f\t%12.8f\t%12.8f\nNEW rra: %12.8f\t%12.8f\t%12.8f\n",
-         orho, ortasc * rad2deg, odecl * rad2deg,
-         nrho, nrtasc * rad2deg, ndecl * rad2deg);
-
-/*
-  double orange, oaz, oel, orrate, oazrate, oelrate;
-  double nrange, naz, nel, nrrate, nazrate, nelrate;
-
-  ecef2azel(&oldposecef, &oldvelecef, &obsposecef, oldlatlonalt.lat, oldlatlonalt.lon,
-            &orange, &oaz, &oel, &orrate, &oazrate, &oelrate);
-  ecef2azel(&newposecef, &newvelecef, &obsposecef, newlatlonalt.lat, newlatlonalt.lon,
-            &nrange, &naz, &nel, &nrrate, &nazrate, &nelrate);
-
-  printf("AZELRANGE --------------------------------------------\n");
-  printf("OLD aer: %12.8f\t%12.8f\t%12.8f\nNEW aer: %12.8f\t%12.8f\t%12.8f\n",
-         oaz * rad2deg, oel * rad2deg, orange, naz * rad2deg, nel * rad2deg, nrange);
-  printf("AZELRANGERATE ----------------------------------------\n");
-  printf("OLD aer: %12.8f\t%12.8f\t%12.8f\nNEW aer: %12.8f\t%12.8f\t%12.8f\n",
-         oazrate * rad2deg, oelrate * rad2deg, orrate, nazrate * rad2deg, nelrate * rad2deg, nrrate);
-*/
-
+  printf("+-------------------+----- OLD -----+----- NEW -----+------ DIFF ------+\n");
+  printdiff("TEME pos x", oldposteme.x, newposteme.x);
+  printdiff("TEME pos y", oldposteme.y, newposteme.y);
+  printdiff("TEME pos z", oldposteme.z, newposteme.z);
+  printdiff("TEME vel x", oldvelteme.x, newvelteme.x);
+  printdiff("TEME vel y", oldvelteme.y, newvelteme.y);
+  printdiff("TEME vel z", oldvelteme.z, newvelteme.z);
+  printdiff("ECEF pos x", oldposecef.x, newposecef.x);
+  printdiff("ECEF pos y", oldposecef.y, newposecef.y);
+  printdiff("ECEF pos z", oldposecef.z, newposecef.z);
+  printdiff("ECEF vel x", oldvelecef.x, newvelecef.x);
+  printdiff("ECEF vel y", oldvelecef.y, newvelecef.y);
+  printdiff("ECEF vel z", oldvelecef.z, newvelecef.z);
+  printdiff("Latitude", oldlatlonalt.lat * rad2deg, newlatlonalt.lat * rad2deg);
+  printdiff("Longitude", oldlatlonalt.lon * rad2deg, newlatlonalt.lon * rad2deg);
+  printdiff("Altitude", oldlatlonalt.alt, newlatlonalt.alt);
+  printdiff("ECEF observer i", obsposecef.i, obsposecef.i);
+  printdiff("ECEF observer j", obsposecef.j, obsposecef.j);
+  printdiff("ECEF observer k", obsposecef.k, obsposecef.k);
+  printdiff("Range (my)", ecef2range(&obsposecef, &oldposecef), ecef2range(&obsposecef, &newposecef));
+  printdiff("Range (Vallado)", orho, nrho);
+  printdiff("Right ascension", ortasc, nrtasc);
+  printdiff("Declination", odecl, ndecl);
+  printdiff("R. rate (Vallado)", odrho, ndrho);
+  printdiff("R.A. rate", odrtasc, ndrtasc);
+  printdiff("Decl. rate", oddecl, nddecl);
+  printf("+-------------------+---------------+---------------+------------------+\n");
 
 /*
   // Calculate doppler shift
@@ -193,58 +227,3 @@ main ()
   return 0;
 }
 
-/* Test TLE 29.08.2017
-ISS (ZARYA)
-1 25544U 98067A   17241.20968750  .00016118  00000-0  25119-3 0  9990
-2 25544  51.6408  34.2995 0004424 198.2687 159.0461 15.54014642 73102
-
-Epoch is August 29 2017 05:01:57 UTC
-
-Orbitron simulation for 0-0-0 latlonalt observer at 2017-08-29 06:01:57UTC
-
-1ISS
-Lon 176.8886° W
-Lat 37.4990° S
-Alt (km)  414.447
-Azm 184.1°
-Elv -70.7°
-RA  249.5544°
-Decl  -19.2665°
-Range (km)  12 467.355
-RRt (km/s)  -1.636
-Vel (km/s)  7.664
-Direction Descending
-Eclipse No
-MA (phase)  32.1° (23)
-TA  32.2°
-Orbit # 7 311
-Mag (illum) Not visible
-Constellation Oph
-Downlink Doppler shift 795Hz @ 145.8MHz
-Uplink Doppler shift -792Hz @ 145.2MHz
-*/
-
-/*
-Orbitron simulation for 0-0-0 latlonalt observer at 2017-08-29 15:01:57UTC
-
-1ISS
-Lon 2.4533° E
-Lat 7.9010° N
-Alt (km)  402.443
-Azm 17.2°
-Elv 19.0°
-RA  244.2845°
-Decl  64.5851°
-Range (km)  1 025.207
-RRt (km/s)  -3.928
-Vel (km/s)  7.673
-Direction Descending
-Eclipse No
-MA (phase)  330.1° (234)
-TA  330.0°
-Orbit # 7 316
-Mag (illum) 1.8 (16%)
-Constellation Dra
-Downlink Doppler shift 1910Hz @ 145.8MHz
-Uplink Doppler shift -1902Hz @ 145.2MHz
-*/
