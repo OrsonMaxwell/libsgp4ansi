@@ -60,7 +60,6 @@
 						</toolChain>
 					</folderInfo>
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1201458331" name="transform.h" rcbsApplicability="disable" resourcePath="transform.h" toolsToInvoke=""/>
-					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.740866642" name="testcpp.cpp" rcbsApplicability="disable" resourcePath="testcpp.cpp" toolsToInvoke=""/>
 					<sourceEntries>
 						<entry excluding="testcpp.cpp|sgp4unit.cpp|sgp4io.cpp|sgp4ext.cpp|test.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
@@ -135,7 +134,6 @@
 						</tool>
 					</fileInfo>
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1829866660.2000214599" name="transform.h" rcbsApplicability="disable" resourcePath="transform.h" toolsToInvoke=""/>
-					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1829866660.21846513" name="testcpp.cpp" rcbsApplicability="disable" resourcePath="testcpp.cpp" toolsToInvoke=""/>
 					<sourceEntries>
 						<entry excluding="transform.c|transform.h|libsgp4ansi.h|libsgp4ansi.c|ttt.c|ttt.h|sgp4unit.c|sgp4io.c|sgp4ext.c|testcpp.cpp|sgp4unit.h|sgp4unit.cpp|sgp4ext.h|sgp4io.cpp|sgp4ext.cpp|libtle2tcp.h|libtle2tcp.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
