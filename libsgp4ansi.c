@@ -11,6 +11,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <time.h>
 #include <math.h>
 
@@ -37,60 +38,6 @@ orbit_dslongper(orbit*, double, double*, double*, double*, double*, double*);
 // ************************************************************************* //
 //                             PRIVATE FUNCTIONS                             //
 // ************************************************************************* //
-
-/*
- * Get position and velocity vectors in the TEME frame at given time
- *
- * Inputs:  sat       - orbit struct pointer with initialized orbital data
- *          time      - UTC time to find satellite data at
- *          msec      - Millisecond portion of time
- *          maxiter   - Kepler's equation maximum iteration count
- *          tolerance - Kepler's equation desired precision tolerance
- * Outputs: pos       - 3D position vector in TEME frame in km
- *          vel       - 3D velocity vector in TEME frame in km/sec
- * Returns: 0         - Success
- *         -1         - Invalid inputs or parametres
- *          1         - Mean motion zero or less
- *          2         - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
- *          3         - Long periodics result error
- *          4         - Short period preliminary quantities error
- *          5         - Decaying satellite
- */
-int
-orbit_prop
-(
-    orbit* sat,
-    time_t* time,
-    unsigned int msec,
-    unsigned int maxiter,
-    double tolerance,
-    vect* pos,
-    vect* vel
-)
-{
-  if ((sat == NULL) ||
-      (time == NULL) ||
-      (msec >= 1000) ||
-      (maxiter < 1) ||
-      (tolerance <= 0.0) ||
-      (pos == NULL) ||
-      (vel == NULL))
-  {
-    return -1;
-  }
-
-  double tdelta = difftime(*time + msec / 1000,
-                           sat->epoch + sat->epoch_ms / 1000) / 60.0L;
-
-  if (sat->isdeepspace == true)
-  {
-    return orbit_sdp4(sat, tdelta, maxiter, tolerance, pos, vel);
-  }
-  else
-  {
-    return orbit_sgp4(sat, tdelta, maxiter, tolerance, pos, vel);
-  }
-}
 
 /*
  * SGP4 propagation function implementation
@@ -700,10 +647,88 @@ orbit_dslongper
 // ************************************************************************* //
 
 /*
- * Initialize SGP4 orbit propagation modelfrom a TLE representation
+ * Initialize SGP4/SDP4 orbit model from a raw NORAD TLE lines
  *
- * Inputs:  sat    - orbit struct pointer with TLE data
- * Outputs: sat    - orbit struct pointer with full orbital data
+ * Inputs:  sat  - Empty orbit struct pointer with TLE data
+ * Outputs: sat  - orbit struct pointer with full orbital data
+ * Returns: None
+ *
+ * Calls: orbit_init
+ */
+int
+tle2orbit(char* tlestr1, char* tlestr2, orbit* sat)
+{
+  // Pre-formatting the raw TLE input
+  for (char j = 10; j <= 15; j++)
+    if (tlestr1[j] == ' ')
+      tlestr1[j] = '_';
+
+  if (tlestr1[44] != ' ')
+    tlestr1[43] = tlestr1[44];
+
+  tlestr1[44] = '.';
+  if (tlestr1[7] == ' ')
+    tlestr1[7] = 'U';
+
+  if (tlestr1[9] == ' ')
+    tlestr1[9] = '.';
+
+  for (char j = 45; j <= 49; j++)
+    if (tlestr1[j] == ' ')
+      tlestr1[j] = '0';
+
+  if (tlestr1[51] == ' ')
+    tlestr1[51] = '0';
+
+  if (tlestr1[53] != ' ')
+    tlestr1[52] = tlestr1[53];
+
+  tlestr1[53] = '.';
+  tlestr2[25] = '.';
+
+  for (char j = 26; j <= 32; j++)
+    if (tlestr2[j] == ' ')
+      tlestr2[j] = '0';
+
+  if (tlestr1[62] == ' ')
+    tlestr1[62] = '0';
+
+  if (tlestr1[68] == ' ')
+    tlestr1[68] = '0';
+
+  struct tm epoch_tm, prop_tm;
+
+  int cardnum, epochyr, epochdays, nexp, Bexp;
+  double nddot, Bstar;
+
+  sscanf(tlestr1,"%2d %5ld %1c %10s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6ld ",
+         &cardnum, &sat->number, &sat->sec_class, sat->designator, &epochyr,
+         &epochdays,&sat->nprimediv2, &nddot, &nexp, &Bstar,
+         &Bexp, &sat->ephem_type, &sat->elset_number);
+
+  fractday2unix(epochyr, epochdays, &sat->epoch);
+
+  sat->ndprimediv6 = nddot * pow(10, nexp);
+  sat->Bstar = Bstar * pow(10, Bexp);
+
+  if (tlestr2[52] == ' ') // check for minus sign
+    sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %10lf %6ld \n",
+           &cardnum,&sat->number, &sat->i, &sat->alpha, &sat->e, &sat->omega,
+           &sat->Mo, &sat->no, &sat->rev_number);
+  else
+    sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %11lf %6ld \n",
+           &cardnum,&sat->number, &sat->i, &sat->alpha, &sat->e, &sat->omega,
+           &sat->Mo, &sat->no, &sat->rev_number);
+
+  // Convert to SGP4 units and expand
+  return orbit_init(sat);
+}
+
+/*
+ * Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
+ *
+ * Inputs:  sat  - orbit struct pointer to an empty orbit
+ * Outputs: sat  - orbit struct pointer with full orbital data
  * Returns: None
  */
 int
@@ -1057,4 +1082,58 @@ orbit_init(orbit* sat)
   }
 
   return 0;
+}
+
+/*
+ * Get position and velocity vectors in the TEME frame at given time
+ *
+ * Inputs:  sat       - orbit struct pointer with initialized orbital data
+ *          time      - UTC time to find satellite data at
+ *          msec      - Millisecond portion of time
+ *          maxiter   - Kepler's equation maximum iteration count
+ *          tolerance - Kepler's equation desired precision tolerance
+ * Outputs: pos       - 3D position vector in TEME frame in km
+ *          vel       - 3D velocity vector in TEME frame in km/sec
+ * Returns: 0         - Success
+ *         -1         - Invalid inputs or parametres
+ *          1         - Mean motion zero or less
+ *          2         - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
+ *          3         - Long periodics result error
+ *          4         - Short period preliminary quantities error
+ *          5         - Decaying satellite
+ */
+int
+orbit_prop
+(
+    orbit* sat,
+    time_t* time,
+    unsigned int msec,
+    unsigned int maxiter,
+    double tolerance,
+    vect* pos,
+    vect* vel
+)
+{
+  if ((sat == NULL) ||
+      (time == NULL) ||
+      (msec >= 1000) ||
+      (maxiter < 1) ||
+      (tolerance <= 0.0) ||
+      (pos == NULL) ||
+      (vel == NULL))
+  {
+    return -1;
+  }
+
+  double tdelta = difftime(*time + msec / 1000,
+                           sat->epoch + sat->epoch_ms / 1000) / 60.0L;
+
+  if (sat->isdeepspace == true)
+  {
+    return orbit_sdp4(sat, tdelta, maxiter, tolerance, pos, vel);
+  }
+  else
+  {
+    return orbit_sgp4(sat, tdelta, maxiter, tolerance, pos, vel);
+  }
 }

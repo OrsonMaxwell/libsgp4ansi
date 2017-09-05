@@ -92,7 +92,12 @@ typedef struct _orbit
 // ************************************************************************* //
 //                                 INTERFACE                                 //
 // ************************************************************************* //
-// SGP4/SDP4 math engine initialization
+
+// Initialize SGP4/SDP4 orbit model from a raw NORAD TLE lines
+extern int
+tle2orbit(char*, char*, orbit*);
+
+// Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
 extern int
 orbit_init(orbit*);
 

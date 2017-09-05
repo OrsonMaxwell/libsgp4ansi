@@ -137,14 +137,58 @@ void rotate3(vect* src, double angle, vect* result)
 // ************************************************************************* //
 
 /*
+ * Convert year and fractional day to unix time
+ *
+ * Inputs:  year   - Year
+ *          days   - Decimal day since year start
+ * Outputs: result - Unix time
+ * Returns: None
+ */
+void
+fractday2unix(unsigned int year, double days, time_t* result)
+{
+  struct tm res_tm;
+
+  int mon_len[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+  int day_of_year = (int)floor(days);
+
+  res_tm.tm_year = 100 + year;
+
+  // Month and day of month
+  if ((year % 4) == 0) // Leap year?
+    mon_len[1] = 29;
+
+  int i = 1, j = 0;
+  while ((day_of_year > j + mon_len[i - 1]) && (i < 12))
+  {
+    j = j + mon_len[i-1];
+    i++;
+  }
+  res_tm.tm_mon = i;
+  res_tm.tm_mday = day_of_year - j;
+
+  // Hours, minutes, and seconds
+  double temp;
+  temp           = (days - day_of_year) * 24.0;
+  res_tm.tm_hour = (int)floor(temp);
+  temp           = (temp - res_tm.tm_hour) * 60.0;
+  res_tm.tm_min  = (int)floor(temp);
+  res_tm.tm_sec  = (temp - res_tm.tm_min) * 60.0;
+
+  // TODO: Make cross-platform
+  result = mktime(&res_tm) - timezone;
+}
+
+/*
  * Convert unix time to Julian date
  *
  * Inputs:  time - Timestamp in unix time
- *          usec - Fracitonal second part, us
+ *          msec - Fracitonal second part, us
  * Returns: Julian date
  */
 double
-unix2jul(time_t* time, unsigned int usec)
+unix2jul(time_t* time, unsigned int msec)
 {
   struct tm* t;
   t = gmtime(time);
@@ -153,7 +197,7 @@ unix2jul(time_t* time, unsigned int usec)
   - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 10) / 12.0))) * 0.25)
   + floor(275 * (t->tm_mon + 1) / 9.0 )
   + t->tm_mday + 1721013.5
-  + ((((double)t->tm_sec + usec / 1000) / 60.0L + t->tm_min) / 60.0
+  + ((((double)t->tm_sec + msec / 1000) / 60.0L + t->tm_min) / 60.0
   + t->tm_hour) / 24.0;
 }
 
