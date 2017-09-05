@@ -33,8 +33,8 @@ double
 dot(vect*, vect*);
 
 // Convert year and fractional day to unix time
-void
-fractday2unix(unsigned int, double, time_t*);
+time_t
+fractday2unix(unsigned int, double);
 
 // Convert unix time to Julian date
 double

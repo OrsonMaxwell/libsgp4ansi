@@ -144,8 +144,8 @@ void rotate3(vect* src, double angle, vect* result)
  * Outputs: result - Unix time
  * Returns: None
  */
-void
-fractday2unix(unsigned int year, double days, time_t* result)
+time_t
+fractday2unix(unsigned int year, double days)
 {
   struct tm res_tm;
 
@@ -176,8 +176,8 @@ fractday2unix(unsigned int year, double days, time_t* result)
   res_tm.tm_min  = (int)floor(temp);
   res_tm.tm_sec  = (temp - res_tm.tm_min) * 60.0;
 
-  // TODO: Make cross-platform
-  *result = mktime(&res_tm) - timezone;
+  // TODO: Make cross-platform and return error value of mktime
+  return mktime(&res_tm) - timezone;
 }
 
 /*

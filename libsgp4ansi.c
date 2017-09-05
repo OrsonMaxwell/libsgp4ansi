@@ -706,7 +706,9 @@ tle2orbit(char* tlestr1, char* tlestr2, orbit* sat)
          &epochdays,&sat->nprimediv2, &nddot, &nexp, &Bstar,
          &Bexp, &sat->ephem_type, &sat->elset_number);
 
-  fractday2unix(epochyr, epochdays, &sat->epoch);
+  sat->epoch = fractday2unix(epochyr, epochdays);
+  if (sat->epoch == -1)
+    return -1;
 
   sat->ndprimediv6 = nddot * pow(10, nexp);
   sat->Bstar = Bstar * pow(10, Bexp);

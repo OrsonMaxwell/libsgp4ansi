@@ -52,18 +52,9 @@ main (int argc, char** argv)
       fprintf(outfile, "%ld (%12.9lf)\n", sat.number, pi * 2 / sat.no);
 
       // Iterate over time range
-      //tsince = startmfe;
       for (double t = t_start; t <= t_stop; t += deltamin)
-      //while (tsince < stopmfe)
       {
-        //if(tsince > stopmfe)
-        //  tsince = stopmfe;
-
         error = orbit_prop(&sat, t, 10, 1.0e-12, &posteme, &velteme);
-        //error = orbit_prop(&sat, &prop_time, sat.epoch_ms, 10, 1.0e-12, &posteme, &velteme);
-
-        //tsince += deltamin;
-
         if (error != 0)
           printf("[ERROR] at %f: %3d\n", t, error);
 
