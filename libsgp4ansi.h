@@ -103,7 +103,8 @@ orbit_init(orbit*);
 
 // Get position and velocity vectors in the TEME frame at given time
 extern int
-orbit_prop(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
+orbit_prop(orbit*, double, unsigned int, double, vect*, vect*);
+//orbit_prop(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
 
 // TODO: Make private!
 extern void

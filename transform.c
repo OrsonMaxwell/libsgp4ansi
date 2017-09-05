@@ -177,7 +177,7 @@ fractday2unix(unsigned int year, double days, time_t* result)
   res_tm.tm_sec  = (temp - res_tm.tm_min) * 60.0;
 
   // TODO: Make cross-platform
-  result = mktime(&res_tm) - timezone;
+  *result = mktime(&res_tm) - timezone;
 }
 
 /*

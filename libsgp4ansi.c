@@ -1106,8 +1106,10 @@ int
 orbit_prop
 (
     orbit* sat,
-    time_t* time,
-    unsigned int msec,
+//    time_t* time,
+//    unsigned int msec,
+// TODO: Make wrapper orbit_at(...) to extract tdelta from datetime
+    double tdelta,
     unsigned int maxiter,
     double tolerance,
     vect* pos,
@@ -1115,8 +1117,8 @@ orbit_prop
 )
 {
   if ((sat == NULL) ||
-      (time == NULL) ||
-      (msec >= 1000) ||
+//      (time == NULL) ||
+//      (msec >= 1000) ||
       (maxiter < 1) ||
       (tolerance <= 0.0) ||
       (pos == NULL) ||
@@ -1125,8 +1127,8 @@ orbit_prop
     return -1;
   }
 
-  double tdelta = difftime(*time + msec / 1000,
-                           sat->epoch + sat->epoch_ms / 1000) / 60.0L;
+//  double tdelta = difftime(*time + msec / 1000,
+//                           sat->epoch + sat->epoch_ms / 1000) / 60.0L;
 
   if (sat->isdeepspace == true)
   {

@@ -18,11 +18,9 @@ main (int argc, char** argv)
   vect posteme;
   vect velteme;
 
-  double startmfe = -1440, stopmfe = 1440, deltamin = 20, tsince = 0;
+  double t_start = -1440, t_stop = 1440, deltamin = 20;//, tsince = 0;
 
   orbit sat = {0};
-
-  time_t prop_time;
 
   char str[2];
 
@@ -54,25 +52,25 @@ main (int argc, char** argv)
       fprintf(outfile, "%ld (%12.9lf)\n", sat.number, pi * 2 / sat.no);
 
       // Iterate over time range
-      tsince = startmfe;
-      while (tsince < stopmfe)
+      //tsince = startmfe;
+      for (double t = t_start; t <= t_stop; t += deltamin)
+      //while (tsince < stopmfe)
       {
-        tsince += deltamin;
+        //if(tsince > stopmfe)
+        //  tsince = stopmfe;
 
-        if(tsince > stopmfe)
-          tsince = stopmfe;
+        error = orbit_prop(&sat, t, 10, 1.0e-12, &posteme, &velteme);
+        //error = orbit_prop(&sat, &prop_time, sat.epoch_ms, 10, 1.0e-12, &posteme, &velteme);
 
-        prop_time += tsince * 60;
+        //tsince += deltamin;
 
-        orbit_prop(&sat, &prop_time, sat.epoch_ms, 10, 1.0e-12, &posteme, &velteme);
-
-        if (error > 0)
-          printf("[ERROR] at %f: %3d\n", tsince, error);
+        if (error != 0)
+          printf("[ERROR] at %f: %3d\n", t, error);
 
         if (error == 0)
         {
           fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f\n",
-                  tsince, posteme.x, posteme.y, posteme.z);
+                  t, posteme.x, posteme.y, posteme.z);
         }
       }
     }
