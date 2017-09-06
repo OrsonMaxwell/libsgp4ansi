@@ -109,6 +109,8 @@ typedef struct _orbit
   double inclo;   // i
   double mo;      // Mo
   double nodeo;   // alpha
+  double alta;    // ?
+  double altp;    // ?
 } orbit;
 
 // ************************************************************************* //

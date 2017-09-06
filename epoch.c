@@ -46,7 +46,7 @@ fractday2unix(unsigned int year, double days)
     j = j + mon_len[i-1];
     i++;
   }
-  res_tm.tm_mon = i;
+  res_tm.tm_mon = i - 1;
   res_tm.tm_mday = day_of_year - j;
 
   // Hours, minutes, and seconds

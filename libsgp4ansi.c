@@ -84,7 +84,7 @@ orbit_sgp4
 )
 {
   double r[3], v[3];
-  sgp4(1, sat, tdelta, &r, &v);
+  sgp4(1, sat, tdelta, r, v);
   pos->x = r[0];
   pos->y = r[1];
   pos->z = r[2];
@@ -127,8 +127,8 @@ orbit_dslongper
 
 void print_orbit(orbit* sat, char* caption)
 {
-  FILE *f = fopen("orbit.txt", "w");
-  fprintf(f, "=============== %50s ===============\n", caption);
+  FILE *f = fopen("orbit.txt", "a");
+  fprintf(f, "===== %s =====\n", caption);
   fprintf(f, "----- TLE portion -----\n");
   fprintf(f, "number:\t\t%d\n", sat->number);
   fprintf(f, "nprimediv2:\t%20.10lf\n", sat->nprimediv2);
@@ -251,7 +251,8 @@ void print_orbit(orbit* sat, char* caption)
   fprintf(f, "inclo:\t\t%20.10lf\n", sat->inclo);
   fprintf(f, "mo:\t\t%20.10lf\n", sat->mo);
   fprintf(f, "nodeo:\t\t%20.10lf\n", sat->nodeo);
-  fprintf(f, "=================================================================================\n");
+  fprintf(f, "alta:\t\t%20.10lf\n", sat->alta);
+  fprintf(f, "altp:\t\t%20.10lf\n", sat->altp);
   fclose(f);
 }
 
@@ -364,7 +365,6 @@ orbit_init(orbit* sat)
 {
 
   sgp4init(0, 'i', 0101, unix2jul(&sat->epoch, 0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sat);
-  print_orbit(sat, "Just after sgp4init");
   return 0;
 }
 
@@ -1704,7 +1704,7 @@ bool sgp4init
      // the old check used 1.0 + cos(pi-1.0e-9), but then compared it to
      // 1.5 e-12, so the threshold was changed to 1.5e-12 for consistency
      const double temp4    =   1.5e-12;
-
+     // TODO: Get rid of zeroing out and use a compount initializer
      /* ----------- set all near earth variables to zero ------------ */
      sat->isimp   = 0;   sat->method = 'n'; sat->aycof    = 0.0;
      sat->con41   = 0.0; sat->cc1    = 0.0; sat->cc4      = 0.0;
@@ -1737,20 +1737,19 @@ bool sgp4init
      sat->zmol  = 0.0; sat->zmos  = 0.0; sat->atime = 0.0;
      sat->xli   = 0.0; sat->xni   = 0.0;
 
-     // sgp4fix - note the following variables are also passed directly via sat->
-     // it is possible to streamline the sgp4init call by deleting the "x"
-     // variables, but the user would need to set the sat->* values first. we
-     // include the additional assignments in case twoline2rv is not used.
-     sat->bstar   = xbstar;
-     sat->ecco    = xecco;
-     sat->argpo   = xargpo;
-     sat->inclo   = xinclo;
-     sat->mo      = xmo;
-     sat->no      = xno;
-     sat->nodeo   = xnodeo;
+     // TODO: Only to test legacy math!
+     sat->argpdot = sat->omegaprime; // omegaprime
+     sat->gsto = sat->GSTo;    // GSTo
+     sat->bstar = sat->Bstar;   // Bstar
+     sat->ecco = sat->e;    // e
+     sat->argpo = sat->omega;   // omega
+     sat->inclo = sat->i;   // i
+     sat->mo = sat->Mo;      // Mo
+     sat->nodeo = sat->alpha;   // alpha
 
-     // sgp4fix add opsmode
-     sat->operationmode = opsmode;
+     // Convert to SGP4 units
+     // ---- find no, ndot, nddot ----
+     sat->no   = sat->no / RPD2RADPM; //* rad/min
 
      /* ------------------------ earth constants ----------------------- */
      // sgp4fix identify constants and allow alternate values
@@ -1764,6 +1763,38 @@ bool sgp4init
      j4 = J4;
      j3oj2 = J3DIVJ2;
 
+     // ---- convert to sgp4 units ----
+     sat->a    = pow( sat->no*tumin , (-2.0/3.0) );
+     sat->nprimediv2 = sat->nprimediv2  / (RPD2RADPM*1440.0);  //* ? * minperday
+     sat->ndprimediv6= sat->ndprimediv6 / (RPD2RADPM*1440.0*1440);
+
+     // ---- find standard orbital elements ----
+     sat->inclo = sat->inclo  * DEG2RAD;
+     sat->nodeo = sat->nodeo  * DEG2RAD;
+     sat->argpo = sat->argpo  * DEG2RAD;
+     sat->mo    = sat->mo     * DEG2RAD;
+
+     sat->alta = sat->a*(1.0 + sat->ecco) - 1.0;
+     sat->altp = sat->a*(1.0 - sat->ecco) - 1.0;
+     // sgp4fix - note the following variables are also passed directly via sat->
+     // it is possible to streamline the sgp4init call by deleting the "x"
+     // variables, but the user would need to set the sat->* values first. we
+     // include the additional assignments in case twoline2rv is not used.
+     //sat->bstar   = xbstar;
+     //sat->ecco    = xecco;
+     //sat->argpo   = xargpo;
+     //sat->inclo   = xinclo;
+     //sat->mo      = xmo;
+     //sat->no      = xno;
+     //sat->nodeo   = xnodeo;
+
+     // sgp4fix add opsmode
+     sat->operationmode = opsmode;
+
+     print_orbit(sat, "Initialized");
+
+
+
      ss     = 78.0 / radiusearthkm + 1.0;
      // sgp4fix use multiply for speed instead of pow
      qzms2ttemp = (120.0 - 78.0) / radiusearthkm;
@@ -1773,6 +1804,8 @@ bool sgp4init
      sat->init = 'y';
      sat->t  = 0.0;
 
+     print_orbit(sat, "Before initl");
+
      initl
          (
            satn, whichconst, sat->ecco, epoch, sat->inclo, &sat->no, &sat->method,
@@ -1780,6 +1813,8 @@ bool sgp4init
            &posq, &rp, &rteosq, &sinio, &sat->gsto, sat->operationmode
          );
      sat->error = 0;
+
+     print_orbit(sat, "after initl");
 
      // sgp4fix remove this check as it is unnecessary
      // the mrt check in sgp4 handles decaying satellite cases even if the starting
