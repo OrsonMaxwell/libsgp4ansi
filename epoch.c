@@ -24,6 +24,7 @@
  * Outputs: result - Unix time
  * Returns: None
  */
+// TODO: Implement msec, move time_t to outputs
 time_t
 fractday2unix(unsigned int year, double days)
 {
