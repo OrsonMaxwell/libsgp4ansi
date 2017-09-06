@@ -27,12 +27,13 @@ main (int argc, char** argv)
   int error = 0;
 
   tle_file = fopen("full.tle", "r");
-  outfile  = fopen("ansi.out", "w");
 
   if(!tle_file) {
     perror("File opening failed!");
     return 1;
   }
+
+  outfile  = fopen("ansi.out", "w");
 
   while (feof(tle_file) == 0)
   {

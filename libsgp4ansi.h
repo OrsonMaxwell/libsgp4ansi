@@ -56,7 +56,7 @@ typedef struct _orbit
   char         name[24];      // Satellite name
   unsigned int number;        // Catalogue number
   char         sec_class;     // Security classification
-  char         designator[8]; // International designator
+  char         designator[10]; // International designator
   time_t       epoch;         // Epoch of the TLE
   unsigned int epoch_ms;      // Fractional seconds portion of epoch, ms
   double       nprimediv2;    // First derivative of mean motion div2, rev/day2

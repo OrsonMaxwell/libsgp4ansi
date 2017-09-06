@@ -649,9 +649,11 @@ orbit_dslongper
 /*
  * Initialize SGP4/SDP4 orbit model from a raw NORAD TLE lines
  *
- * Inputs:  sat  - Empty orbit struct pointer with TLE data
- * Outputs: sat  - orbit struct pointer with full orbital data
- * Returns: None
+ * Inputs:  tlestr1 - TLE line 1
+ *          tlestr2 - TLE line 2
+ * Outputs: sat     - orbit struct pointer with full orbital data
+ * Returns: 0       - Success
+ *         -1       - Failure to read TLE lines
  *
  * Calls: orbit_init
  */
@@ -698,13 +700,32 @@ tle2orbit(char* tlestr1, char* tlestr2, orbit* sat)
 
   struct tm epoch_tm, prop_tm;
 
-  int cardnum, epochyr, epochdays, nexp, Bexp;
-  double nddot, Bstar;
+  int cardnum, epochyr, nexp, Bexp, checksum;
+  double nddot, Bstar, epochdays;
 
-  sscanf(tlestr1,"%2d %5ld %1c %10s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6ld ",
+  int retval = sscanf(tlestr1,"%2d %5ld %1c %8s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6ld ",
          &cardnum, &sat->number, &sat->sec_class, sat->designator, &epochyr,
          &epochdays,&sat->nprimediv2, &nddot, &nexp, &Bstar,
          &Bexp, &sat->ephem_type, &sat->elset_number);
+
+  if (retval != 13)
+  {
+    return -1;
+  }
+
+  if (tlestr2[52] == ' ') // check for minus sign
+    retval = sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %10lf %6ld \n",
+           &cardnum,&sat->number, &sat->i, &sat->alpha, &sat->e, &sat->omega,
+           &sat->Mo, &sat->no, &sat->rev_number);
+  else
+    retval = sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %11lf %6ld \n",
+           &cardnum,&sat->number, &sat->i, &sat->alpha, &sat->e, &sat->omega,
+           &sat->Mo, &sat->no, &sat->rev_number);
+
+  if (retval != 9)
+  {
+    return -1;
+  }
 
   sat->epoch = fractday2unix(epochyr, epochdays);
   if (sat->epoch == -1)
@@ -712,15 +733,6 @@ tle2orbit(char* tlestr1, char* tlestr2, orbit* sat)
 
   sat->ndprimediv6 = nddot * pow(10, nexp);
   sat->Bstar = Bstar * pow(10, Bexp);
-
-  if (tlestr2[52] == ' ') // check for minus sign
-    sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %10lf %6ld \n",
-           &cardnum,&sat->number, &sat->i, &sat->alpha, &sat->e, &sat->omega,
-           &sat->Mo, &sat->no, &sat->rev_number);
-  else
-    sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %11lf %6ld \n",
-           &cardnum,&sat->number, &sat->i, &sat->alpha, &sat->e, &sat->omega,
-           &sat->Mo, &sat->no, &sat->rev_number);
 
   // Convert to SGP4 units and expand
   return orbit_init(sat);
@@ -731,7 +743,7 @@ tle2orbit(char* tlestr1, char* tlestr2, orbit* sat)
  *
  * Inputs:  sat  - orbit struct pointer to an empty orbit
  * Outputs: sat  - orbit struct pointer with full orbital data
- * Returns: None
+ * Returns: None TODO: add return values
  */
 int
 orbit_init(orbit* sat)
