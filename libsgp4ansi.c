@@ -12,12 +12,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <time.h>
 #include <math.h>
 
 #include "libsgp4ansi.h"
+#include "epoch.h"
 #include "const.h"
-#include "transform.h"
+#include "coord.h"
+#include "vector.h"
 
 // ************************************************************************* //
 //                            PRIVATE PROTOTYPES                             //
@@ -25,11 +26,11 @@
 
 // SGP4 propagation function implementation
 int
-orbit_sgp4(orbit*, double, unsigned int, double, vect*, vect*);
+orbit_sgp4(orbit*, double, unsigned int, double, vec3*, vec3*);
 
 // SDP4 propagation function implementation
 int
-orbit_sdp4(orbit*, double, unsigned int, double, vect*, vect*);
+orbit_sdp4(orbit*, double, unsigned int, double, vec3*, vec3*);
 
 // Deep space long period periodics contributions to the mean elements
 void
@@ -62,8 +63,8 @@ orbit_sgp4
     double tdelta,
     unsigned int maxiter,
     double tolerance,
-    vect* pos,
-    vect* vel
+    vec3* pos,
+    vec3* vel
 )
 {
   // Update for secular gravity and atmospheric drag
@@ -101,8 +102,8 @@ orbit_sgp4
   }
 
   double em = sat->e;
-  double am = pow((xke / sat->no), 2.0L / 3.0L) * tempa * tempa;
-  sat->no   = xke / pow(am, 1.5);
+  double am = pow((XKE / sat->no), 2.0L / 3.0L) * tempa * tempa;
+  sat->no   = XKE / pow(am, 1.5);
   em        = em - tempe;
 
   // fix tolerance for error recognition
@@ -122,10 +123,10 @@ orbit_sgp4
   double emsq = em * em;
          temp = 1.0 - emsq;
 
-  nodem  = fmod(nodem, twopi);
-  argpm  = fmod(argpm, twopi);
-  xlm    = fmod(xlm, twopi);
-  mm     = fmod(xlm - argpm - nodem, twopi);
+  nodem  = fmod(nodem, TWOPI);
+  argpm  = fmod(argpm, TWOPI);
+  xlm    = fmod(xlm, TWOPI);
+  mm     = fmod(xlm - argpm - nodem, TWOPI);
 
   // Compute extra mean quantities
   double sinim = sin(sat->i);
@@ -137,7 +138,7 @@ orbit_sgp4
   double xl   = mm + argpm + nodem + temp * sat->xlcof * axnl;
 
   // Kepler's equation
-  double       u     = fmod(xl - nodem, twopi);
+  double       u     = fmod(xl - nodem, TWOPI);
   double       eo1   = u;
   double       temp5 = 9999.9;
   unsigned int kiter = 0;
@@ -166,7 +167,7 @@ orbit_sgp4
   double el2       = axnl * axnl + aynl * aynl;
   double pl        = am * (1.0 - el2);
   double mrt       = 0.0;
-  double vkmpersec = Re * xke / 60.0;
+  double vkmpersec = RE * XKE / 60.0;
 
   double betal, rl,    rdotl, rvdotl, sinu, cosu,  su,    sin2u, cos2u,
          temp1, temp2, xnode, xinc,   mvt,  rvdot, sinsu, cossu, snod,
@@ -189,16 +190,16 @@ orbit_sgp4
     sin2u  = (cosu + cosu) * sinu;
     cos2u  = 1.0 - 2.0 * sinu * sinu;
     temp   = 1.0 / pl;
-    temp1  = 0.5 * j2 * temp;
+    temp1  = 0.5 * J2 * temp;
     temp2  = temp1 * temp;
     mrt    = rl * (1.0 - 1.5 * temp2 * betal * sat->con41) + 0.5 * temp1
              * sat->x1mth2 * cos2u;
     su     = su - 0.25 * temp2 * sat->x7thm1 * sin2u;
     xnode  = nodem + 1.5 * temp2 * cosim * sin2u;
     xinc   = sat->i + 1.5 * temp2 * cosim * sinim * cos2u;
-    mvt    = rdotl - sat->no * temp1 * sat->x1mth2 * sin2u / xke;
+    mvt    = rdotl - sat->no * temp1 * sat->x1mth2 * sin2u / XKE;
     rvdot  = rvdotl + sat->no * temp1 * (sat->x1mth2 * cos2u + 1.5
-             * sat->con41) / xke;
+             * sat->con41) / XKE;
 
     // Orientation vectors
     sinsu =  sin(su);
@@ -217,9 +218,9 @@ orbit_sgp4
     vz    =  sini * cossu;
 
     // Position and velocity vectors
-    pos->x = (mrt * ux) * Re;
-    pos->y = (mrt * uy) * Re;
-    pos->z = (mrt * uz) * Re;
+    pos->x = (mrt * ux) * RE;
+    pos->y = (mrt * uy) * RE;
+    pos->z = (mrt * uz) * RE;
     vel->x = (mvt * ux + rvdot * vx) * vkmpersec;
     vel->y = (mvt * uy + rvdot * vy) * vkmpersec;
     vel->z = (mvt * uz + rvdot * vz) * vkmpersec;
@@ -257,8 +258,8 @@ orbit_sdp4
     double tdelta,
     unsigned int iter,
     double thresh,
-    vect* pos,
-    vect* vel
+    vec3* pos,
+    vec3* vel
 )
 {
   // Update for secular gravity and atmospheric drag
@@ -318,8 +319,8 @@ orbit_sdp4
     return 1;
   }
 
-  double am = pow((xke / nm), 2.0L / 3.0L) * tempa * tempa;
-  nm = xke / pow(am, 1.5);
+  double am = pow((XKE / nm), 2.0L / 3.0L) * tempa * tempa;
+  nm = XKE / pow(am, 1.5);
   em = em - tempe;
 
   // fix tolerance for error recognition
@@ -337,10 +338,10 @@ orbit_sdp4
   double emsq   = em * em;
   temp   = 1.0 - emsq;
 
-  nodem  = fmod(nodem, twopi);
-  argpm  = fmod(argpm, twopi);
-  xlm    = fmod(xlm, twopi);
-  mm     = fmod(xlm - argpm - nodem, twopi);
+  nodem  = fmod(nodem, TWOPI);
+  argpm  = fmod(argpm, TWOPI);
+  xlm    = fmod(xlm, TWOPI);
+  mm     = fmod(xlm - argpm - nodem, TWOPI);
 
   // Compute extra mean quantities
   double sinim = sin(inclm);
@@ -374,8 +375,8 @@ orbit_sdp4
     if (xincp < 0.0)
     {
       xincp  = -xincp;
-      nodep = nodep + pi;
-      argpp  = argpp - pi;
+      nodep = nodep + PI;
+      argpp  = argpp - PI;
     }
 
     if ((ep < 0.0 ) || ( ep > 1.0))
@@ -389,13 +390,13 @@ orbit_sdp4
   {
     sinip =  sin(xincp);
     cosip =  cos(xincp);
-    sat->aycof = -0.5*j3divj2*sinip;
+    sat->aycof = -0.5*J3DIVJ2*sinip;
 
     // Division by zero check for xincp = 180 deg
     if (fabs(cosip+1.0) > 1.5e-12)
-      sat->xlcof = -0.25 * j3divj2 * sinip * (3.0 + 5.0 * cosip) / (1.0 + cosip);
+      sat->xlcof = -0.25 * J3DIVJ2 * sinip * (3.0 + 5.0 * cosip) / (1.0 + cosip);
     else
-      sat->xlcof = -0.25 * j3divj2 * sinip * (3.0 + 5.0 * cosip) / 1.5e-12;
+      sat->xlcof = -0.25 * J3DIVJ2 * sinip * (3.0 + 5.0 * cosip) / 1.5e-12;
   }
 
   double axnl = ep * cos(argpp);
@@ -404,7 +405,7 @@ orbit_sdp4
   double xl   = mp + argpp + nodep + temp * sat->xlcof * axnl;
 
   // Kepler's equation
-  double u    = fmod(xl - nodep, twopi);
+  double u    = fmod(xl - nodep, TWOPI);
   double eo1  = u;
   double temp5 = 9999.9;
   unsigned int ktr = 0;
@@ -429,7 +430,7 @@ orbit_sdp4
   double el2   = axnl * axnl + aynl * aynl;
   double pl    = am * (1.0 - el2);
   double mrt = 0.0;
-  double vkmpersec = Re * xke / 60.0;
+  double vkmpersec = RE * XKE / 60.0;
 
   double betal, rl, rdotl, rvdotl, sinu, cosu, su, sin2u, cos2u, temp1, temp2,
   cosisq, xnode, xinc, mvt, rvdot, sinsu, cossu, snod, cnod, sini, cosi, xmx,
@@ -452,7 +453,7 @@ orbit_sdp4
     sin2u  = (cosu + cosu) * sinu;
     cos2u  = 1.0 - 2.0 * sinu * sinu;
     temp   = 1.0 / pl;
-    temp1  = 0.5 * j2 * temp;
+    temp1  = 0.5 * J2 * temp;
     temp2  = temp1 * temp;
 
     // Update for short period periodics
@@ -468,9 +469,9 @@ orbit_sdp4
     su    = su - 0.25 * temp2 * sat->x7thm1 * sin2u;
     xnode = nodep + 1.5 * temp2 * cosip * sin2u;
     xinc  = xincp + 1.5 * temp2 * cosip * sinip * cos2u;
-    mvt   = rdotl - nm * temp1 * sat->x1mth2 * sin2u / xke;
+    mvt   = rdotl - nm * temp1 * sat->x1mth2 * sin2u / XKE;
     rvdot = rvdotl + nm * temp1 * (sat->x1mth2 * cos2u +
-        1.5 * sat->con41) / xke;
+        1.5 * sat->con41) / XKE;
 
     // Orientation vectors
     sinsu =  sin(su);
@@ -489,9 +490,9 @@ orbit_sdp4
     vz    =  sini * cossu;
 
     // Position and velocity vectors
-    pos->x = (mrt * ux)* Re;
-    pos->y = (mrt * uy)* Re;
-    pos->z = (mrt * uz)* Re;
+    pos->x = (mrt * ux)* RE;
+    pos->y = (mrt * uy)* RE;
+    pos->z = (mrt * uz)* RE;
     vel->x = (mvt * ux + rvdot * vx) * vkmpersec;
     vel->y = (mvt * uy + rvdot * vy) * vkmpersec;
     vel->z = (mvt * uz + rvdot * vz) * vkmpersec;
@@ -616,7 +617,7 @@ orbit_dslongper
       dbet   = -ph * sinop + pinc * cosip * cosop;
       alfdp  = alfdp + dalf;
       betdp  = betdp + dbet;
-      *alpha  = fmod(*alpha, twopi);
+      *alpha  = fmod(*alpha, TWOPI);
 
       xls    = *mp + *omega + cosip * (*alpha);
       dls    = pl + pgh - pinc * (*alpha) * sinip;
@@ -624,15 +625,15 @@ orbit_dslongper
       xnoh   = *alpha;
       *alpha  = atan2(alfdp, betdp);
 
-      if (fabs(xnoh - *alpha) > pi)
+      if (fabs(xnoh - *alpha) > PI)
       {
         if (*alpha < xnoh)
         {
-          *alpha = *alpha + twopi;
+          *alpha = *alpha + TWOPI;
         }
         else
         {
-          *alpha = *alpha - twopi;
+          *alpha = *alpha - TWOPI;
         }
       }
 
@@ -749,18 +750,18 @@ int
 orbit_init(orbit* sat)
 {
   // Convert to SGP4 units
-  sat->no          = sat->no / rpd2radmin;
-  sat->a           = pow(sat->no * tumin, (-2.0L / 3.0L));
-  sat->nprimediv2  = sat->nprimediv2  / (rpd2radmin * 1440);
-  sat->ndprimediv6 = sat->ndprimediv6 / (rpd2radmin * 1440 * 1440);
+  sat->no          = sat->no / RPD2RADPM;
+  sat->a           = pow(sat->no * TUMIN, (-2.0L / 3.0L));
+  sat->nprimediv2  = sat->nprimediv2  / (RPD2RADPM * 1440);
+  sat->ndprimediv6 = sat->ndprimediv6 / (RPD2RADPM * 1440 * 1440);
   sat->julepoch    = unix2jul(&sat->epoch, sat->epoch_ms);
   sat->GSTo        = jul2gst(sat->julepoch);
 
   // Standard orbital elements
-  sat->i       = sat->i * deg2rad;
-  sat->alpha   = sat->alpha * deg2rad;
-  sat->omega   = sat->omega * deg2rad;
-  sat->Mo      = sat->Mo * deg2rad;
+  sat->i       = sat->i * DEG2RAD;
+  sat->alpha   = sat->alpha * DEG2RAD;
+  sat->omega   = sat->omega * DEG2RAD;
+  sat->Mo      = sat->Mo * DEG2RAD;
   sat->altapoR = sat->a * (1.0 + sat->e) - 1.0;
   sat->altperR = sat->a * (1.0 - sat->e) - 1.0;
   sat->sini    = sin(sat->i);
@@ -773,8 +774,8 @@ orbit_init(orbit* sat)
   double cosi2   = pow(sat->cosi, 2);
 
   // Reverse Kozai notation of the mean motion
-  double ak    = pow(xke / sat->no, 2.0L / 3.0L);
-  double d1    = 0.75 * j2 * (3.0 * cosi2 - 1.0) / (rteosq * omegasq);
+  double ak    = pow(XKE / sat->no, 2.0L / 3.0L);
+  double d1    = 0.75 * J2 * (3.0 * cosi2 - 1.0) / (rteosq * omegasq);
   double del   = d1 / pow(ak, 2);
   double adel  = ak * (1.0 - del * del - del * (1.0L / 3.0L + 134.0 * del
                  * del / 81.0));
@@ -792,9 +793,9 @@ orbit_init(orbit* sat)
 
   if ((omegasq >= 0.0 ) || (sat->no >= 0.0))
   {
-    double s4th   = 78.0 / Re + 1.0;
-    double qzms24 = pow((120.0 - 78.0) / Re, 4);
-    double altperkm = sat->altperR * Re;
+    double s4th   = 78.0 / RE + 1.0;
+    double qzms24 = pow((120.0 - 78.0) / RE, 4);
+    double altperkm = sat->altperR * RE;
 
     sat->islowperigee    = false;
     if (altperkm < 220.0)
@@ -811,8 +812,8 @@ orbit_init(orbit* sat)
         s4th   = 20.0;
       }
 
-      qzms24 = pow((120.0 - s4th) / Re, 4);
-      s4th   = s4th / Re + 1.0;
+      qzms24 = pow((120.0 - s4th) / RE, 4);
+      s4th   = s4th / RE + 1.0;
     }
 
     double pinvsq = 1.0 / posq;
@@ -826,7 +827,7 @@ orbit_init(orbit* sat)
     double coef   = qzms24 * pow(tsi, 4.0);
     double coef1  = coef / pow(psisq, 3.5);
     double C2     = coef1 * sat->no * (sat->a * (1.0 + 1.5 * etasq + eeta *
-                    (4.0 + etasq)) + 0.375 * j2 * tsi / psisq *
+                    (4.0 + etasq)) + 0.375 * J2 * tsi / psisq *
                     sat->con41 * (8.0 + 3.0 * etasq * (8.0 + etasq)));
 
     sat->C1       = sat->Bstar * C2;
@@ -835,12 +836,12 @@ orbit_init(orbit* sat)
     // Low eccentricity case
     if (sat->e > 1.0e-4)
     {
-      C3 = -2.0 * coef * tsi * j3divj2 * sat->no * sat->sini / sat->e;
+      C3 = -2.0 * coef * tsi * J3DIVJ2 * sat->no * sat->sini / sat->e;
     }
 
     sat->x1mth2   = 1.0 - cosi2;
     sat->C4       = 2.0* sat->no * coef1 * sat->a * omegasq * (sat->eta * (2.0 + 0.5
-                    * etasq) + sat->e * (0.5 + 2.0 * etasq) - j2 * tsi / (sat->a *
+                    * etasq) + sat->e * (0.5 + 2.0 * etasq) - J2 * tsi / (sat->a *
                     psisq) * (-3.0 * sat->con41 * (1.0 - 2.0 * eeta + etasq *
                     (1.5 - 0.5 * eeta)) + 0.75 * sat->x1mth2 * (2.0 * etasq -
                     eeta * (1.0 + etasq)) * cos(2.0 * sat->omega)));
@@ -849,9 +850,9 @@ orbit_init(orbit* sat)
                    eeta * etasq);
 
     double cosi4  = pow(cosi2, 2);
-    double temp1  = 1.5 * j2 * pinvsq * sat->no;
-    double temp2  = 0.5 * temp1 * j2 * pinvsq;
-    double temp3  = -0.46875 * j4 * pinvsq * pinvsq * sat->no;
+    double temp1  = 1.5 * J2 * pinvsq * sat->no;
+    double temp2  = 0.5 * temp1 * J2 * pinvsq;
+    double temp3  = -0.46875 * J4 * pinvsq * pinvsq * sat->no;
 
     sat->mdot     = sat->no + 0.5 * temp1 * rteosq * sat->con41 + 0.0625 * temp2
                     * rteosq * (13.0 - 78.0 * cosi2 + 137.0 * cosi4);
@@ -880,11 +881,11 @@ orbit_init(orbit* sat)
 
     // Division by zero protection in case xinco = 180deg
     if (fabs(sat->cosi + 1.0) > 1.5e-12)
-      sat->xlcof = -0.25 * j3divj2 * sat->sini * (3.0 + 5.0 * sat->cosi) / (1.0 + sat->cosi);
+      sat->xlcof = -0.25 * J3DIVJ2 * sat->sini * (3.0 + 5.0 * sat->cosi) / (1.0 + sat->cosi);
     else
-      sat->xlcof = -0.25 * j3divj2 * sat->sini * (3.0 + 5.0 * sat->cosi) / 1.5e-12;
+      sat->xlcof = -0.25 * J3DIVJ2 * sat->sini * (3.0 + 5.0 * sat->cosi) / 1.5e-12;
 
-    sat->aycof   = -0.5 * j3divj2 * sat->sini;
+    sat->aycof   = -0.5 * J3DIVJ2 * sat->sini;
 
     sat->delMo   = pow(1.0 + sat->eta * cos(sat->Mo), 3);
     sat->sinMo   = sin(sat->Mo);
@@ -922,7 +923,7 @@ orbit_init(orbit* sat)
 
       // Initialize lunar and solar terms
       double day    = sat->julepoch + 18261.5;
-      double xnodce = fmod(4.5236020 - 9.2422029e-4 * day, twopi);
+      double xnodce = fmod(4.5236020 - 9.2422029e-4 * day, TWOPI);
       double stem   = sin(xnodce);
       double ctem   = cos(xnodce);
       double zcosil = 0.91375164 - 0.03568096 * ctem;
@@ -1030,8 +1031,8 @@ orbit_init(orbit* sat)
         }
       }
 
-      sat->zmol = fmod(4.7199672 + 0.22997150  * day - gamma, twopi);
-      sat->zmos = fmod(6.2565837 + 0.017201977 * day, twopi);
+      sat->zmol = fmod(4.7199672 + 0.22997150  * day - gamma, TWOPI);
+      sat->zmos = fmod(6.2565837 + 0.017201977 * day, TWOPI);
 
       // Apply solar terms
       sat->se2  =   2.0 * ss1 * ss6;
@@ -1083,7 +1084,7 @@ orbit_init(orbit* sat)
     }
   }
 
-  vect pos = {0}, vel = {0};
+  vec3 pos = {0}, vel = {0};
 
   if (false) // TODO: Deepspace FFS
   //if (sat->isdeepspace == true)
@@ -1126,8 +1127,8 @@ orbit_prop
     double tdelta,
     unsigned int maxiter,
     double tolerance,
-    vect* pos,
-    vect* vel
+    vec3* pos,
+    vec3* vel
 )
 {
   if ((sat == NULL) ||

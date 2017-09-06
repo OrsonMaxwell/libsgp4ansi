@@ -22,7 +22,7 @@
 /*
  * 3D vector
  */
-typedef struct _vect
+typedef struct _vec3
 {
   union {
     double i;
@@ -45,7 +45,7 @@ typedef struct _vect
     double z;
     double alt;
   };
-} vect;
+} vec3;
 
 /*
  * Satellite orbital element set
@@ -53,10 +53,10 @@ typedef struct _vect
 typedef struct _orbit
 {
   // NORAD TLE portion
-  char         name[24];      // Satellite name
+  char         name[25];      // Satellite name, 24 chars + \0
   unsigned int number;        // Catalogue number
   char         sec_class;     // Security classification
-  char         designator[10]; // International designator
+  char         designator[9]; // International designator, 8 chars + \0
   time_t       epoch;         // Epoch of the TLE
   unsigned int epoch_ms;      // Fractional seconds portion of epoch, ms
   double       nprimediv2;    // First derivative of mean motion div2, rev/day2
@@ -101,13 +101,8 @@ tle2orbit(char*, char*, orbit*);
 extern int
 orbit_init(orbit*);
 
-// Get position and velocity vectors in the TEME frame at given time
+// Get position and velocity vectors in the TEME frame at given time since epoch
 extern int
-orbit_prop(orbit*, double, unsigned int, double, vect*, vect*);
-//orbit_prop(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
-
-// TODO: Make private!
-extern void
-print_orbit(orbit*, char*);
+orbit_prop(orbit*, double, unsigned int, double, vec3*, vec3*);
 
 #endif /* LIBSGP4ANSI_H_ */

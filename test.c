@@ -4,7 +4,7 @@
 
 #include "libsgp4ansi.h"
 #include "const.h"
-#include "transform.h"
+#include "vector.h"
 
 int
 main (int argc, char** argv)
@@ -15,8 +15,8 @@ main (int argc, char** argv)
 
   FILE* tle_file, * outfile;
 
-  vect posteme;
-  vect velteme;
+  vec3 posteme;
+  vec3 velteme;
 
   double t_start = -1440, t_stop = 1440, deltamin = 20;//, tsince = 0;
 
@@ -50,7 +50,7 @@ main (int argc, char** argv)
 
       tle2orbit(tlestr1, tlestr2, &sat);
 
-      fprintf(outfile, "%ld (%12.9lf)\n", sat.number, pi * 2 / sat.no);
+      fprintf(outfile, "%ld (%12.9lf)\n", sat.number, PI * 2 / sat.no);
 
       // Iterate over time range
       for (double t = t_start; t <= t_stop; t += deltamin)
