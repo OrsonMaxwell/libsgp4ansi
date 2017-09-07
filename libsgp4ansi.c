@@ -141,7 +141,7 @@ void print_orbit(orbit* sat, char* caption)
   fprintf(f, "Mo:\t\t%20.10lf\n", sat->Mo);
   fprintf(f, "no:\t\t%20.10lf\n", sat->no);
   fprintf(f, "----- Time -----\n");
-  fprintf(f, "epoch:\t\t%s.%3d\n", ctime(&sat->epoch), sat->epoch_ms);
+  fprintf(f, "epoch:\t\t%s.%d\n", ctime(&sat->epoch), sat->epoch_ms);
   fprintf(f, "julepoch:\t%20.10lf\n", sat->julepoch);
   fprintf(f, "GSTo:\t\t%20.10lf\n", sat->GSTo);
   fprintf(f, "----- Flags -----\n");
@@ -342,14 +342,19 @@ tle2orbit(char* tlestr1, char* tlestr2, orbit* sat)
     return -1;
   }
 
-  sat->epoch = fractday2unix(epochyr, epochdays);
-  if (sat->epoch == -1)
+  // Make this return milliseconds
+  if (fractday2unix(epochyr, epochdays, &sat->epoch, &sat->epoch_ms) != 0)
+  {
     return -1;
+  }
+
+  sat->julepoch = unix2jul(&sat->epoch, sat->epoch_ms);
 
   sat->ndprimediv6 = nddot * pow(10, nexp);
   sat->Bstar = Bstar * pow(10, Bexp);
 
-  // Convert to SGP4 units and expand
+  // TODO: Convert to SGP4 units and expand
+
   return orbit_init(sat);
 }
 
@@ -364,7 +369,7 @@ int
 orbit_init(orbit* sat)
 {
 
-  sgp4init(0, 'i', 0101, unix2jul(&sat->epoch, 0), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sat);
+  sgp4init(0, 'i', 0101, sat->julepoch, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sat);
   return 0;
 }
 

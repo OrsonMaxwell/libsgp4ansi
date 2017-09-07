@@ -21,13 +21,19 @@
  *
  * Inputs:  year   - Year
  *          days   - Decimal day since year start
- * Outputs: result - Unix time
- * Returns: None
+ * Outputs: unix   - Unix time, s since 00:00 Jan, 1 1970
+ *          ms     - Fractional part of seconds, ms
+ * Returns: 0      - Success
+ *         -1      - Invalid input
  */
-// TODO: Implement msec, move time_t to outputs
-time_t
-fractday2unix(unsigned int year, double days)
+int
+fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
 {
+  if (days > ((year % 4 == 0) ? 366 : 365))
+  {
+    return -1;
+  }
+
   struct tm res_tm;
 
   int mon_len[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
@@ -50,26 +56,37 @@ fractday2unix(unsigned int year, double days)
   res_tm.tm_mday = day_of_year - j;
 
   // Hours, minutes, and seconds
-  double temp;
+  double temp, sec;
+  int result;
   temp           = (days - day_of_year) * 24.0;
   res_tm.tm_hour = (int)floor(temp);
   temp           = (temp - res_tm.tm_hour) * 60.0;
   res_tm.tm_min  = (int)floor(temp);
-  res_tm.tm_sec  = (temp - res_tm.tm_min) * 60.0;
+  sec            = (temp - res_tm.tm_min) * 60.0;
+  res_tm.tm_sec  = (int)floor(sec);
+  *ms            = (sec - res_tm.tm_sec) * 1000;
 
   // TODO: Make cross-platform and return error value of mktime
-  return mktime(&res_tm) - timezone;
+  result = mktime(&res_tm) - timezone;
+
+  if (result == -1)
+  {
+    return result;
+  }
+
+  *unix = (time_t)result;
+  return 0;
 }
 
 /*
  * Convert unix time to Julian date
  *
  * Inputs:  time - Timestamp in unix time
- *          msec - Fracitonal second part, us
+ *          ms   - Fracitonal second part, ms
  * Returns: Julian date
  */
 double
-unix2jul(time_t* time, unsigned int msec)
+unix2jul(time_t* time, float ms)
 {
   struct tm* t;
   t = gmtime(time);
@@ -78,8 +95,7 @@ unix2jul(time_t* time, unsigned int msec)
   - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 10) / 12.0))) * 0.25)
   + floor(275 * (t->tm_mon + 1) / 9.0 )
   + t->tm_mday + 1721013.5
-  + ((((double)t->tm_sec + msec / 1000) / 60.0L + t->tm_min) / 60.0
-  + t->tm_hour) / 24.0;
+  + ((((double)t->tm_sec + ms / 1000.0) / 60.0 + t->tm_min) / 60.0 + t->tm_hour) / 24.0;
 }
 
 /*

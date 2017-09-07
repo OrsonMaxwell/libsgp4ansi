@@ -26,7 +26,7 @@ main (int argc, char** argv)
 
   int error = 0;
 
-  tle_file = fopen("full.tle", "r");
+  tle_file = fopen(argv[1], "r");
 
   if(!tle_file) {
     perror("File opening failed!");

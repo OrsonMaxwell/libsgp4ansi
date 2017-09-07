@@ -58,7 +58,7 @@ typedef struct _orbit
   char         sec_class;     // Security classification
   char         designator[9]; // International designator, 8 chars + \0
   time_t       epoch;         // Epoch of the TLE
-  unsigned int epoch_ms;      // Fractional seconds portion of epoch, ms
+  float        epoch_ms;      // Fractional seconds portion of epoch, ms
   double       nprimediv2;    // First derivative of mean motion div2, rev/day2
   double       ndprimediv6;   // Second derivative of mean motion div6, rev/day3
   double       Bstar;         // Pseudo-ballistic drag coefficient, 1/Earth r
