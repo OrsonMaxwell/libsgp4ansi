@@ -17,31 +17,6 @@
 #include "epoch.h"
 #include "vector.h"
 
-// ************************************************************************* //
-//                                 MISC MATH                                 //
-// ************************************************************************* //
-/*
- * Return unity multiplier with the sign of the argument
- *
- * Inputs:  arg    - Source of the sign information
- * Outputs: None
- * Returns: unity with argument sign
- */
-int
-signof(double arg)
-{
-  return (arg < 0.0)? -1 : 1;
-}
-
-// ************************************************************************* //
-//                                   TIME                                    //
-// ************************************************************************* //
-
-
-// ************************************************************************* //
-//                               COORDINATES                                 //
-// ************************************************************************* //
-
 /*
  * Transform position and velocity vectors from TEME to ECEF frame of reference
  *
@@ -162,11 +137,11 @@ ecef2latlonalt
 
   if (fabs(ijsq) < tolerance)
   {
-    latlonalt->lon= signof(posecef->k) * PIDIV2;
+    latlonalt->lon = ((posecef->k < 0)?-1:1) * PIDIV2;
   }
   else
   {
-    latlonalt->lon= atan2( posecef->j, posecef->i );
+    latlonalt->lon = atan2( posecef->j, posecef->i );
   }
 
   // Wrap around
@@ -183,7 +158,7 @@ ecef2latlonalt
   }
 
   // Latitude
-  double posmag = magvec3(posecef);
+  double posmag  = vec3_mag(posecef);
   latlonalt->lat = asin(posecef->k / posmag);
 
   // Converge latitude to the goid over 10 iterations or less
@@ -298,11 +273,11 @@ double* drho, double* dtrtasc, double* dtdecl
   vec3 earthrate, rhov, drhov, vsijk;
   double   latgc, temp, temp1;
 
-  latgc = asin(rsijk->k / magvec3(rsijk));
+  latgc = asin(rsijk->k / vec3_mag(rsijk));
   earthrate.x = 0.0;
   earthrate.y = 0.0;
   earthrate.z = omegaearth;
-  crossvec3(&earthrate, rsijk, &vsijk);
+  vec3_cross(&earthrate, rsijk, &vsijk);
 
 /*  if (direct == 1) //from
   {
@@ -326,11 +301,11 @@ double* drho, double* dtrtasc, double* dtdecl
   else //to
   {*/
     /* ------ find ijk range vector from site to satellite ------ */
-    addvec3(1.0, rijk, -1.0, rsijk, &rhov);
-    addvec3(1.0, vijk, -cos(latgc), &vsijk, &drhov);
+    vec3_add(1.0, rijk, -1.0, rsijk, &rhov);
+    vec3_add(1.0, vijk, -cos(latgc), &vsijk, &drhov);
 
     /* -------- calculate topocentric angle and rate values ----- */
-    *rho = magvec3(&rhov);
+    *rho = vec3_mag(&rhov);
     temp = sqrt(rhov.x * rhov.x + rhov.y * rhov.y);
     if (temp < small)
     {
@@ -340,10 +315,10 @@ double* drho, double* dtrtasc, double* dtdecl
     else
       *trtasc = atan2(rhov.y / temp, rhov.x / temp);
 
-    *tdecl = asin(rhov.z / magvec3(&rhov));
+    *tdecl = asin(rhov.z / vec3_mag(&rhov));
 
     temp1 = -rhov.y * rhov.y - rhov.x * rhov.x;
-    *drho = dotvec3(&rhov, &drhov) / *rho;
+    *drho = vec3_dot(&rhov, &drhov) / *rho;
     if (fabs(temp1) > small)
       *dtrtasc = (drhov.x * rhov.y - drhov.y * rhov.x) / temp1;
     else
@@ -360,9 +335,9 @@ ecef2range(vec3* obsposecef, vec3* satposecef)
 {
   // Observer to satellite vector
   vec3 obs2sat;
-  addvec3(1.0, satposecef, -1.0, obsposecef, &obs2sat);
+  vec3_add(1.0, satposecef, -1.0, obsposecef, &obs2sat);
 
-  return magvec3(&obs2sat);
+  return vec3_mag(&obs2sat);
 }
 
 void ecef2azel

@@ -12,10 +12,6 @@
 #ifndef COORD_H_
 #define COORD_H_
 
-// Return unity multiplier with the sign of the argument
-int
-signof(double);
-
 // Transform position and velocity vectors from TEME to ECEF frame of reference
 void
 teme2ecef(vec3*, vec3*, double, vec3*, vec3*);

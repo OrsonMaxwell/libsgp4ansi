@@ -22,7 +22,7 @@
  * Returns: vector arg magnitude
  */
 double
-magvec3(vec3* arg)
+vec3_mag(vec3* arg)
 {
   return sqrt(arg->x * arg->x + arg->y * arg->y + arg->z * arg->z);
 }
@@ -35,7 +35,7 @@ magvec3(vec3* arg)
  * Returns: None
  */
 void
-copyvec3(vec3* from, vec3* to)
+vec3_copy(vec3* from, vec3* to)
 {
   to->x = from->x;
   to->y = from->y;
@@ -53,7 +53,7 @@ copyvec3(vec3* from, vec3* to)
  * Returns: None
  */
 void
-addvec3(double c1, vec3* vect1, double c2, vec3* vect2, vec3* result)
+vec3_add(double c1, vec3* vect1, double c2, vec3* vect2, vec3* result)
 {
   result->x = c1 * vect1->x + c2 * vect2->x;
   result->y = c1 * vect1->y + c2 * vect2->y;
@@ -69,7 +69,7 @@ addvec3(double c1, vec3* vect1, double c2, vec3* vect2, vec3* result)
  * Returns: dot product
  */
 double
-dotvec3(vec3* vect1, vec3* vect2)
+vec3_dot(vec3* vect1, vec3* vect2)
 {
   return vect1->x * vect2->x + vect1->y * vect2->y + vect1->z * vect2->z;
 }
@@ -83,7 +83,7 @@ dotvec3(vec3* vect1, vec3* vect2)
  * Returns: None
  */
 void
-crossvec3
+vec3_cross
 (
     vec3* vect1, vec3* vect2, vec3* result
 )
@@ -91,26 +91,4 @@ crossvec3
   result->x= vect1->y * vect2->z - vect1->z * vect2->y;
   result->y= vect1->z * vect2->x - vect1->x * vect2->z;
   result->z= vect1->x * vect2->y - vect1->y * vect2->x;
-}
-
-void rotate2(vec3* src, double angle, vec3* result)
-{
-  double tempz = src->z;
-  double s     = sin(angle);
-  double c     = cos(angle);
-
-  result->x = src->x * c - tempz * s;
-  result->y = src->y;
-  result->z = src->z * c + src->x * s;
-}
-
-void rotate3(vec3* src, double angle, vec3* result)
-{
-  double tempy  = src->y;
-  double sine   = sin(angle);
-  double cosine = cos(angle);
-
-  result->y = src->y * cosine - src->x * sine;
-  result->x = src->x * cosine + tempy * sine;
-  result->z = src->z;
 }

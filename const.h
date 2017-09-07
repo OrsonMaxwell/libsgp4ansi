@@ -21,6 +21,8 @@
 #define RPD2RADPM   (1440.0 / (2.0 * PI))  // Revolutions per day
                                            // to radians per minute coefficient
 
+#define TWOTHIRD    (2.0L / 3.0L)
+
 // ************************************************************************* //
 //                               GEODETIC DATUM                              //
 // ************************************************************************* //
@@ -38,6 +40,7 @@
 #define J3       -0.00000253881          // 3rd grav zonal harmonic of the Earth
 #define J4       -0.00000165597          // 4th grav zonal harmonic of the Earth
 #define J3DIVJ2   (J3 / J2)
+#define J2DIV2    (J2 / 2.0L)
 #endif /* USE_WGS72_LEGACY */
 
 #ifdef USE_WGS72  // WGS 72
@@ -53,6 +56,7 @@
 #define J3       -0.00000253881          // 3rd grav zonal harmonic of the Earth
 #define J4       -0.00000165597          // 4th grav zonal harmonic of the Earth
 #define J3DIVJ2   (J3 / J2)
+#define J2DIV2    (J2 / 2.0L)
 #endif /* USE_WGS72 */
 
 #ifdef USE_WGS84  // WGS 84
@@ -68,6 +72,7 @@
 #define J3       -0.00000253215306       // 3rd grav zonal harmonic of the Earth
 #define J4       -0.00000161098761       // 4th grav zonal harmonic of the Earth
 #define J3DIVJ2   (J3 / J2)
+#define J2DIV2    (J2 / 2.0L)
 #endif /* USE_WGS84 */
 
 #endif /* CONST_H_ */

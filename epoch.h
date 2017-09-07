@@ -12,6 +12,8 @@
 #ifndef EPOCH_H_
 #define EPOCH_H_
 
+#include <time.h>
+
 // Convert year and fractional day to unix time
 int
 fractday2unix(unsigned int, double, time_t*, float*);

@@ -12,28 +12,28 @@
 #ifndef VECTOR_H_
 #define VECTOR_H_
 
+// ************************************************************************* //
+//                                 FUNCTIONS                                 //
+// ************************************************************************* //
+
 // Find magnitude of a 3D vector
 double
-magvec3(vec3*);
+vec3_mag(vec3*);
 
 // Copy a 3D vector
 void
-copyvec3(vec3*, vec3*);
+vec3_copy(vec3*, vec3*);
 
 // Add two 3D vectors with coefficients
 void
-addvec3(double, vec3*, double, vec3*, vec3*);
+vec3_add(double, vec3*, double, vec3*, vec3*);
 
 // Dot product of two 3D vectors
 double
-dotvec3(vec3*, vec3*);
+vec3_dot(vec3*, vec3*);
 
 // Crossing of two 3D vectors
 void
-crossvec3(vec3*, vec3*, vec3*);
-
-// TODO: Write decription or inline the procedures
-void rotate2(vec3*, double, vec3*);
-void rotate3(vec3*, double, vec3*);
+vec3_cross(vec3*, vec3*, vec3*);
 
 #endif /* VECTOR_H_ */

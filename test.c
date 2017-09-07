@@ -3,24 +3,23 @@
 #include <time.h>
 
 #include "libsgp4ansi.h"
-#include "const.h"
-#include "vector.h"
 
 int
 main (int argc, char** argv)
 {
+
 
   char tlestr1[130];
   char tlestr2[130];
 
   FILE* tle_file, * outfile;
 
-  vec3 posteme;
-  vec3 velteme;
+  vec3 posteme = {0};
+  //vec3 velteme = {0};
 
   double t_start = -1440, t_stop = 1440, deltamin = 20;//, tsince = 0;
 
-  orbit sat = {0};
+  sat s = {0};
 
   char str[2];
 
@@ -42,20 +41,22 @@ main (int argc, char** argv)
       fgets(tlestr1, 130, tle_file);
       strncpy(str, &tlestr1[0], 1);
       str[1] = '\0';
+    // TODO: Get read of #
     } while ((strcmp(str, "#") == 0) && (feof(tle_file) == 0));
 
     if (feof(tle_file) == 0)
     {
       fgets(tlestr2, 130, tle_file);
 
-      tle2orbit(tlestr1, tlestr2, &sat);
+      // TODO: Read name from file!
+      sat_load_tle("BLEH", tlestr1, tlestr2, &s);
 
-      fprintf(outfile, "%ld (%12.9lf)\n", sat.number, PI * 2 / sat.no);
+      fprintf(outfile, "%ld (%12.9lf)\n", s.tle.norad_number, 6.283185 / s.tle.mean_motion);
 
       // Iterate over time range
       for (double t = t_start; t <= t_stop; t += deltamin)
       {
-        error = orbit_prop(&sat, t, 10, 1.0e-12, &posteme, &velteme);
+        //error = orbit_prop(&s, t, 10, 1.0e-12, &posteme, &velteme);
         if (error != 0)
           printf("[ERROR] at %f: %3d\n", t, error);
 
@@ -70,6 +71,9 @@ main (int argc, char** argv)
 
   fclose(tle_file);
   fclose(outfile);
+
+  return 0;
+
 
   return 0;
 }
