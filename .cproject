@@ -44,6 +44,7 @@
 									<listOptionValue builtIn="false" value="USE_WGS72"/>
 								</option>
 								<option id="gnu.c.compiler.option.warnings.allwarn.2097274895" name="All warnings (-Wall)" superClass="gnu.c.compiler.option.warnings.allwarn" useByScannerDiscovery="false" value="false" valueType="boolean"/>
+								<option id="gnu.c.compiler.option.misc.other.1170516195" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -Winline" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1199938450" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.mingw.so.debug.1489247025" name="MinGW C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.mingw.so.debug">

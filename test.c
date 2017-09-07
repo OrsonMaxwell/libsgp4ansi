@@ -49,7 +49,11 @@ main (int argc, char** argv)
       fgets(tlestr2, 130, tle_file);
 
       // TODO: Read name from file!
-      sat_load_tle("BLEH", tlestr1, tlestr2, &s);
+      if(sat_load_tle("BLEH", tlestr1, tlestr2, &s) == -1)
+      {
+        printf("[ERROR] Failed to load TLE file! Aborting.");
+        return 0;
+      }
 
       fprintf(outfile, "%ld (%12.9lf)\n", s.tle.norad_number, 6.283185 / s.tle.mean_motion);
 
@@ -71,9 +75,6 @@ main (int argc, char** argv)
 
   fclose(tle_file);
   fclose(outfile);
-
-  return 0;
-
 
   return 0;
 }

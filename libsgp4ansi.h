@@ -40,6 +40,14 @@ typedef struct _vec3
 } vec3;
 
 /*
+ * Satellite deep space orbital integrator values
+ */
+struct intv
+{
+  double xndot, xnddt, xldot;
+};
+
+/*
  * Satellite orbital element set
  */
 typedef struct _sat {
@@ -52,7 +60,7 @@ typedef struct _sat {
     double epoch_jul;
     double mean_motion_dt2;
     double mean_motion_ddt6;
-    double bstar;
+    double Bstar;
     double inclination;
     double right_asc_node;
     double eccentricity;
@@ -91,34 +99,33 @@ typedef struct _sat {
     double d2201, d2211, d3210, d3222, d4410, d4422, d5220,
     d5232, d5421, d5433, del1,  del2,  del3;
     // Geopotential resonance (12h)
-    bool resonance_flag;
+    bool is_resonant;
     // Geosynchronous resonance (24h)
-    bool synchronous_flag;
+    bool is_synchronous;
   } deep;
-  // Integrator values
-  struct intv
-  {
-    double xndot, xnddt, xldot;
-  } intv;
+  // Integrator values for epoch
+  struct intv intv0;
+  // Integrator values for current a_time
+  struct intv intvt;
   // Integrator constants
   struct intc
   {
     double xfact, xlamo;
-    // Values for epoch
-    struct intv values_0;
   } intc;
   // Integrator parametres
   struct intp
   {
     double xli, xni, atime;
-    // Values for current a_time
-    struct intv values_t;
   } intp;
 } sat;
 
 // ************************************************************************* //
 //                                    API                                    //
 // ************************************************************************* //
+
+// Printout sat struct
+void
+sat_print(sat*, const char*);
 
 // Initialize SGP4/SDP4 orbit model from a raw NORAD TLE lines
 extern int
