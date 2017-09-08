@@ -45,32 +45,34 @@ typedef struct _vec3
 typedef struct _sat
 {
   // NORAD TLE portion
-  char         name[25];      // Satellite name, 24 chars + \0
-  unsigned int number;        // Catalogue number
-  char         sec_class;     // Security classification
-  char         designator[9]; // International designator, 8 chars + \0
-  time_t       epoch;         // Epoch of the TLE
-  float        epoch_ms;      // Fractional seconds portion of epoch, ms
-  double       nprimediv2;    // First derivative of mean motion div2, rev/day2
-  double       ndprimediv6;   // Second derivative of mean motion div6, rev/day3
-  double       Bstar;         // Pseudo-ballistic drag coefficient, 1/Earth r
-  unsigned int elset_number;  // Current element set number
-  double       i;             // Orbital inclination, 0..180deg
-  double       alpha;         // Right ascension of ascension node, 0..360deg
-  double       e;             // Orbital eccentricity, 0.0..1.0
-  double       omega;         // Argument of perigee, 0..360deg
-  double       Mo;            // Mean anomaly at epoch, 0..360deg
-  double       no;            // Mean motion at epoch, rev/day
-  unsigned int rev_number;    // Number of revolutions at epoch
-  // Time
-  double julepoch, GSTo;
+  char         name[25];          // Satellite name, 24 chars + \0
+  char         sec_class;         // Security classification
+  char         int_designator[9]; // International designator, 8 chars + \0
+  time_t       epoch;             // Epoch of the TLE
+  float        epoch_ms;          // Fractional seconds portion of epoch, ms
+  double       mean_motion_dt2;   // 1st derivative of mean motion div2, rev/day2
+  double       mean_motion_ddt6;  // 2nd derivative of mean motion div6, rev/day3
+  double       Bstar;             // Pseudo-ballistic drag coefficient, 1/Earth r
+  unsigned int elset_number;      // Current element set number
+  double       inclination;       // Orbital inclination, 0..180deg
+  double       right_asc_node;    // Right ascension of ascension node, 0..360deg
+  double       eccentricity;      // Orbital eccentricity, 0.0..1.0
+  double       argument_perigee;  // Argument of perigee, 0..360deg
+  double       mean_anomaly;      // Mean anomaly at epoch, 0..360deg
+  double       mean_motion;       // Mean motion at epoch, rev/day
+  unsigned int norad_number;      // Catalogue number
+  unsigned int orbit_number;      // Number of revolutions at epoch
   // Flags
-  bool isdeepspace, islowperigee;
-  // Standard orbital terms
-  double a, altapoR, altperR, aycof, C1, C4, C5, con41, cosi, d2, d3, d4,
-         delMo, eta,   mdot,  nodecf, nodedot, omegaprime, omgcof, sinMo, sini,
-         t2cof, t3cof, t4cof, t5cof,  x1mth2,  x7thm1,     xlcof,  xmcof;
+  bool is_deep_space, use_simple_model, is_resonant;
+  // Common terms
+  double a3ovk2, aycof, C1, C4, cosio,  eta,   omgdot, perigee, period, sinio,
+         t2cof, x1mth2, x3thm1, x7thm1, xlcof, xmdot,  xnodcf,  xnodot;
+  // Near space terms
+  double a, altapoR, altperR, C5, , cosi, d2, d3, d4,
+         delMo, mdot,  nodecf, nodedot, omegaprime, omgcof, sinMo, sini,
+         t3cof, t4cof, t5cof, xmcof;
   // Deep space terms
+  double julepoch, GSTo;
   double e3,  ee2,  peo, pgho, pho,  pinco, plo, se2,  se3,  sgh2, sgh3, sgh4,
          sh2, sh3,  si2, si3,  sl2,  sl3,   sl4, xgh2, xgh3, xgh4, xh2,  xh3,
          xi2, xi3,  xl2, xl3,  xl4,  zmol,  zmos;

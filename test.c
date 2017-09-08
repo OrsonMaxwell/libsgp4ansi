@@ -52,7 +52,7 @@ main (int argc, char** argv)
       // TODO: Read name from file!
       tle2orbit(tlestr1, tlestr2, &s);
 
-      fprintf(outfile, "%ld (%12.9lf)\n", s.number, 3.14159265358979323846 * 2 / s.no);
+      fprintf(outfile, "%ld (%12.9lf)\n", s.norad_number, 3.14159265358979323846 * 2 / s.mean_motion);
 
       // Iterate over time range
       for (double t = t_start; t <= t_stop; t += deltamin)
