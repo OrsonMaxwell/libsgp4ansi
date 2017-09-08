@@ -131,8 +131,11 @@ sat_print(sat*, const char*);
 extern int
 sat_load_tle(char*, char*, char*, sat*);
 
-// Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
+// Expand SGP4/SDP4 orbit elements from NORAD TLE data
 extern int
 sat_init(sat*);
+
+int FindPositionSGP4(sat* s, double tdelta, vec3*);
+int FindPositionSDP4(sat* s, double tsince, vec3*);
 
 #endif /* LIBSGP4ANSI_H_ */

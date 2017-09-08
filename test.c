@@ -17,7 +17,7 @@ main (int argc, char** argv)
   vec3 posteme = {0};
   //vec3 velteme = {0};
 
-  double t_start = -1440, t_stop = 1440, deltamin = 20;//, tsince = 0;
+  double t_start = -1440, t_stop = 1440, deltamin = 1;
 
   sat s = {0};
 
@@ -55,12 +55,21 @@ main (int argc, char** argv)
         return 0;
       }
 
-      fprintf(outfile, "%ld (%12.9lf)\n", s.tle.norad_number, 6.283185 / s.tle.mean_motion);
+      fprintf(outfile, "%ld (%12.9lf)\n", s.tle.norad_number, s.comm.period);
 
       // Iterate over time range
       for (double t = t_start; t <= t_stop; t += deltamin)
       {
         //error = orbit_prop(&s, t, 10, 1.0e-12, &posteme, &velteme);
+        if (s.comm.period >= 225)
+        {
+          FindPositionSDP4(&s, t, &posteme);
+        }
+        else
+        {
+          FindPositionSGP4(&s, t, &posteme);
+        }
+
         if (error != 0)
           printf("[ERROR] at %f: %3d\n", t, error);
 

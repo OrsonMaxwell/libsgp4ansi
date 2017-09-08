@@ -52,6 +52,56 @@ sat_deep_init(sat*, const double, const double, const double, const double,
 inline void
 sat_deep_dot(sat*, struct intv*);
 
+int kepler_nr
+(
+    const double tdelta,
+    const double e,
+    const double a,
+    const double omega,
+    const double xl,
+    const double xnode,
+    const double xincl,
+    const double xlcof,
+    const double aycof,
+    const double x3thm1,
+    const double x1mth2,
+    const double x7thm1,
+    const double cosio,
+    const double sinio,
+    vec3* pos
+);
+
+void
+DeepSpaceCalculateLunarSolarTerms(
+    sat* s,
+        const double tsince,
+        double* pe,
+        double* pinc,
+        double* pl,
+        double* pgh,
+        double* ph);
+
+void
+DeepSpacePeriodics(
+    sat* s,
+        const double tsince,
+        double* em,
+        double* xinc,
+        double* omgasm,
+        double* xnodes,
+        double* xll);
+
+void
+DeepSpaceSecular(
+    sat *s,
+    const double tsince,
+    double* xll,
+    double* omgasm,
+    double* xnodes,
+    double* em,
+    double* xinc,
+    double* xn);
+
 // ************************************************************************* //
 //                             PRIVATE FUNCTIONS                             //
 // ************************************************************************* //
@@ -358,118 +408,118 @@ sat_deep_init
 
   for (int cnt = 0; cnt < 2; cnt++)
   {
-      // Repeat solar term calculation a second time after linart terms
-      const double a1  = zcosg * zcosh + zsing * zcosi * zsinh;
-      const double a3  = -zsing * zcosh + zcosg * zcosi * zsinh;
-      const double a7  = -zcosg * zsinh + zsing * zcosi * zcosh;
-      const double a8  = zsing * zsini;
-      const double a9  = zsing * zsinh + zcosg * zcosi*zcosh;
-      const double a10 = zcosg * zsini;
-      const double a2  = cosio * a7 + sinio * a8;
-      const double a4  = cosio * a9 + sinio * a10;
-      const double a5  = -sinio * a7 + cosio * a8;
-      const double a6  = -sinio * a9 + cosio * a10;
-      const double x1  = a1 * cosg + a2 * sing;
-      const double x2  = a3 * cosg + a4 * sing;
-      const double x3  = -a1 * sing + a2 * cosg;
-      const double x4  = -a3 * sing + a4 * cosg;
-      const double x5  = a5 * sing;
-      const double x6  = a6 * sing;
-      const double x7  = a5 * cosg;
-      const double x8  = a6 * cosg;
-      const double z31 = 12.0 * x1 * x1 - 3. * x3 * x3;
-      const double z32 = 24.0 * x1 * x2 - 6. * x3 * x4;
-      const double z33 = 12.0 * x2 * x2 - 3. * x4 * x4;
-      double z1        = 3.0 * (a1 * a1 + a2 * a2) + z31 * eosq;
-      double z2        = 6.0 * (a1 * a3 + a2 * a4) + z32 * eosq;
-      double z3        = 3.0 * (a3 * a3 + a4 * a4) + z33 * eosq;
+    // Repeat solar term calculation a second time after linart terms
+    const double a1  = zcosg * zcosh + zsing * zcosi * zsinh;
+    const double a3  = -zsing * zcosh + zcosg * zcosi * zsinh;
+    const double a7  = -zcosg * zsinh + zsing * zcosi * zcosh;
+    const double a8  = zsing * zsini;
+    const double a9  = zsing * zsinh + zcosg * zcosi*zcosh;
+    const double a10 = zcosg * zsini;
+    const double a2  = cosio * a7 + sinio * a8;
+    const double a4  = cosio * a9 + sinio * a10;
+    const double a5  = -sinio * a7 + cosio * a8;
+    const double a6  = -sinio * a9 + cosio * a10;
+    const double x1  = a1 * cosg + a2 * sing;
+    const double x2  = a3 * cosg + a4 * sing;
+    const double x3  = -a1 * sing + a2 * cosg;
+    const double x4  = -a3 * sing + a4 * cosg;
+    const double x5  = a5 * sing;
+    const double x6  = a6 * sing;
+    const double x7  = a5 * cosg;
+    const double x8  = a6 * cosg;
+    const double z31 = 12.0 * x1 * x1 - 3. * x3 * x3;
+    const double z32 = 24.0 * x1 * x2 - 6. * x3 * x4;
+    const double z33 = 12.0 * x2 * x2 - 3. * x4 * x4;
+    double z1        = 3.0 * (a1 * a1 + a2 * a2) + z31 * eosq;
+    double z2        = 6.0 * (a1 * a3 + a2 * a4) + z32 * eosq;
+    double z3        = 3.0 * (a3 * a3 + a4 * a4) + z33 * eosq;
 
-      const double z11 = -6.0 * a1 * a5 + eosq
-                       * (-24. * x1 * x7 - 6. * x3 * x5);
-      const double z12 = -6.0 * (a1 * a6 + a3 * a5) + eosq
-                       *(-24. * (x2 * x7 + x1 * x8) - 6. * (x3 * x6 + x4 * x5));
-      const double z13 = -6.0 * a3 * a6 + eosq
-                       * (-24. * x2 * x8 - 6. * x4 * x6);
-      const double z21 = 6.0 * a2 * a5 + eosq
-                       * (24. * x1 * x5 - 6. * x3 * x7);
-      const double z22 = 6.0 * (a4 * a5 + a2 * a6) + eosq
-                       * (24. * (x2 * x5 + x1 * x6) - 6. * (x4 * x7 + x3 * x8));
-      const double z23 = 6.0 * a4 * a6 + eosq
-                       * (24. * x2 * x6 - 6. * x4 * x8);
+    const double z11 = -6.0 * a1 * a5 + eosq
+                     * (-24. * x1 * x7 - 6. * x3 * x5);
+    const double z12 = -6.0 * (a1 * a6 + a3 * a5) + eosq
+                     *(-24. * (x2 * x7 + x1 * x8) - 6. * (x3 * x6 + x4 * x5));
+    const double z13 = -6.0 * a3 * a6 + eosq
+                     * (-24. * x2 * x8 - 6. * x4 * x6);
+    const double z21 = 6.0 * a2 * a5 + eosq
+                     * (24. * x1 * x5 - 6. * x3 * x7);
+    const double z22 = 6.0 * (a4 * a5 + a2 * a6) + eosq
+                     * (24. * (x2 * x5 + x1 * x6) - 6. * (x4 * x7 + x3 * x8));
+    const double z23 = 6.0 * a4 * a6 + eosq
+                     * (24. * x2 * x6 - 6. * x4 * x8);
 
-      z1 = z1 + z1 + betao2 * z31;
-      z2 = z2 + z2 + betao2 * z32;
-      z3 = z3 + z3 + betao2 * z33;
+    z1 = z1 + z1 + betao2 * z31;
+    z2 = z2 + z2 + betao2 * z32;
+    z3 = z3 + z3 + betao2 * z33;
 
-      const double s3 = cc * xnoi;
-      const double s2 = -0.5 * s3 / betao;
-      const double s4 = s3 * betao;
-      const double s1 = -15.0 * s->tle.eccentricity * s4;
-      const double s5 = x1 * x3 + x2 * x4;
-      const double s6 = x2 * x3 + x1 * x4;
-      const double s7 = x2 * x4 - x1 * x3;
+    const double s3 = cc * xnoi;
+    const double s2 = -0.5 * s3 / betao;
+    const double s4 = s3 * betao;
+    const double s1 = -15.0 * s->tle.eccentricity * s4;
+    const double s5 = x1 * x3 + x2 * x4;
+    const double s6 = x2 * x3 + x1 * x4;
+    const double s7 = x2 * x4 - x1 * x3;
 
-      se  = s1 * zn * s5;
-      si  = s2 * zn * (z11 + z13);
-      sl  = -zn * s3 * (z1 + z3 - 14.0 - 6.0 * eosq);
-      sgh = s4 * zn * (z31 + z33 - 6.0);
+    se  = s1 * zn * s5;
+    si  = s2 * zn * (z11 + z13);
+    sl  = -zn * s3 * (z1 + z3 - 14.0 - 6.0 * eosq);
+    sgh = s4 * zn * (z31 + z33 - 6.0);
 
-      // Fix for certain inclination
-      if (s->tle.inclination < 5.2359877e-2 ||
+    // Fix for certain inclination
+    if (s->tle.inclination < 5.2359877e-2 ||
         s->tle.inclination > PI - 5.2359877e-2)
-      {
-        shdq = 0.0;
-      }
-      else
-      {
-        shdq = (-zn * s2 * (z21 + z23)) / sinio;
-      }
+    {
+      shdq = 0.0;
+    }
+    else
+    {
+      shdq = (-zn * s2 * (z21 + z23)) / sinio;
+    }
 
-      s->deep.ee2  =  2.0  * s1 * s6;
-      s->deep.e3   =  2.0  * s1 * s7;
-      s->deep.xi2  =  2.0  * s2 * z12;
-      s->deep.xi3  =  2.0  * s2 * (z13 - z11);
-      s->deep.xl2  = -2.0  * s3 * z2;
-      s->deep.xl3  = -2.0  * s3 * (z3 - z1);
-      s->deep.xl4  = -2.0  * s3 * (-21.0 - 9.0 * eosq) * ze;
-      s->deep.xgh2 =  2.0  * s4 * z32;
-      s->deep.xgh3 =  2.0  * s4 * (z33 - z31);
-      s->deep.xgh4 = -18.0 * s4 * ze;
-      s->deep.xh2  = -2.0  * s2 * z22;
-      s->deep.xh3  = -2.0  * s2 * (z23 - z21);
+    s->deep.ee2  =  2.0  * s1 * s6;
+    s->deep.e3   =  2.0  * s1 * s7;
+    s->deep.xi2  =  2.0  * s2 * z12;
+    s->deep.xi3  =  2.0  * s2 * (z13 - z11);
+    s->deep.xl2  = -2.0  * s3 * z2;
+    s->deep.xl3  = -2.0  * s3 * (z3 - z1);
+    s->deep.xl4  = -2.0  * s3 * (-21.0 - 9.0 * eosq) * ze;
+    s->deep.xgh2 =  2.0  * s4 * z32;
+    s->deep.xgh3 =  2.0  * s4 * (z33 - z31);
+    s->deep.xgh4 = -18.0 * s4 * ze;
+    s->deep.xh2  = -2.0  * s2 * z22;
+    s->deep.xh3  = -2.0  * s2 * (z23 - z21);
 
-      if (cnt == 1)
-      {
-          break;
-      }
-      // Calculate lunar terms
-      s->deep.sse  = se;
-      s->deep.ssi  = si;
-      s->deep.ssl  = sl;
-      s->deep.ssh  = shdq;
-      s->deep.ssg  = sgh - cosio * s->deep.ssh;
-      s->deep.se2  = s->deep.ee2;
-      s->deep.si2  = s->deep.xi2;
-      s->deep.sl2  = s->deep.xl2;
-      s->deep.sgh2 = s->deep.xgh2;
-      s->deep.sh2  = s->deep.xh2;
-      s->deep.se3  = s->deep.e3;
-      s->deep.si3  = s->deep.xi3;
-      s->deep.sl3  = s->deep.xl3;
-      s->deep.sgh3 = s->deep.xgh3;
-      s->deep.sh3  = s->deep.xh3;
-      s->deep.sl4  = s->deep.xl4;
-      s->deep.sgh4 = s->deep.xgh4;
+    if (cnt == 1)
+    {
+      break;
+    }
+    // Calculate lunar terms
+    s->deep.sse  = se;
+    s->deep.ssi  = si;
+    s->deep.ssl  = sl;
+    s->deep.ssh  = shdq;
+    s->deep.ssg  = sgh - cosio * s->deep.ssh;
+    s->deep.se2  = s->deep.ee2;
+    s->deep.si2  = s->deep.xi2;
+    s->deep.sl2  = s->deep.xl2;
+    s->deep.sgh2 = s->deep.xgh2;
+    s->deep.sh2  = s->deep.xh2;
+    s->deep.se3  = s->deep.e3;
+    s->deep.si3  = s->deep.xi3;
+    s->deep.sl3  = s->deep.xl3;
+    s->deep.sgh3 = s->deep.xgh3;
+    s->deep.sh3  = s->deep.xh3;
+    s->deep.sl4  = s->deep.xl4;
+    s->deep.sgh4 = s->deep.xgh4;
 
-      zcosg = zcosgl;
-      zsing = zsingl;
-      zcosi = zcosil;
-      zsini = zsinil;
-      zcosh = zcoshl * cosq + zsinhl * sinq;
-      zsinh = sinq * zcoshl - cosq * zsinhl;
-      zn    = ZNL;
-      cc    = C1L;
-      ze    = ZEL;
+    zcosg = zcosgl;
+    zsing = zsingl;
+    zcosi = zcosil;
+    zsini = zsinil;
+    zcosh = zcoshl * cosq + zsinhl * sinq;
+    zsinh = sinq * zcoshl - cosq * zsinhl;
+    zn    = ZNL;
+    cc    = C1L;
+    ze    = ZEL;
   }
 
   s->deep.sse += se;
@@ -479,15 +529,13 @@ sat_deep_init
   s->deep.ssh += shdq;
 
   s->deep.is_resonant     = false;
-  s->deep.is_synchronous   = false;
-  bool do_init_integrator    = true;
+  s->deep.is_synchronous  = false;
+  bool do_init_integrator = true;
 
   if (s->comm.xnodp < 0.0052359877
    && s->comm.xnodp > 0.0034906585)
   {
-    /*
-     * 24h synchronous resonance terms initialisation
-     */
+    // Synchronous resonant terms initialization
     s->deep.is_resonant = true;
     s->deep.is_synchronous = true;
 
@@ -830,24 +878,24 @@ sat_load_tle(char* name_str, char* line1, char* line2, sat* s)
   }
   s->tle.epoch_jul        = unix2jul(&s->tle.epoch, s->tle.epoch_ms);
   s->tle.mean_motion_dt2  = mean_motion_dt2  / (RPD2RADPM * 1440.0);
-  s->tle.mean_motion_ddt6 = mean_motion_ddt6 * pow(10, nexp)
-                          / (RPD2RADPM * 1440.0 * 1440);
+  s->tle.mean_motion_ddt6 = mean_motion_ddt6 * pow(10.0, nexp)
+                          / (RPD2RADPM * 1440.0 * 1440.0);
   s->tle.Bstar            = bstar * pow(10, bexp);
   s->tle.inclination      = inclination * DEG2RAD;
   s->tle.right_asc_node   = right_asc_node * DEG2RAD;
   s->tle.argument_perigee = argument_perigee * DEG2RAD;
   s->tle.mean_anomaly     = mean_anomaly * DEG2RAD;
-  s->tle.mean_motion      = mean_motion * TWOPI / 1440;
+  s->tle.mean_motion      = mean_motion / RPD2RADPM;
 
-  // Recover original mean motion and semimajor axis
+  // Un-Kozai mean motion and semimajor axis
   const double a1     = pow(XKE / s->tle.mean_motion, TWOTHIRD);
   const double cosio  = cos(s->tle.inclination);
   const double theta2 = cosio * cosio;
   const double x3thm1 = 3.0 * theta2 - 1.0;
   const double eosq   = s->tle.eccentricity * s->tle.eccentricity;
   const double betao2 = 1.0 - eosq;
-  const double betao  = sqrt(betao2);
-  const double temp   = (1.5 * J2 / 2.0) * x3thm1 / (betao * betao2);
+  const double rte2   = sqrt(betao2);
+  const double temp   = (1.5 * J2DIV2) * x3thm1 / (rte2 * betao2);
   const double del1   = temp / (a1 * a1);
   const double a0     = a1 * (1.0 - del1 * (1.0 / 3.0 + del1 * (1.0 + del1
                       * 134.0 / 81.0)));
@@ -865,7 +913,7 @@ sat_load_tle(char* name_str, char* line1, char* line2, sat* s)
 }
 
 /*
- * Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
+ * Expand SGP4/SDP4 orbit elements from NORAD TLE data
  *
  * Inputs:  s  - sat struct pointer to an unexpanded elements set
  * Outputs: s  - sat struct pointer with full orbital data
@@ -892,6 +940,7 @@ sat_init(sat* s)
     return -2;
   }
 
+  s->deep.gsto        = jul2gst(s->tle.epoch_jul);
   s->comm.cosio       = cos(s->tle.inclination);
   s->comm.sinio       = sin(s->tle.inclination);
   const double theta2 = s->comm.cosio * s->comm.cosio;
@@ -930,105 +979,777 @@ sat_init(sat* s)
     s4 = s4 / RE + 1;
   }
 
-   // Expand constants
-   const double pinvsq = 1.0 / (s->comm.aodp * s->comm.aodp * betao2 * betao2);
-   const double tsi    = 1.0 / (s->comm.aodp - s4);
-   s->comm.eta         = s->comm.aodp * s->tle.eccentricity * tsi;
-   const double etasq  = s->comm.eta * s->comm.eta;
-   const double eeta   = s->tle.eccentricity * s->comm.eta;
-   const double psisq  = fabs(1.0 - etasq);
-   const double coef   = qoms24 * pow(tsi, 4.0);
-   const double coef1  = coef / pow(psisq, 3.5);
-   const double c2     = coef1 * s->comm.xnodp * (s->comm.aodp * (1.0 + 1.5
-                       * etasq + eeta * (4.0 + etasq)) + 0.75 * J2DIV2 * tsi
-                       / psisq * s->comm.x3thm1 * (8.0 + 3.0 * etasq
-                       * (8.0 + etasq)));
-   s->comm.c1          = s->tle.Bstar * c2;
-   s->comm.a3ovk2      = -J3 / J2DIV2;
-   s->comm.x1mth2      = 1.0 - theta2;
-   s->comm.c4          = 2.0 * s->comm.xnodp * coef1 * s->comm.aodp * betao2
-                       * (s->comm.eta * (2.0 + 0.5 * etasq)
-                       + s->tle.eccentricity * (0.5 + 2.0 * etasq) - J2 * tsi
-                       / (s->comm.aodp * psisq) * (-3.0 * s->comm.x3thm1 * (1.0
-                       - 2.0 * eeta + etasq * (1.5 - 0.5 * eeta)) + 0.75
-                       * s->comm.x1mth2 * (2.0 * etasq - eeta * (1.0 + etasq))
-                       * cos(2.0 * s->tle.argument_perigee)));
-   const double theta4 = theta2 * theta2;
-   const double temp1  = 3.0 * J2DIV2 * pinvsq * s->comm.xnodp;
-   const double temp2  = temp1 * J2DIV2 * pinvsq;
-   const double temp3  = 1.25 * J2DIV2 * pinvsq * pinvsq * s->comm.xnodp;
-   s->comm.xmdot       = s->comm.xnodp + 0.5 * temp1 * betao * s->comm.x3thm1
-                       + 0.0625 * temp2 * betao * (13.0 - 78.0 * theta2 + 137.0
-                       * theta4);
-   const double x1m5th = 1.0 - 5.0 * theta2;
-   s->comm.omgdot      = -0.5 * temp1 * x1m5th + 0.0625 * temp2 * (7.0 - 114.0
-                       * theta2 + 395.0 * theta4) + temp3 * (3.0 - 36.0
-                       * theta2 + 49.0 * theta4);
-   const double xhdot1 = -temp1 * s->comm.cosio;
-   s->comm.xnodot      = xhdot1 + (0.5 * temp2 * (4.0 - 19.0 * theta2) + 2.0
-                       * temp3 * (3.0 - 7.0 * theta2)) * s->comm.cosio;
-   s->comm.xnodcf      = 3.5 * betao2 * xhdot1 * s->comm.c1;
-   s->comm.t2cof       = 1.5 * s->comm.c1;
+  // Expand constants
+  const double pinvsq = 1.0 / (s->comm.aodp * s->comm.aodp * betao2 * betao2);
+  const double tsi    = 1.0 / (s->comm.aodp - s4);
+  s->comm.eta         = s->comm.aodp * s->tle.eccentricity * tsi;
+  const double etasq  = s->comm.eta * s->comm.eta;
+  const double eeta   = s->tle.eccentricity * s->comm.eta;
+  const double psisq  = fabs(1.0 - etasq);
+  const double coef   = qoms24 * pow(tsi, 4.0);
+  const double coef1  = coef / pow(psisq, 3.5);
+  const double c2     = coef1 * s->comm.xnodp * (s->comm.aodp * (1.0 + 1.5
+                      * etasq + eeta * (4.0 + etasq)) + 0.75 * J2DIV2 * tsi
+                      / psisq * s->comm.x3thm1 * (8.0 + 3.0 * etasq
+                      * (8.0 + etasq)));
+  s->comm.c1          = s->tle.Bstar * c2;
+  s->comm.a3ovk2      = -J3 / J2DIV2;
+  s->comm.x1mth2      = 1.0 - theta2;
+  s->comm.c4          = 2.0 * s->comm.xnodp * coef1 * s->comm.aodp * betao2
+                      * (s->comm.eta * (2.0 + 0.5 * etasq)
+                      + s->tle.eccentricity * (0.5 + 2.0 * etasq) - J2 * tsi
+                      / (s->comm.aodp * psisq) * (-3.0 * s->comm.x3thm1 * (1.0
+                      - 2.0 * eeta + etasq * (1.5 - 0.5 * eeta)) + 0.75
+                      * s->comm.x1mth2 * (2.0 * etasq - eeta * (1.0 + etasq))
+                      * cos(2.0 * s->tle.argument_perigee)));
+  const double theta4 = theta2 * theta2;
+  const double temp1  = 3.0 * J2DIV2 * pinvsq * s->comm.xnodp;
+  const double temp2  = temp1 * J2DIV2 * pinvsq;
+  const double temp3  = 1.25 * J2DIV2 * pinvsq * pinvsq * s->comm.xnodp;
+  s->comm.xmdot       = s->comm.xnodp + 0.5 * temp1 * betao * s->comm.x3thm1
+                      + 0.0625 * temp2 * betao * (13.0 - 78.0 * theta2 + 137.0
+                      * theta4);
+  const double x1m5th = 1.0 - 5.0 * theta2;
+  s->comm.omgdot      = -0.5 * temp1 * x1m5th + 0.0625 * temp2 * (7.0 - 114.0
+                      * theta2 + 395.0 * theta4) + temp3 * (3.0 - 36.0
+                      * theta2 + 49.0 * theta4);
+  const double xhdot1 = -temp1 * s->comm.cosio;
+  s->comm.xnodot      = xhdot1 + (0.5 * temp2 * (4.0 - 19.0 * theta2) + 2.0
+                      * temp3 * (3.0 - 7.0 * theta2)) * s->comm.cosio;
+  s->comm.xnodcf      = 3.5 * betao2 * xhdot1 * s->comm.c1;
+  s->comm.t2cof       = 1.5 * s->comm.c1;
 
-   if (fabs(s->comm.cosio + 1.0) > 1.5e-12)
-   {
-     s->comm.xlcof = 0.125 * s->comm.a3ovk2 * s->comm.sinio * (3.0 + 5.0 * s->comm.cosio) / (1.0 + s->comm.cosio);
-   }
-   else
-   {
-     s->comm.xlcof = 0.125 * s->comm.a3ovk2 * s->comm.sinio * (3.0 + 5.0 * s->comm.cosio) / 1.5e-12;
-   }
+  if (fabs(s->comm.cosio + 1.0) > 1.5e-12)
+  {
+    s->comm.xlcof     = 0.125 * s->comm.a3ovk2 * s->comm.sinio * (3.0 + 5.0
+                      * s->comm.cosio) / (1.0 + s->comm.cosio);
+  }
+  else
+  {
+    s->comm.xlcof     = 0.125 * s->comm.a3ovk2 * s->comm.sinio * (3.0 + 5.0
+                      * s->comm.cosio) / 1.5e-12;
+  }
 
-   s->comm.aycof = 0.25 * s->comm.a3ovk2 * s->comm.sinio;
-   s->comm.x7thm1 = 7.0 * theta2 - 1.0;
+  s->comm.aycof       = 0.25 * s->comm.a3ovk2 * s->comm.sinio;
+  s->comm.x7thm1      = 7.0 * theta2 - 1.0;
 
-   if (s->comm.is_deep_space)
-   {
-     s->deep.gsto = jul2gst(s->tle.epoch_jul);
+  if (s->comm.is_deep_space)
+  {
+    // Initialize deep space constants
+    sat_deep_init(s, eosq, s->comm.sinio, s->comm.cosio, betao, theta2, betao2,
+                  s->comm.xmdot, s->comm.omgdot, s->comm.xnodot);
+  }
+  else
+  {
+    // Shortcut for round orbits
+    double c3 = 0.0;
+    if (s->tle.eccentricity > 1.0e-4)
+    {
+      c3 = coef * tsi * s->comm.a3ovk2 * s->comm.xnodp * s->comm.sinio
+         / s->tle.eccentricity;
+    }
 
-     // Initialize deep space constants
-     sat_deep_init(s, eosq, s->comm.sinio, s->comm.cosio, betao, theta2, betao2,
-                   s->comm.xmdot, s->comm.omgdot, s->comm.xnodot);
-   }
-   else
-   {
-     // Shortcut for round orbits
-     double c3 = 0.0;
-     if (s->tle.eccentricity > 1.0e-4)
-     {
-       c3 = coef * tsi * s->comm.a3ovk2 * s->comm.xnodp * s->comm.sinio
-           / s->tle.eccentricity;
-     }
+    s->near.delmo       = pow(1 + s->comm.eta * (cos(s->tle.mean_anomaly)), 3.0);
+    s->near.sinmo       = sin(s->tle.mean_anomaly);
+    s->near.c5      = 2.0 * coef1 * s->comm.aodp * betao2 * (1.0 + 2.75
+                    * (etasq + eeta) + eeta * etasq);
+    s->near.omgcof  = s->tle.Bstar * c3 * cos(s->tle.argument_perigee);
 
-     s->near.c5      = 2.0 * coef1 * s->comm.aodp * betao2 * (1.0 + 2.75
-         * (etasq + eeta) + eeta * etasq);
-     s->near.omgcof  = s->tle.Bstar * c3 * cos(s->tle.argument_perigee);
+    // Shortcut for round orbits
+    s->near.xmcof   = 0.0;
+    if (s->tle.eccentricity > 1.0e-4)
+    {
+      s->near.xmcof = -TWOTHIRD * coef * s->tle.Bstar / eeta;
+    }
 
-     // Shortcut for round orbits
-     s->near.xmcof   = 0.0;
-     if (s->tle.eccentricity > 1.0e-4)
-     {
-       s->near.xmcof = -TWOTHIRD * coef * s->tle.Bstar / eeta;
-     }
+    if (!s->comm.use_simple_model)
+    {
+      const double c1sq = s->comm.c1 * s->comm.c1;
+      s->near.d2        = 4.0 * s->comm.aodp * tsi * c1sq;
+      const double temp = s->near.d2 * tsi * s->comm.c1 / 3.0;
+      s->near.d3        = (17.0 * s->comm.aodp + s4) * temp;
+      s->near.d4        = 0.5 * temp * s->comm.aodp * tsi * (221.0
+                        * s->comm.aodp + 31.0 * s4) * s->comm.c1;
+      s->near.t3cof     = s->near.d2 + 2.0 * c1sq;
+      s->near.t4cof     = 0.25 * (3.0 * s->near.d3 + s->comm.c1
+                        * (12.0 * s->near.d2 + 10.0 * c1sq));
+      s->near.t5cof     = 0.2 * (3.0 * s->near.d4 + 12.0 * s->comm.c1
+                        * s->near.d3 + 6.0 * s->near.d2 * s->near.d2 + 15.0
+                        * c1sq * (2.0 * s->near.d2 + c1sq));
+    }
+  }
 
-     s->near.delmo = pow(1.0 + s->comm.eta * (cos(s->tle.mean_anomaly)), 3.0);
-     s->near.sinmo = sin(s->tle.mean_anomaly);
+  vec3 pos = {0};
+  sat_print(s, "After init");
 
-     if (!s->comm.use_simple_model)
-     {
-       const double c1sq = s->comm.c1 * s->comm.c1;
-       s->near.d2        = 4.0 * s->comm.aodp * tsi * c1sq;
-       const double temp = s->near.d2 * tsi * s->comm.c1 / 3.0;
-       s->near.d3        = (17.0 * s->comm.aodp + s4) * temp;
-       s->near.d4        = 0.5 * temp * s->comm.aodp * tsi * (221.0
-           * s->comm.aodp + 31.0 * s4) * s->comm.c1;
-       s->near.t3cof     = s->near.d2 + 2.0 * c1sq;
-       s->near.t4cof     = 0.25 * (3.0 * s->near.d3 + s->comm.c1
-           * (12.0 * s->near.d2 + 10.0 * c1sq));
-       s->near.t5cof     = 0.2 * (3.0 * s->near.d4 + 12.0 * s->comm.c1 *
-           s->near.d3 + 6.0 * s->near.d2 * s->near.d2 + 15.0 *
-           c1sq * (2.0 * s->near.d2 + c1sq));
-     }
-   }
+
   return 0;
+} // sat_init()
+
+int FindPositionSDP4(sat* s, double tdelta, vec3* pos)
+{
+  /*
+   * the final values
+   */
+  double e;
+  double a;
+  double omega;
+  double xl;
+  double xnode;
+  double xincl;
+
+
+  /*
+   * update for secular gravity and atmospheric drag
+   */
+  double xmdf = s->tle.mean_anomaly
+            + s->comm.xmdot * tdelta;
+  double omgadf = s->tle.argument_perigee
+            + s->comm.omgdot * tdelta;
+  const double xnoddf = s->tle.right_asc_node
+            + s->comm.xnodot * tdelta;
+
+  const double tsq = tdelta * tdelta;
+  xnode = xnoddf + s->comm.xnodcf * tsq;
+  double tempa = 1.0 - s->comm.c1 * tdelta;
+  double tempe = s->tle.Bstar * s->comm.c4 * tdelta;
+  double templ = s->comm.t2cof * tsq;
+
+  double xn = s->comm.xnodp;
+  e = s->tle.eccentricity;
+  xincl = s->tle.inclination;
+
+  DeepSpaceSecular(s, tdelta, &xmdf, &omgadf, &xnode, &e, &xincl, &xn);
+
+  if (xn <= 0.0)
+  {
+    return -1;
+  }
+
+  a = pow(XKE / xn, TWOTHIRD) * tempa * tempa;
+  e -= tempe;
+  double xmam = xmdf + s->comm.xnodp * templ;
+
+  DeepSpacePeriodics(s, tdelta, &e, &xincl, &omgadf, &xnode, &xmam);
+
+  /*
+   * keeping xincl positive important unless you need to display xincl
+   * and dislike negative inclinations
+   */
+  if (xincl < 0.0)
+  {
+    xincl = -xincl;
+    xnode += PI;
+    omgadf -= PI;
+  }
+
+  xl = xmam + omgadf + xnode;
+  omega = omgadf;
+
+  /*
+   * fix tolerance for error recognition
+   */
+  if (e <= -0.001)
+  {
+    return -2;
+  }
+  else if (e < 1.0e-6)
+  {
+    e = 1.0e-6;
+  }
+  else if (e > (1.0 - 1.0e-6))
+  {
+    e = 1.0 - 1.0e-6;
+  }
+
+  /*
+   * Apply short period periodics
+   */
+  const double perturbed_sinio = sin(xincl);
+  const double perturbed_cosio = cos(xincl);
+
+  const double perturbed_theta2 = perturbed_cosio * perturbed_cosio;
+
+  const double perturbed_x3thm1 = 3.0 * perturbed_theta2 - 1.0;
+  const double perturbed_x1mth2 = 1.0 - perturbed_theta2;
+  const double perturbed_x7thm1 = 7.0 * perturbed_theta2 - 1.0;
+
+  double perturbed_xlcof;
+  if (fabs(perturbed_cosio + 1.0) > 1.5e-12)
+  {
+    perturbed_xlcof = 0.125 * s->comm.a3ovk2 * perturbed_sinio
+        * (3.0 + 5.0 * perturbed_cosio) / (1.0 + perturbed_cosio);
+  }
+  else
+  {
+    perturbed_xlcof = 0.125 * s->comm.a3ovk2 * perturbed_sinio
+        * (3.0 + 5.0 * perturbed_cosio) / 1.5e-12;
+  }
+
+  const double perturbed_aycof = 0.25 * s->comm.a3ovk2
+      * perturbed_sinio;
+
+  /*
+   * using calculated values, find position and velocity
+   */
+  return kepler_nr(tdelta, e,
+                                        a, omega, xl, xnode,
+                                        xincl, perturbed_xlcof, perturbed_aycof,
+                                        perturbed_x3thm1, perturbed_x1mth2, perturbed_x7thm1,
+                                        perturbed_cosio, perturbed_sinio, pos);
+
+}
+
+int FindPositionSGP4(sat* s, double tdelta, vec3* pos)
+{
+  /*
+   * the final values
+   */
+  double e;
+  double a;
+  double omega;
+  double xl;
+  double xnode;
+  double xincl;
+
+  /*
+   * update for secular gravity and atmospheric drag
+   */
+  const double xmdf = s->tle.mean_anomaly
+            + s->comm.xmdot * tdelta;
+  const double omgadf = s->tle.argument_perigee
+            + s->comm.omgdot * tdelta;
+  const double xnoddf = s->tle.right_asc_node
+            + s->comm.xnodot * tdelta;
+
+  const double tsq = tdelta * tdelta;
+  xnode = xnoddf + s->comm.xnodcf * tsq;
+  double tempa = 1.0 - s->comm.c1 * tdelta;
+  double tempe = s->tle.Bstar * s->comm.c4 * tdelta;
+  double templ = s->comm.t2cof * tsq;
+
+  xincl = s->tle.inclination;
+  omega = omgadf;
+  double xmp = xmdf;
+
+  if (!s->comm.use_simple_model)
+  {
+    const double delomg = s->near.omgcof * tdelta;
+    const double delm = s->near.xmcof
+        * (pow(1.0 + s->comm.eta * cos(xmdf), 3.0)
+            * - s->near.delmo);
+    const double temp = delomg + delm;
+
+    xmp += temp;
+    omega -= temp;
+
+    const double tcube = tsq * tdelta;
+    const double tfour = tdelta * tcube;
+
+    tempa = tempa - s->near.d2 * tsq - s->near.d3
+        * tcube - s->near.d4 * tfour;
+    tempe += s->tle.Bstar * s->near.c5
+        * (sin(xmp) - s->near.sinmo);
+    templ += s->near.t3cof * tcube + tfour
+        * (s->near.t4cof + tdelta * s->near.t5cof);
+  }
+
+  a = s->comm.aodp * tempa * tempa;
+  e = s->tle.eccentricity - tempe;
+  xl = xmp + omega + xnode + s->comm.xnodp * templ;
+
+  /*
+   * fix tolerance for error recognition
+   */
+   if (e <= -0.001)
+   {
+     return -3;
+   }
+   else if (e < 1.0e-6)
+   {
+     e = 1.0e-6;
+   }
+   else if (e > (1.0 - 1.0e-6))
+   {
+     e = 1.0 - 1.0e-6;
+   }
+
+   /*
+    * using calculated values, find position and velocity
+    * we can pass in constants from Initialise() as these dont change
+    */
+   return kepler_nr(tdelta, e,
+                                         a, omega, xl, xnode,
+                                         xincl, s->comm.xlcof, s->comm.aycof,
+                                         s->comm.x3thm1, s->comm.x1mth2, s->comm.x7thm1,
+                                         s->comm.cosio, s->comm.sinio, pos);
+
+}
+
+int kepler_nr
+(
+    const double tdelta,
+    const double e,
+    const double a,
+    const double omega,
+    const double xl,
+    const double xnode,
+    const double xincl,
+    const double xlcof,
+    const double aycof,
+    const double x3thm1,
+    const double x1mth2,
+    const double x7thm1,
+    const double cosio,
+    const double sinio,
+    vec3* pos
+)
+{
+  const double beta2 = 1.0 - e * e;
+  const double xn = XKE / pow(a, 1.5);
+  /*
+   * long period periodics
+   */
+  const double axn = e * cos(omega);
+  const double temp11 = 1.0 / (a * beta2);
+  const double xll = temp11 * xlcof * axn;
+  const double aynl = temp11 * aycof;
+  const double xlt = xl + xll;
+  const double ayn = e * sin(omega) + aynl;
+  const double elsq = axn * axn + ayn * ayn;
+
+  if (elsq >= 1.0)
+  {
+    return -4;
+  }
+
+  /*
+   * solve keplers equation
+   * - solve using Newton-Raphson root solving
+   * - here capu is almost the mean anomoly
+   * - initialise the eccentric anomaly term epw
+   * - The fmod saves reduction of angle to +/-2pi in sin/cos() and prevents
+   * convergence problems.
+   */
+  const double capu = fmod(xlt - xnode, TWOPI);
+  double epw = capu;
+
+  double sinepw = 0.0;
+  double cosepw = 0.0;
+  double ecose = 0.0;
+  double esine = 0.0;
+
+  /*
+   * sensibility check for N-R correction
+   */
+  const double max_newton_naphson = 1.25 * fabs(sqrt(elsq));
+
+  bool kepler_running = true;
+
+  for (int i = 0; i < 10 && kepler_running; i++)
+  {
+    sinepw = sin(epw);
+    cosepw = cos(epw);
+    ecose = axn * cosepw + ayn * sinepw;
+    esine = axn * sinepw - ayn * cosepw;
+
+    double f = capu - epw + esine;
+
+    if (fabs(f) < 1.0e-12)
+    {
+      kepler_running = false;
+    }
+    else
+    {
+      /*
+       * 1st order Newton-Raphson correction
+       */
+      const double fdot = 1.0 - ecose;
+      double delta_epw = f / fdot;
+
+      /*
+       * 2nd order Newton-Raphson correction.
+       * f / (fdot - 0.5 * d2f * f/fdot)
+       */
+      if (i == 0)
+      {
+        if (delta_epw > max_newton_naphson)
+        {
+          delta_epw = max_newton_naphson;
+        }
+        else if (delta_epw < -max_newton_naphson)
+        {
+          delta_epw = -max_newton_naphson;
+        }
+      }
+      else
+      {
+        delta_epw = f / (fdot + 0.5 * esine * delta_epw);
+      }
+
+      /*
+       * Newton-Raphson correction of -F/DF
+       */
+      epw += delta_epw;
+    }
+  }
+  /*
+   * short period preliminary quantities
+   */
+  const double temp21 = 1.0 - elsq;
+  const double pl = a * temp21;
+
+  if (pl < 0.0)
+  {
+    return -5;
+  }
+
+  const double r = a * (1.0 - ecose);
+  const double temp31 = 1.0 / r;
+  const double rdot = XKE * sqrt(a) * esine * temp31;
+  const double rfdot = XKE * sqrt(pl) * temp31;
+  const double temp32 = a * temp31;
+  const double betal = sqrt(temp21);
+  const double temp33 = 1.0 / (1.0 + betal);
+  const double cosu = temp32 * (cosepw - axn + ayn * esine * temp33);
+  const double sinu = temp32 * (sinepw - ayn - axn * esine * temp33);
+  const double u = atan2(sinu, cosu);
+  const double sin2u = 2.0 * sinu * cosu;
+  const double cos2u = 2.0 * cosu * cosu - 1.0;
+
+  /*
+   * update for short periodics
+   */
+  const double temp41 = 1.0 / pl;
+  const double temp42 = J2DIV2 * temp41;
+  const double temp43 = temp42 * temp41;
+
+  const double rk = r * (1.0 - 1.5 * temp43 * betal * x3thm1)
+            + 0.5 * temp42 * x1mth2 * cos2u;
+  const double uk = u - 0.25 * temp43 * x7thm1 * sin2u;
+  const double xnodek = xnode + 1.5 * temp43 * cosio * sin2u;
+  const double xinck = xincl + 1.5 * temp43 * cosio * sinio * cos2u;
+  const double rdotk = rdot - xn * temp42 * x1mth2 * sin2u;
+  const double rfdotk = rfdot + xn * temp42 * (x1mth2 * cos2u + 1.5 * x3thm1);
+
+  /*
+   * orientation vectors
+   */
+  const double sinuk = sin(uk);
+  const double cosuk = cos(uk);
+  const double sinik = sin(xinck);
+  const double cosik = cos(xinck);
+  const double sinnok = sin(xnodek);
+  const double cosnok = cos(xnodek);
+  const double xmx = -sinnok * cosik;
+  const double xmy = cosnok * cosik;
+  const double ux = xmx * sinuk + cosnok * cosuk;
+  const double uy = xmy * sinuk + sinnok * cosuk;
+  const double uz = sinik * sinuk;
+  const double vx = xmx * cosuk - cosnok * sinuk;
+  const double vy = xmy * cosuk - sinnok * sinuk;
+  const double vz = sinik * cosuk;
+  /*
+   * position and velocity
+   */
+  pos->x = rk * ux * RE;
+  pos->y = rk * uy * RE;
+  pos->z = rk * uz * RE;
+  const double xdot = (rdotk * ux + rfdotk * vx) * RE / 60.0;
+  const double ydot = (rdotk * uy + rfdotk * vy) * RE / 60.0;
+  const double zdot = (rdotk * uz + rfdotk * vz) * RE / 60.0;
+  vec3 velocity = {xdot, ydot, zdot};
+
+  if (rk < 1.0)
+  {
+    return -6;
+  }
+
+  return 0;
+}
+
+void
+DeepSpaceSecular(
+    sat *s,
+    const double tsince,
+    double* xll,
+    double* omgasm,
+    double* xnodes,
+    double* em,
+    double* xinc,
+    double* xn)
+{
+  static const double STEP = 720.0;
+  static const double STEP2 = 259200.0;
+
+  *xll += s->deep.ssl * tsince;
+  *omgasm += s->deep.ssg * tsince;
+  *xnodes += s->deep.ssh * tsince;
+  *em += s->deep.sse * tsince;
+  *xinc += s->deep.ssi * tsince;
+
+  if (s->deep.is_resonant)
+  {
+    /*
+     * 1st condition (if tsince is less than one time step from epoch)
+     * 2nd condition (if s->intp.atime and
+     *     tsince are of opposite signs, so zero crossing required)
+     * 3rd condition (if tsince is closer to zero than
+     *     s->intp.atime, only integrate away from zero)
+     */
+    if (fabs(tsince) < STEP ||
+        tsince * s->intp.atime <= 0.0 ||
+        fabs(tsince) < fabs(s->intp.atime))
+    {
+      /*
+       * restart from epoch
+       */
+      s->intp.atime = 0.0;
+      s->intp.xni = s->comm.xnodp;
+      s->intp.xli = s->intc.xlamo;
+
+      /*
+       * restore precomputed values for epoch
+       */
+      s->intvt = s->intv0;
+    }
+
+    double ft = tsince - s->intp.atime;
+
+    /*
+     * if time difference (ft) is greater than the time step (720.0)
+     * loop around until s->intp.atime is within one time step of
+     * tsince
+     */
+    if (fabs(ft) >= STEP)
+    {
+      /*
+       * calculate step direction to allow s->intp.atime
+       * to catch up with tsince
+       */
+      double delt = -STEP;
+      if (ft >= 0.0)
+      {
+        delt = STEP;
+      }
+
+      do
+      {
+        /*
+         * integrate using current dot terms
+         */
+          /*
+           * integrator
+           */
+          s->intp.xli += s->intvt.xldot * delt + s->intvt.xndot * STEP2;
+          s->intp.xni += s->intvt.xndot * delt + s->intvt.xnddt * STEP2;
+
+          /*
+           * increment integrator time
+           */
+          s->intp.atime += delt;
+
+        /*
+         * calculate dot terms for next integration
+         */
+        sat_deep_dot(s, &s->intvt);
+
+        ft = tsince - s->intp.atime;
+      } while (fabs(ft) >= STEP);
+    }
+
+    /*
+     * integrator
+     */
+    *xn = s->intp.xni
+        + s->intvt.xndot * ft
+        + s->intvt.xnddt * ft * ft * 0.5;
+    const double xl = s->intp.xli
+        + s->intvt.xldot * ft
+        + s->intvt.xndot * ft * ft * 0.5;
+    const double temp = -*xnodes + s->deep.gsto + tsince * THDT;
+
+    if (s->deep.is_synchronous)
+    {
+      *xll = xl + temp - *omgasm;
+    }
+    else
+    {
+      *xll = xl + temp + temp;
+    }
+  }
+}
+
+void
+DeepSpacePeriodics(
+    sat* s,
+        const double tsince,
+        double* em,
+        double* xinc,
+        double* omgasm,
+        double* xnodes,
+        double* xll)
+{
+    /*
+     * storage for lunar / solar terms
+     * set by DeepSpaceCalculateLunarSolarTerms()
+     */
+    double pe = 0.0;
+    double pinc = 0.0;
+    double pl = 0.0;
+    double pgh = 0.0;
+    double ph = 0.0;
+
+    /*
+     * calculate lunar / solar terms for current time
+     */
+    DeepSpaceCalculateLunarSolarTerms(s, tsince, &pe, &pinc, &pl, &pgh, &ph);
+
+    *xinc += pinc;
+    *em += pe;
+
+    /* Spacetrack report #3 has sin/cos from before perturbations
+     * added to xinc (oldxinc), but apparently report # 6 has then
+     * from after they are added.
+     * use for strn3
+     * if (elements_.Inclination() >= 0.2)
+     * use for gsfc
+     * if (xinc >= 0.2)
+     * (moved from start of function)
+     */
+    const double sinis = sin(*xinc);
+    const double cosis = cos(*xinc);
+
+    if (*xinc >= 0.2)
+    {
+        /*
+         * apply periodics directly
+         */
+        const double tmp_ph = ph / sinis;
+
+        *omgasm += pgh - cosis * tmp_ph;
+        *xnodes += tmp_ph;
+        *xll += pl;
+    }
+    else
+    {
+        /*
+         * apply periodics with lyddane modification
+         */
+        const double sinok = sin(*xnodes);
+        const double cosok = cos(*xnodes);
+        double alfdp = sinis * sinok;
+        double betdp = sinis * cosok;
+        const double dalf = ph * cosok + pinc * cosis * sinok;
+        const double dbet = -ph * sinok + pinc * cosis * cosok;
+
+        alfdp += dalf;
+        betdp += dbet;
+
+        *xnodes -= TWOPI * floor(*xnodes / TWOPI);
+
+        double xls = *xll + *omgasm + cosis * *xnodes;
+        double dls = pl + pgh - pinc * *xnodes * sinis;
+        xls += dls;
+
+        /*
+         * save old xnodes value
+         */
+        const double oldxnodes = *xnodes;
+
+        *xnodes = atan2(alfdp, betdp);
+        if (*xnodes < 0.0)
+        {
+            *xnodes += TWOPI;
+        }
+
+        /*
+         * Get perturbed xnodes in to same quadrant as original.
+         * RAAN is in the range of 0 to 360 degrees
+         * atan2 is in the range of -180 to 180 degrees
+         */
+        if (fabs(oldxnodes - *xnodes) > PI)
+        {
+            if (*xnodes < oldxnodes)
+            {
+                *xnodes += TWOPI;
+            }
+            else
+            {
+                *xnodes -= TWOPI;
+            }
+        }
+
+        *xll += pl;
+        *omgasm = xls - *xll - cosis * *xnodes;
+    }
+}
+
+void
+DeepSpaceCalculateLunarSolarTerms(
+    sat* s,
+        const double tsince,
+        double* pe,
+        double* pinc,
+        double* pl,
+        double* pgh,
+        double* ph)
+{
+    static const double ZES = 0.01675;
+    static const double ZNS = 1.19459E-5;
+    static const double ZNL = 1.5835218E-4;
+    static const double ZEL = 0.05490;
+
+    /*
+     * calculate solar terms for time tsince
+     */
+    double zm = s->deep.zmos + ZNS * tsince;
+    double zf = zm + 2.0 * ZES * sin(zm);
+    double sinzf = sin(zf);
+    double f2 = 0.5 * sinzf * sinzf - 0.25;
+    double f3 = -0.5 * sinzf * cos(zf);
+
+    const double ses = s->deep.se2 * f2
+        + s->deep.se3 * f3;
+    const double sis = s->deep.si2 * f2
+        + s->deep.si3 * f3;
+    const double sls = s->deep.sl2 * f2
+        + s->deep.sl3 * f3
+        + s->deep.sl4 * sinzf;
+    const double sghs = s->deep.sgh2 * f2
+        + s->deep.sgh3 * f3
+        + s->deep.sgh4 * sinzf;
+    const double shs = s->deep.sh2 * f2
+        + s->deep.sh3 * f3;
+
+    /*
+     * calculate lunar terms for time tsince
+     */
+    zm = s->deep.zmol + ZNL * tsince;
+    zf = zm + 2.0 * ZEL * sin(zm);
+    sinzf = sin(zf);
+    f2 = 0.5 * sinzf * sinzf - 0.25;
+    f3 = -0.5 * sinzf * cos(zf);
+
+    const double sel = s->deep.ee2 * f2
+        + s->deep.e3 * f3;
+    const double sil = s->deep.xi2 * f2
+        + s->deep.xi3 * f3;
+    const double sll = s->deep.xl2 * f2
+        + s->deep.xl3 * f3
+        + s->deep.xl4 * sinzf;
+    const double sghl = s->deep.xgh2 * f2
+        + s->deep.xgh3 * f3
+        + s->deep.xgh4 * sinzf;
+    const double shl = s->deep.xh2 * f2
+        + s->deep.xh3 * f3;
+
+    /*
+     * merge calculated values
+     */
+    *pe = ses + sel;
+    *pinc = sis + sil;
+    *pl = sls + sll;
+    *pgh = sghs + sghl;
+    *ph = shs + shl;
 }
