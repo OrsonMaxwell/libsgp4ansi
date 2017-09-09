@@ -7,44 +7,52 @@ import os, sys
 import subprocess
 import datetime
 
+sgp4bin = 'sgp4'
+
+if os.name == 'nt':
+  print("Assuming Windows environment")
+  sgp4bin += '.exe'
+if os.name == 'posix':
+  print("Assuming Linux (posix) environment")
+  
 # Run reference executable
 print('--- Running Sattrack Report #3 verification mode...')
 start = datetime.datetime.now()
-print(subprocess.Popen('sgp4.exe a v SGP4-VER.TLE', stdout=subprocess.PIPE, creationflags=0x08000000).communicate()[0].decode())
+print(subprocess.Popen([sgp4bin, 'a', 'v', 'SGP4-VER.TLE'], stdout=subprocess.PIPE).communicate()[0].decode())
 stop = datetime.datetime.now()
 tdiff_av = stop - start
 print('--- Done in {}s'.format(tdiff_av.total_seconds()))
 
 print('--- Running Sattrack Report #3 full catalogue mode...')
 start = datetime.datetime.now()
-print(subprocess.Popen('sgp4.exe a c full.tle', stdout=subprocess.PIPE, creationflags=0x08000000).communicate()[0].decode())
+print(subprocess.Popen([sgp4bin, 'a', 'c', 'full.tle'], stdout=subprocess.PIPE).communicate()[0].decode())
 stop = datetime.datetime.now()
 tdiff_ac = stop - start
 print('--- Done in {}s'.format(tdiff_ac.total_seconds()))
 
 print('--- Running AIAA-2006-6753 verification mode...')
 start = datetime.datetime.now()
-print(subprocess.Popen('sgp4.exe i v SGP4-VER.TLE', stdout=subprocess.PIPE, creationflags=0x08000000).communicate()[0].decode())
+print(subprocess.Popen([sgp4bin, 'i', 'v', 'SGP4-VER.TLE'], stdout=subprocess.PIPE).communicate()[0].decode())
 stop = datetime.datetime.now()
 tdiff_iv = stop - start
 print('--- Done in {}s'.format(tdiff_iv.total_seconds()))
 
 print('--- Running AIAA-2006-6753 full catalogue mode...')
 start = datetime.datetime.now()
-print(subprocess.Popen('sgp4.exe i c full.tle', stdout=subprocess.PIPE, creationflags=0x08000000).communicate()[0].decode())
+print(subprocess.Popen([sgp4bin, 'i', 'c', 'full.tle'], stdout=subprocess.PIPE).communicate()[0].decode())
 stop = datetime.datetime.now()
 tdiff_ic = stop - start
 print('--- Done in {}s'.format(tdiff_ic.total_seconds()))
 
 print('--- Running libsgp4ansi full catalogue mode...')
 start = datetime.datetime.now()
-#print(subprocess.Popen('ansi.exe v full.tle', stdout=subprocess.PIPE, creationflags=0x08000000).communicate()[0].decode())
+print(subprocess.Popen(['ansi.exe', 'c', 'full.tle'], stdout=subprocess.PIPE).communicate()[0].decode())
 stop = datetime.datetime.now()
 tdiff_ic = stop - start
 print('--- Done in {}s'.format(tdiff_ic.total_seconds()))
 
 print('--- Loading full catalogue data...')
-
+start = datetime.datetime.now()
 with open('a721.out') as f:
   ref = f.readlines()
 with open('i72.out') as f:
@@ -91,11 +99,16 @@ dotsp1[current_sat][0].append(orbital_period)
 dotsp1[current_sat][1].append(1000 * delta1) # get back to meters
 dotsp2[current_sat][0].append(orbital_period)
 dotsp2[current_sat][1].append(1000 * delta2)
+
+stop = datetime.datetime.now()
+tdiff_read = stop - start
+
 print('[   EOF] Sat {0}, per:{1:8.3f}, '.format(current_sat, orbital_period), end='')
 print('d1: {0:10.9f}, d2: {1:10.9f}'.format(1000 * delta1, 1000 * delta2))
-print('--- Loaded {} data points per set'.format(len(dotsp1.keys())))
+print('--- Loaded {} data points per set in {}s.'.format(len(dotsp1.keys()), tdiff_read.total_seconds()))
 
 print('--- Plotting data - please wait...')
+start = datetime.datetime.now()
 # Plotting
 xmin = 0
 xmax = 2000
@@ -118,5 +131,10 @@ plt.title('Max difference in ephemerides: STR#3 vs AIAA (blue), STR#3 vs ANSI (r
 plt.xlabel('Orbital period, min')
 plt.ylabel('Difference, m')
 plt.tight_layout(pad=0.0, w_pad=0.1, h_pad=0.1)
+
+stop = datetime.datetime.now()
+tdiff_plot = stop - start
+
+print('--- Plotted in {}s'.format(tdiff_plot.total_seconds()))
 
 plt.show()
