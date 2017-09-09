@@ -7,10 +7,16 @@
 int
 main (int argc, char** argv)
 {
+  if (argc != 3)
+    return 0;
+  if ((argv[1][0] != 'c') && (argv[1][0] != 'v'))
+    return 0;
 
-
+  char tlestr0[130];
   char tlestr1[130];
   char tlestr2[130];
+
+  char timedef[36];
 
   FILE* tle_file, * outfile;
 
@@ -21,11 +27,9 @@ main (int argc, char** argv)
 
   sat s = {0};
 
-  char str[2];
-
   int error = 0;
 
-  tle_file = fopen(argv[1], "r");
+  tle_file = fopen(argv[2], "r");
   //tle_file = fopen("full.tle", "r");
 
   if (!tle_file) {
@@ -37,35 +41,45 @@ main (int argc, char** argv)
 
   while (feof(tle_file) == 0)
   {
-    do
+    fgets(tlestr0, 130, tle_file);
+    fgets(tlestr1, 130, tle_file);
+    fgets(tlestr2, 130, tle_file);
+
+    if (argv[1][0] == 'v'){
+      strncpy(timedef, tlestr2 + 69, 35);
+      timedef[35] = '\0';
+      sscanf(timedef, "%lf %lf %lf", &t_start, &t_stop, &deltamin);
+    }
+
+    // TODO: Read name from file!
+    tle2orbit(tlestr0, tlestr1, tlestr2, &s);
+
+    fprintf(outfile, "%ld (%12.9lf)\n", s.norad_number, 3.14159265358979323846 * 2 / s.mean_motion);
+
+    // Iterate over time range
+    for (double t = t_start; t <= t_stop; t += deltamin)
     {
-      fgets(tlestr1, 130, tle_file);
-      strncpy(str, &tlestr1[0], 1);
-      str[1] = '\0';
-    // TODO: Get read of #
-    } while ((strcmp(str, "#") == 0) && (feof(tle_file) == 0));
+      error = orbit_prop(&s, t, 10, 1.0e-12, &posteme, &velteme);
 
-    if (feof(tle_file) == 0)
-    {
-      fgets(tlestr2, 130, tle_file);
+      if (error != 0)
+        printf("[ERROR] at %f: %3d\n", t, error);
 
-      // TODO: Read name from file!
-      tle2orbit(tlestr1, tlestr2, &s);
-
-      fprintf(outfile, "%ld (%12.9lf)\n", s.norad_number, 3.14159265358979323846 * 2 / s.mean_motion);
-
-      // Iterate over time range
-      for (double t = t_start; t <= t_stop; t += deltamin)
+      if (error == 0)
       {
-        error = orbit_prop(&s, t, 10, 1.0e-12, &posteme, &velteme);
+        fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f",
+                t, posteme.x, posteme.y, posteme.z);
 
-        if (error != 0)
-          printf("[ERROR] at %f: %3d\n", t, error);
-
-        if (error == 0)
+        if (argv[1][0] == 'v')
         {
-          fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f\n",
-                  t, posteme.x, posteme.y, posteme.z);
+          /*
+          rv2coe(ro, vo, mu, p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper );
+                          fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f\n",
+                                   a, ecc, incl*rad, node*rad, argp*rad, nu*rad, m*rad);
+          */
+        }
+        else
+        {
+          fprintf(outfile, "\n");
         }
       }
     }

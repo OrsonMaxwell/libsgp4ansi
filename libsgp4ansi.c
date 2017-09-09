@@ -330,7 +330,7 @@ void print_orbit(sat* sat, char* caption)
  * Calls: orbit_init
  */
 int
-tle2orbit(char* tlestr1, char* tlestr2, sat* sat)
+tle2orbit(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
 {
   // Pre-formatting the raw TLE input
   for (char j = 10; j <= 15; j++)
@@ -370,6 +370,8 @@ tle2orbit(char* tlestr1, char* tlestr2, sat* sat)
   if (tlestr1[68] == ' ')
     tlestr1[68] = '0';
 
+  str_trim(tlestr0, 24, s->name);
+
   struct tm epoch_tm, prop_tm;
 
   // TODO: Do real checks
@@ -378,8 +380,8 @@ tle2orbit(char* tlestr1, char* tlestr2, sat* sat)
   double nddot, Bstar, epochdays;
 
   int retval = sscanf(tlestr1,"%2d %5ld %1c %8s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6ld ",
-         &cardnum, &sat->norad_number, &sat->sec_class, sat->int_designator, &epochyr,
-         &epochdays,&sat->mean_motion_dt2, &nddot, &nexp, &Bstar,
+         &cardnum, &s->norad_number, &s->sec_class, s->int_designator, &epochyr,
+         &epochdays,&s->mean_motion_dt2, &nddot, &nexp, &Bstar,
          &Bexp, &ephem_type, &elset_number);
 
   if (retval != 13)
@@ -389,12 +391,12 @@ tle2orbit(char* tlestr1, char* tlestr2, sat* sat)
 
   if (tlestr2[52] == ' ') // check for minus sign
     retval = sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %10lf %6ld \n",
-           &cardnum,&sat->norad_number, &sat->inclination, &sat->right_asc_node, &sat->eccentricity, &sat->argument_perigee,
-           &sat->mean_anomaly, &sat->mean_motion, &sat->orbit_number);
+           &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node, &s->eccentricity, &s->argument_perigee,
+           &s->mean_anomaly, &s->mean_motion, &s->orbit_number);
   else
     retval = sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %11lf %6ld \n",
-           &cardnum,&sat->norad_number, &sat->inclination, &sat->right_asc_node, &sat->eccentricity, &sat->argument_perigee,
-           &sat->mean_anomaly, &sat->mean_motion, &sat->orbit_number);
+           &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node, &s->eccentricity, &s->argument_perigee,
+           &s->mean_anomaly, &s->mean_motion, &s->orbit_number);
 
   if (retval != 9)
   {
@@ -402,19 +404,19 @@ tle2orbit(char* tlestr1, char* tlestr2, sat* sat)
   }
 
   // Make this return milliseconds
-  if (fractday2unix(epochyr, epochdays, &sat->epoch, &sat->epoch_ms) != 0)
+  if (fractday2unix(epochyr, epochdays, &s->epoch, &s->epoch_ms) != 0)
   {
     return -1;
   }
 
-  sat->julepoch = unix2jul(&sat->epoch, sat->epoch_ms);
+  s->julepoch = unix2jul(&s->epoch, s->epoch_ms);
 
-  sat->mean_motion_ddt6 = nddot * pow(10, nexp);
-  sat->Bstar = Bstar * pow(10, Bexp);
+  s->mean_motion_ddt6 = nddot * pow(10, nexp);
+  s->Bstar = Bstar * pow(10, Bexp);
 
   // TODO: Convert to SGP4 units and expand
 
-  return orbit_init(sat);
+  return orbit_init(s);
 }
 
 /*
@@ -1864,7 +1866,7 @@ bool sgp4init
      sat->init = 'y';
      sat->t  = 0.0;
 
-     print_orbit(sat, "sgp4init pre-initl");
+     //print_orbit(sat, "sgp4init pre-initl");
      initl
          (
            satn, whichconst, sat->ecco, epoch, sat->inclo, &sat->mean_motion, &sat->method,
@@ -1873,7 +1875,7 @@ bool sgp4init
          );
      sat->error = 0;
 
-     print_orbit(sat, "sgp4init post-initl");
+     //print_orbit(sat, "sgp4init post-initl");
 
      // sgp4fix remove this check as it is unnecessary
      // the mrt check in sgp4 handles decaying satellite cases even if the starting
@@ -1959,7 +1961,7 @@ bool sgp4init
          sat->delmo   = delmotemp * delmotemp * delmotemp;
          sat->sinmao  = sin(sat->mo);
          sat->x7thm1  = 7.0 * cosio2 - 1.0;
-         print_orbit(sat, "sgp4init pre-deepspace");
+         //print_orbit(sat, "sgp4init pre-deepspace");
          /* --------------- deep space initialization ------------- */
          if ((2*PI / sat->mean_motion) >= 225.0)
            {
@@ -1986,7 +1988,7 @@ bool sgp4init
                    &z12, &z13, &z21, &z22, &z23, &z31, &z32, &z33,
                    &sat->zmol, &sat->zmos
                  );
-             print_orbit(sat, "sgp4init post-dscom");
+             //print_orbit(sat, "sgp4init post-dscom");
              dpper
                  (
                    sat->e3, sat->ee2, sat->peo, sat->pgho,
@@ -2000,7 +2002,7 @@ bool sgp4init
                    &sat->ecco, &sat->inclo, &sat->nodeo, &sat->argpo, &sat->mo,
                    sat->operationmode
                  );
-             print_orbit(sat, "sgp4init post-dpper");
+             //print_orbit(sat, "sgp4init post-dpper");
              argpm  = 0.0;
              nodem  = 0.0;
              mm     = 0.0;
@@ -2021,7 +2023,7 @@ bool sgp4init
                    &sat->del1,  &sat->del2,  &sat->del3,  &sat->xfact,
                    &sat->xlamo, &sat->xli,   &sat->xni
                  );
-             print_orbit(sat, "sgp4init post-dsinit");
+             //print_orbit(sat, "sgp4init post-dsinit");
            }
 
        /* ----------- set variables if not deep space ----------- */
@@ -2042,14 +2044,14 @@ bool sgp4init
                             15.0 * cc1sq * (2.0 * sat->d2 + cc1sq));
          }
        } // if omeosq = 0 ...
-     print_orbit(sat, "sgp4init post-simple model");
+     //print_orbit(sat, "sgp4init post-simple model");
        /* finally propogate to zero epoch to initialize all others. */
        // sgp4fix take out check to let satellites process until they are actually below earth surface
 //       if(sat->error == 0)
        sgp4(1, sat, 0.0, r, v);
 
        sat->init = 'n';
-       print_orbit(sat, "sgp4init post-sgp4 call");
+       //print_orbit(sat, "sgp4init post-sgp4 call");
 //#include "debug6.cpp"
        //sgp4fix return boolean. sat->error contains any error codes
        return true;
@@ -2437,3 +2439,388 @@ bool sgp4
      return true;
 }  // end sgp4
 
+double  sgn
+        (
+          double x
+        )
+   {
+     if (x < 0.0)
+       {
+          return -1.0;
+       }
+       else
+       {
+          return 1.0;
+       }
+
+   }
+
+double  mag2
+(
+    double x[3]
+)
+{
+  return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
+}
+
+void    cross2
+(
+    double vec1[3], double vec2[3], double outvec[3]
+)
+{
+  outvec[0]= vec1[1]*vec2[2] - vec1[2]*vec2[1];
+  outvec[1]= vec1[2]*vec2[0] - vec1[0]*vec2[2];
+  outvec[2]= vec1[0]*vec2[1] - vec1[1]*vec2[0];
+}
+
+double  dot2
+(
+    double x[3], double y[3]
+)
+{
+  return (x[0]*y[0] + x[1]*y[1] + x[2]*y[2]);
+}  // end dot
+
+double  angle
+(
+    double vec1[3],
+    double vec2[3]
+)
+{
+  double small, undefined, magv1, magv2, temp;
+  small     = 0.00000001;
+  undefined = 999999.1;
+
+  magv1 = mag2(vec1);
+  magv2 = mag2(vec2);
+
+  if (magv1*magv2 > small*small)
+  {
+    temp= dot2(vec1,vec2) / (magv1*magv2);
+    if (fabs( temp ) > 1.0)
+      temp= sgn(temp) * 1.0;
+    return acos( temp );
+  }
+  else
+    return undefined;
+}  // end angle
+
+double  asinh
+(
+    double xval
+)
+{
+  return log( xval + sqrt( xval*xval + 1.0 ) );
+}  // end asinh
+
+/* -----------------------------------------------------------------------------
+*
+*                           function newtonnu
+*
+*  this function solves keplers equation when the true anomaly is known.
+*    the mean and eccentric, parabolic, or hyperbolic anomaly is also found.
+*    the parabolic limit at 168ø is arbitrary. the hyperbolic anomaly is also
+*    limited. the hyperbolic sine is used because it's not double valued.
+*
+*  author        : david vallado                  719-573-2600   27 may 2002
+*
+*  revisions
+*    vallado     - fix small                                     24 sep 2002
+*
+*  inputs          description                    range / units
+*    ecc         - eccentricity                   0.0  to
+*    nu          - true anomaly                   -2pi to 2pi rad
+*
+*  outputs       :
+*    e0          - eccentric anomaly              0.0  to 2pi rad       153.02 ø
+*    m           - mean anomaly                   0.0  to 2pi rad       151.7425 ø
+*
+*  locals        :
+*    e1          - eccentric anomaly, next value  rad
+*    sine        - sine of e
+*    cose        - cosine of e
+*    ktr         - index
+*
+*  coupling      :
+*    asinh       - arc hyperbolic sine
+*
+*  references    :
+*    vallado       2007, 85, alg 5
+* --------------------------------------------------------------------------- */
+
+void newtonnu
+(
+    double ecc, double nu,
+    double* e0, double* m
+)
+{
+  double small, sine, cose;
+
+  // ---------------------  implementation   ---------------------
+  *e0= 999999.9;
+  *m = 999999.9;
+  small = 0.00000001;
+
+  // --------------------------- circular ------------------------
+  if ( fabs( ecc ) < small  )
+  {
+    *m = nu;
+    *e0= nu;
+  }
+  else
+    // ---------------------- elliptical -----------------------
+    if ( ecc < 1.0-small  )
+    {
+      sine= ( sqrt( 1.0 -ecc*ecc ) * sin(nu) ) / ( 1.0 +ecc*cos(nu) );
+      cose= ( ecc + cos(nu) ) / ( 1.0  + ecc*cos(nu) );
+      *e0  = atan2( sine,cose );
+      *m   = *e0 - ecc*sin(*e0);
+    }
+    else
+      // -------------------- hyperbolic  --------------------
+      if ( ecc > 1.0 + small  )
+      {
+        if ((ecc > 1.0 ) && (fabs(nu)+0.00001 < PI-acos(1.0 /ecc)))
+        {
+          sine= ( sqrt( ecc*ecc-1.0  ) * sin(nu) ) / ( 1.0  + ecc*cos(nu) );
+          *e0  = asinh( sine );
+          *m   = ecc*sinh(*e0) - *e0;
+        }
+      }
+      else
+        // ----------------- parabolic ---------------------
+        if ( fabs(nu) < 168.0*PI/180.0  )
+        {
+          *e0= tan( nu*0.5  );
+          *m = *e0 + (*e0**e0**e0)/3.0;
+        }
+
+  if ( ecc < 1.0  )
+  {
+    *m = fmod( *m,2.0 *PI );
+    if ( *m < 0.0  )
+      *m = *m + 2.0 *PI;
+    *e0 = fmod( *e0,2.0 *PI );
+  }
+}  // end newtonnu
+
+/* -----------------------------------------------------------------------------
+*
+*                           function rv2coe
+*
+*  this function finds the classical orbital elements given the geocentric
+*    equatorial position and velocity vectors.
+*
+*  author        : david vallado                  719-573-2600   21 jun 2002
+*
+*  revisions
+*    vallado     - fix special cases                              5 sep 2002
+*    vallado     - delete extra check in inclination code        16 oct 2002
+*    vallado     - add constant file use                         29 jun 2003
+*    vallado     - add mu                                         2 apr 2007
+*
+*  inputs          description                    range / units
+*    r           - ijk position vector            km
+*    v           - ijk velocity vector            km / s
+*    mu          - gravitational parameter        km3 / s2
+*
+*  outputs       :
+*    p           - semilatus rectum               km
+*    a           - semimajor axis                 km
+*    ecc         - eccentricity
+*    incl        - inclination                    0.0  to pi rad
+*    omega       - longitude of ascending node    0.0  to 2pi rad
+*    argp        - argument of perigee            0.0  to 2pi rad
+*    nu          - true anomaly                   0.0  to 2pi rad
+*    m           - mean anomaly                   0.0  to 2pi rad
+*    arglat      - argument of latitude      (ci) 0.0  to 2pi rad
+*    truelon     - true longitude            (ce) 0.0  to 2pi rad
+*    lonper      - longitude of periapsis    (ee) 0.0  to 2pi rad
+*
+*  locals        :
+*    hbar        - angular momentum h vector      km2 / s
+*    ebar        - eccentricity     e vector
+*    nbar        - line of nodes    n vector
+*    c1          - v**2 - u/r
+*    rdotv       - r dot v
+*    hk          - hk unit vector
+*    sme         - specfic mechanical energy      km2 / s2
+*    i           - index
+*    e           - eccentric, parabolic,
+*                  hyperbolic anomaly             rad
+*    temp        - temporary variable
+*    typeorbit   - type of orbit                  ee, ei, ce, ci
+*
+*  coupling      :
+*    mag         - magnitude of a vector
+*    cross       - cross product of two vectors
+*    angle       - find the angle between two vectors
+*    newtonnu    - find the mean anomaly
+*
+*  references    :
+*    vallado       2007, 126, alg 9, ex 2-5
+* --------------------------------------------------------------------------- */
+
+void rv2coe
+     (
+       double r[3], double v[3], double mu,
+       double* p, double* a, double* ecc, double* incl, double* omega, double* argp,
+       double* nu, double* m, double* arglat, double* truelon, double* lonper
+     )
+     {
+       double undefined, small, hbar[3], nbar[3], magr, magv, magn, ebar[3], sme,
+              rdotv, infinite, temp, c1, hk, twopi, magh, halfpi, e;
+
+       int i;
+       char typeorbit[3];
+
+     twopi  = 2.0 * PI;
+     halfpi = 0.5 * PI;
+     small  = 0.00000001;
+     undefined = 999999.1;
+     infinite  = 999999.9;
+
+     // -------------------------  implementation   -----------------
+     magr = mag2( r );
+     magv = mag2( v );
+
+     // ------------------  find h n and e vectors   ----------------
+     cross2( r,v, hbar );
+     magh = mag2( hbar );
+     if ( magh > small )
+       {
+         nbar[0]= -hbar[1];
+         nbar[1]=  hbar[0];
+         nbar[2]=   0.0;
+         magn = mag2( nbar );
+         c1 = magv*magv - mu  / magr;
+         rdotv = dot2( r,v );
+         for (i= 0; i <= 2; i++)
+             ebar[i]= (c1*r[i] - rdotv*v[i]) / mu;
+         *ecc = mag2( ebar );
+
+         // ------------  find *a e and semi-latus rectum   ----------
+         sme= ( magv*magv*0.5  ) - ( mu  / magr );
+         if ( fabs( sme ) > small )
+             *a= -mu  / (2.0 *sme);
+           else
+             *a= infinite;
+         *p = magh*magh / mu;
+
+         // -----------------  find inclination   -------------------
+         hk= hbar[2] / magh;
+         *incl= acos( hk );
+
+         // --------  determine type of orbit for later use  --------
+         // ------ elliptical, parabolic, hyperbolic inclined -------
+         strcpy(typeorbit,"ei");
+         if ( *ecc < small )
+           {
+             // ----------------  circular equatorial ---------------
+             if  ((*incl<small) | (fabs(*incl-PI)<small))
+                 strcpy(typeorbit,"ce");
+               else
+                 // --------------  circular inclined ---------------
+                 strcpy(typeorbit,"ci");
+           }
+           else
+           {
+             // - elliptical, parabolic, hyperbolic equatorial --
+             if  ((*incl<small) | (fabs(*incl-PI)<small))
+                 strcpy(typeorbit,"ee");
+           }
+
+         // ----------  find longitude of ascending node ------------
+         if ( magn > small )
+           {
+             temp= nbar[0] / magn;
+             if ( fabs(temp) > 1.0  )
+                 temp= sgn(temp);
+             *omega= acos( temp );
+             if ( nbar[1] < 0.0  )
+                 *omega= twopi - *omega;
+           }
+           else
+             *omega= undefined;
+
+         // ---------------- find argument of perigee ---------------
+         if ( strcmp(typeorbit,"ei") == 0 )
+           {
+             *argp = angle( nbar,ebar);
+             if ( ebar[2] < 0.0  )
+                 *argp= twopi - *argp;
+           }
+           else
+             *argp= undefined;
+
+         // ------------  find true anomaly at epoch    -------------
+         if ( typeorbit[0] == 'e' )
+           {
+             *nu =  angle( ebar,r);
+             if ( rdotv < 0.0  )
+                 *nu= twopi - *nu;
+           }
+           else
+             *nu= undefined;
+
+         // ----  find argument of latitude - circular inclined -----
+         if ( strcmp(typeorbit,"ci") == 0 )
+           {
+             *arglat = angle( nbar,r );
+             if ( r[2] < 0.0  )
+                 *arglat= twopi - *arglat;
+             *m = *arglat;
+           }
+           else
+             *arglat= undefined;
+
+         // -- find longitude of perigee - elliptical equatorial ----
+         if  (( *ecc>small ) && (strcmp(typeorbit,"ee") == 0))
+           {
+             temp= ebar[0] / *ecc;
+             if ( fabs(temp) > 1.0  )
+                 temp= sgn(temp);
+             *lonper= acos( temp );
+             if ( ebar[1] < 0.0  )
+                 *lonper= twopi - *lonper;
+             if ( *incl > halfpi )
+                 *lonper= twopi - *lonper;
+           }
+           else
+             *lonper= undefined;
+
+         // -------- find true longitude - circular equatorial ------
+         if  (( magr>small ) && ( strcmp(typeorbit,"ce") == 0 ))
+           {
+             temp= r[0] / magr;
+             if ( fabs(temp) > 1.0  )
+                 temp= sgn(temp);
+             *truelon= acos( temp );
+             if ( r[1] < 0.0  )
+                 *truelon= twopi - *truelon;
+             if ( *incl > halfpi )
+                 *truelon= twopi - *truelon;
+             *m = *truelon;
+           }
+           else
+             *truelon= undefined;
+
+         // ------------ find mean anomaly for all orbits -----------
+         if ( typeorbit[0] == 'e' )
+             newtonnu(*ecc,*nu,  &e, m);
+     }
+      else
+     {
+        *p    = undefined;
+        *a    = undefined;
+        *ecc  = undefined;
+        *incl = undefined;
+        *omega= undefined;
+        *argp = undefined;
+        *nu   = undefined;
+        *m    = undefined;
+        *arglat = undefined;
+        *truelon= undefined;
+        *lonper = undefined;
+     }
+   }  // end rv2coe

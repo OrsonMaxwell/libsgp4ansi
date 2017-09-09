@@ -68,7 +68,7 @@ typedef struct _sat
   double a3ovk2, aycof, C1, C4, cosio,  eta,   omgdot, perigee, period, sinio,
          t2cof, x1mth2, x3thm1, x7thm1, xlcof, xmdot,  xnodcf,  xnodot;
   // Near space terms
-  double a, altapoR, altperR, C5, , cosi, d2, d3, d4,
+  double a, altapoR, altperR, C5 , cosi, d2, d3, d4,
          delMo, mdot,  nodecf, nodedot, omegaprime, omgcof, sinMo, sini,
          t3cof, t4cof, t5cof, xmcof;
   // Deep space terms
@@ -113,7 +113,7 @@ typedef struct _sat
 
 // Initialize SGP4/SDP4 orbit model from a raw NORAD TLE lines
 extern int
-tle2orbit(char*, char*, sat*);
+tle2orbit(char*, char*, char*, sat*);
 
 // Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
 extern int
