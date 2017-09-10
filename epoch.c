@@ -66,8 +66,8 @@ fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
   res_tm.tm_sec  = (int)floor(sec);
   *ms            = (sec - res_tm.tm_sec) * 1000;
 
-  // TODO: Make cross-platform and return error value of mktime
-  result = mktime(&res_tm) - timezone;
+  // TODO: Return error value of mktime
+  result = mktime(&res_tm) - TIMEZONE;
 
   if (result == -1)
   {

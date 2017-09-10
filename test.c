@@ -9,7 +9,7 @@ main (int argc, char** argv)
 {
   if (argc != 3)
     return 0;
-  if ((argv[1][0] != 'c') && (argv[1][0] != 'v'))
+  if ((argv[1][0] != 'c') && (argv[1][0] != 'v') && (argv[1][0] != 'h'))
     return 0;
 
   char tlestr0[130];
@@ -30,7 +30,6 @@ main (int argc, char** argv)
   int error = 0;
 
   tle_file = fopen(argv[2], "r");
-  //tle_file = fopen("full.tle", "r");
 
   if (!tle_file) {
     printf("File opening failed!\n");
@@ -51,7 +50,6 @@ main (int argc, char** argv)
       sscanf(timedef, "%lf %lf %lf", &t_start, &t_stop, &deltamin);
     }
 
-    // TODO: Read name from file!
     tle2orbit(tlestr0, tlestr1, tlestr2, &s);
 
     fprintf(outfile, "%ld (%12.9lf)\n", s.norad_number, 3.14159265358979323846 * 2 / s.mean_motion);

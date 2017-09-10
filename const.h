@@ -13,6 +13,12 @@
 
 #define JULIAN_JAN1_12H_2000 2451545.0     // Jan 1 2000 12h UTC Julian date
 
+#ifdef __unix__
+#define TIMEZONE __timezone
+#elif defined(_WIN32) || defined(WIN32)
+#define TIMEZONE timezone
+#endif
+
 // ************************************************************************* //
 //                                    MATH                                   //
 // ************************************************************************* //

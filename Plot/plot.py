@@ -71,22 +71,26 @@ for i, line in enumerate(ref):
   m = re.fullmatch('([0-9]{1,5})\ \(([0-9\.]+)\)', line.strip())
   if m != None:
     if len(dotsp1.keys()) > 0:
-      dotsp1[current_sat][0].append(orbital_period)
-      dotsp1[current_sat][1].append(1000 * delta1) # get back to meters
-      dotsp2[current_sat][0].append(orbital_period)
-      dotsp2[current_sat][1].append(1000 * delta2)
+      dotsp1[current_sat + str(orbital_period)][0].append(orbital_period)
+      dotsp1[current_sat + str(orbital_period)][1].append(1000 * delta1) # get back to meters
+      dotsp2[current_sat + str(orbital_period)][0].append(orbital_period)
+      dotsp2[current_sat + str(orbital_period)][1].append(1000 * delta2)
       print('[{0}] Sat {1}, per:{2:8.3f}, '.format(i, current_sat, orbital_period), end='')
       print('d1: {0:10.9f}, d2: {1:10.9f}\r'.format(1000 * delta1, 1000 * delta2), end='')
     current_sat = m.group(1)
     orbital_period = float(m.group(2))
-    dotsp1[current_sat] = ([], [])
-    dotsp2[current_sat] = ([], [])
+    dotsp1[current_sat + str(orbital_period)] = ([], [])
+    dotsp2[current_sat + str(orbital_period)] = ([], [])
     delta1 = 0.0
     delta2 = 0.0
   else:
-    ref_vals = list(map(float, line.split()))
-    diff1_vals = list(map(float, diff1[i].split()))
-    diff2_vals = list(map(float, diff2[i].split()))
+    try:
+      ref_vals = list(map(float, line.split()))
+      diff1_vals = list(map(float, diff1[i].split()))
+      diff2_vals = list(map(float, diff1[i].split()))
+    except ValueError as e:
+      print('\n[ERROR]', i, current_sat, str(orbital_period) + '\n' + str(e))
+      sys.exit(0)
     tempdelta1 = max(abs(ref_vals[1] - diff1_vals[1]), abs(ref_vals[2] - diff1_vals[2]), abs(ref_vals[3] - diff1_vals[3]))
     if delta1 < tempdelta1:
       delta1 = tempdelta1
@@ -95,15 +99,15 @@ for i, line in enumerate(ref):
       delta2 = tempdelta2
 
 # Repeat for last sat
-dotsp1[current_sat][0].append(orbital_period)
-dotsp1[current_sat][1].append(1000 * delta1) # get back to meters
-dotsp2[current_sat][0].append(orbital_period)
-dotsp2[current_sat][1].append(1000 * delta2)
+dotsp1[current_sat + str(orbital_period)][0].append(orbital_period)
+dotsp1[current_sat + str(orbital_period)][1].append(1000 * delta1) # get back to meters
+dotsp2[current_sat + str(orbital_period)][0].append(orbital_period)
+dotsp2[current_sat + str(orbital_period)][1].append(1000 * delta2)
 
 stop = datetime.datetime.now()
 tdiff_read = stop - start
 
-print('[   EOF] Sat {0}, per:{1:8.3f}, '.format(current_sat, orbital_period), end='')
+print('[EOF] Sat {0}, per:{1:8.3f}, '.format(current_sat, orbital_period), end='')
 print('d1: {0:10.9f}, d2: {1:10.9f}'.format(1000 * delta1, 1000 * delta2))
 print('--- Loaded {} data points per set in {}s.'.format(len(dotsp1.keys()), tdiff_read.total_seconds()))
 
