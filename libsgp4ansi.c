@@ -2316,6 +2316,7 @@ bool sgp4
            {
 //            printf("# error ep %f\n", ep);
              sat->error = 3;
+
              // sgp4fix add return
              return false;
            }

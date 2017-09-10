@@ -7,9 +7,9 @@
 int
 main (int argc, char** argv)
 {
-  if (argc != 3)
+  if (argc < 2)
     return 0;
-  if ((argv[1][0] != 'c') && (argv[1][0] != 'v') && (argv[1][0] != 'h'))
+  if ((argv[1][0] != 'c') && (argv[1][0] != 'v') && (argv[1][0] != 't'))
     return 0;
 
   char tlestr0[130];
@@ -27,7 +27,21 @@ main (int argc, char** argv)
 
   sat s = {0};
 
-  int error = 0;
+  if (argv[1][0] == 't')
+  {
+    // Timing run
+    strcpy(tlestr0, "SL - 6 R / B(2)");
+    strcpy(tlestr1, "1 16925U 86065D   06151.67415771  .02550794 -30915-6  18784-3 0  4486");
+    strcpy(tlestr2, "2 16925  62.0906 295.0239 5596327 245.1593  47.9690  4.88511875148616 ");
+
+    tle2orbit(tlestr0, tlestr1, tlestr2, &s);
+
+    for (int t = 0; t < 10000000; t++) {
+      t_start = t % 2880 - 1440;
+      orbit_prop(&s, t_start, 10, 1.0e-12, &posteme, &velteme);
+    }
+    return 0;
+  }
 
   tle_file = fopen(argv[2], "r");
 
@@ -36,10 +50,15 @@ main (int argc, char** argv)
     return 0;
   }
 
-  outfile  = fopen("ansi.out", "w");
+  if (argv[1][0] == 'v')
+    outfile  = fopen("ansi_ver.out", "w");
+  else if (argv[1][0] == 'c')
+    outfile  = fopen("ansi.out", "w");
 
   while (feof(tle_file) == 0)
   {
+    s.error = 0;
+
     fgets(tlestr0, 130, tle_file);
     fgets(tlestr1, 130, tle_file);
     fgets(tlestr2, 130, tle_file);
@@ -55,14 +74,17 @@ main (int argc, char** argv)
     fprintf(outfile, "%ld (%12.9lf)\n", s.norad_number, 3.14159265358979323846 * 2 / s.mean_motion);
 
     // Iterate over time range
-    for (double t = t_start; t <= t_stop; t += deltamin)
+    for (double t = t_start; t <= t_stop + deltamin - 1.0e-12; t += deltamin)
     {
-      error = orbit_prop(&s, t, 10, 1.0e-12, &posteme, &velteme);
+      orbit_prop(&s, t, 10, 1.0e-12, &posteme, &velteme);
 
-      if (error != 0)
-        printf("[ERROR] at %f: %3d\n", t, error);
-
-      if (error == 0)
+      if (s.error != 0)
+      {
+        printf("[ERROR] Sat %5d (%12.9lf),\tcode %2d at %8.f mfe\n",
+               s.norad_number, 3.14159265358979323846 * 2 / s.mean_motion, s.error, t);
+        break;
+      }
+      else
       {
         fprintf(outfile, " %16.8f %16.8f %16.8f %16.8f",
                 t, posteme.x, posteme.y, posteme.z);
@@ -74,6 +96,7 @@ main (int argc, char** argv)
                           fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f\n",
                                    a, ecc, incl*rad, node*rad, argp*rad, nu*rad, m*rad);
           */
+          fprintf(outfile, "\n");
         }
         else
         {

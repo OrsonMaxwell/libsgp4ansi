@@ -81,8 +81,8 @@ typedef struct _sat
          dedt,  didt,  dmdt,  dnodt, domdt, del1,  del2,  del3,  xfact, xlamo,
          xli,   xni;
   // TODO: REMOVE THIS! DONE FOR BACKWARDS COMPATIBILITY DURING MATH-OVERHAUL
-  int isimp;      // islowperigee
-  int error;      // unused
+  int isimp;      // use simple model
+  int error;      //
   char method;    // unused
   char operationmode; // unused
   char init;      // unused

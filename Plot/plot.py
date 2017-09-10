@@ -9,6 +9,9 @@ import datetime
 
 sgp4bin = 'sgp4'
 
+ver_filename = 'SGP4-VER.TLE'
+fullcat_filename = 'full.tle'
+
 if os.name == 'nt':
   print("Assuming Windows environment")
   sgp4bin += '.exe'
@@ -16,42 +19,64 @@ if os.name == 'posix':
   print("Assuming Linux (posix) environment")
   
 # Run reference executable
-print('--- Running Sattrack Report #3 verification mode...')
+print('Running Sattrack Report #3 verification mode...')
 start = datetime.datetime.now()
-print(subprocess.Popen([sgp4bin, 'a', 'v', 'SGP4-VER.TLE'], stdout=subprocess.PIPE).communicate()[0].decode())
+print(subprocess.Popen([sgp4bin, 'a', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
 stop = datetime.datetime.now()
 tdiff_av = stop - start
-print('--- Done in {}s'.format(tdiff_av.total_seconds()))
 
-print('--- Running Sattrack Report #3 full catalogue mode...')
+print('Running AIAA-2006-6753 verification mode...')
 start = datetime.datetime.now()
-print(subprocess.Popen([sgp4bin, 'a', 'c', 'full.tle'], stdout=subprocess.PIPE).communicate()[0].decode())
-stop = datetime.datetime.now()
-tdiff_ac = stop - start
-print('--- Done in {}s'.format(tdiff_ac.total_seconds()))
-
-print('--- Running AIAA-2006-6753 verification mode...')
-start = datetime.datetime.now()
-print(subprocess.Popen([sgp4bin, 'i', 'v', 'SGP4-VER.TLE'], stdout=subprocess.PIPE).communicate()[0].decode())
+print(subprocess.Popen([sgp4bin, 'i', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
 stop = datetime.datetime.now()
 tdiff_iv = stop - start
-print('--- Done in {}s'.format(tdiff_iv.total_seconds()))
 
-print('--- Running AIAA-2006-6753 full catalogue mode...')
+print('Running libsgp4ansi verification mode...')
 start = datetime.datetime.now()
-print(subprocess.Popen([sgp4bin, 'i', 'c', 'full.tle'], stdout=subprocess.PIPE).communicate()[0].decode())
+print(subprocess.Popen(['ansi.exe', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+stop = datetime.datetime.now()
+tdiff_ansic = stop - start
+
+print('Running Sattrack Report #3 full catalogue mode...')
+start = datetime.datetime.now()
+print(subprocess.Popen([sgp4bin, 'a', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+stop = datetime.datetime.now()
+tdiff_ac = stop - start
+
+print('Running AIAA-2006-6753 full catalogue mode...')
+start = datetime.datetime.now()
+print(subprocess.Popen([sgp4bin, 'i', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
 stop = datetime.datetime.now()
 tdiff_ic = stop - start
-print('--- Done in {}s'.format(tdiff_ic.total_seconds()))
 
-print('--- Running libsgp4ansi full catalogue mode...')
+print('Running libsgp4ansi full catalogue mode...')
 start = datetime.datetime.now()
-print(subprocess.Popen(['ansi.exe', 'c', 'full.tle'], stdout=subprocess.PIPE).communicate()[0].decode())
+print(subprocess.Popen(['ansi.exe', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
 stop = datetime.datetime.now()
-tdiff_ic = stop - start
-print('--- Done in {}s'.format(tdiff_ic.total_seconds()))
+tdiff_ansic = stop - start
 
-print('--- Loading full catalogue data...')
+print('Running Sattrack Report #3 timing mode...')
+start = datetime.datetime.now()
+print(subprocess.Popen([sgp4bin, 'a', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
+stop = datetime.datetime.now()
+tdiff_at = stop - start
+print('Done in {}s'.format(tdiff_at.total_seconds()))
+
+print('Running AIAA-2006-6753 timing mode...')
+start = datetime.datetime.now()
+print(subprocess.Popen([sgp4bin, 'i', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
+stop = datetime.datetime.now()
+tdiff_it = stop - start
+print('Done in {}s'.format(tdiff_it.total_seconds()))
+
+print('Running libsgp4ansi timing mode...')
+start = datetime.datetime.now()
+print(subprocess.Popen(['ansi.exe', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
+stop = datetime.datetime.now()
+tdiff_ansit = stop - start
+print('Done in {}s'.format(tdiff_ansit.total_seconds()))
+
+print('Loading full catalogue data...')
 start = datetime.datetime.now()
 with open('a721.out') as f:
   ref = f.readlines()
@@ -59,6 +84,13 @@ with open('i72.out') as f:
   diff1 = f.readlines()
 with open('ansi.out') as f:
   diff2 = f.readlines()
+
+if ((len(ref) != len(diff1)) or (len(ref) != len(diff2))):
+  print('[ERROR] Data files differ in length! - Please check:')
+  print('        a721.out is {} lines'.format(len(ref)))
+  print('        i72.out is  {} lines'.format(len(diff1)))
+  print('        ansi.out is {} lines'.format(len(diff2)))
+#  sys.exit(0)
 
 current_sat = ''
 orbital_period = 0.0
@@ -87,7 +119,7 @@ for i, line in enumerate(ref):
     try:
       ref_vals = list(map(float, line.split()))
       diff1_vals = list(map(float, diff1[i].split()))
-      diff2_vals = list(map(float, diff1[i].split()))
+      diff2_vals = list(map(float, diff2[i].split()))
     except ValueError as e:
       print('\n[ERROR]', i, current_sat, str(orbital_period) + '\n' + str(e))
       sys.exit(0)
@@ -109,9 +141,9 @@ tdiff_read = stop - start
 
 print('[EOF] Sat {0}, per:{1:8.3f}, '.format(current_sat, orbital_period), end='')
 print('d1: {0:10.9f}, d2: {1:10.9f}'.format(1000 * delta1, 1000 * delta2))
-print('--- Loaded {} data points per set in {}s.'.format(len(dotsp1.keys()), tdiff_read.total_seconds()))
+print('Loaded {} data points per set'.format(len(dotsp1.keys())))
 
-print('--- Plotting data - please wait...')
+print('Plotting data - please wait...')
 start = datetime.datetime.now()
 # Plotting
 xmin = 0
@@ -138,7 +170,5 @@ plt.tight_layout(pad=0.0, w_pad=0.1, h_pad=0.1)
 
 stop = datetime.datetime.now()
 tdiff_plot = stop - start
-
-print('--- Plotted in {}s'.format(tdiff_plot.total_seconds()))
 
 plt.show()
