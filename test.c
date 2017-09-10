@@ -34,9 +34,11 @@ main (int argc, char** argv)
     strcpy(tlestr1, "1 16925U 86065D   06151.67415771  .02550794 -30915-6  18784-3 0  4486");
     strcpy(tlestr2, "2 16925  62.0906 295.0239 5596327 245.1593  47.9690  4.88511875148616 ");
 
-    tle2orbit(tlestr0, tlestr1, tlestr2, &s);
+    for (int t = 0; t < 5000000; t++) {
+      tle2orbit(tlestr0, tlestr1, tlestr2, &s);
+    }
 
-    for (int t = 0; t < 10000000; t++) {
+    for (int t = 0; t < 5000000; t++) {
       t_start = t % 2880 - 1440;
       orbit_prop(&s, t_start, 10, 1.0e-12, &posteme, &velteme);
     }
