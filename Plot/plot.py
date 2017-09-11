@@ -268,9 +268,18 @@ fig.canvas.set_window_title('Solving Kepler\'s Equation for satellite 23333')
 
 xmin = int(min(aiaa_23333_t))
 xmax = int(max(aiaa_23333_t))
-print('***********************', xmin, xmax)
 xticksmin = range(xmin, xmax + 1, 50)
 xticksmaj = range(xmin, xmax + 1, 200)
+
+y1min = 27.5
+y1max = 27.6
+y1ticksmaj = [27.51, 27.52, 27.53, 27.54, 27.55, 27.56, 27.57, 27.58, 27.59]
+
+y2min = 0
+y2max = 360
+y2ticksmin = [30, 60, 210, 240, 300, 330]
+y2ticksmaj = [90, 180, 270, 360]
+
 plt.subplot(211)
 plt.plot(aiaa_23333_t, aiaa_23333_i, c='k', marker='', ls=':')
 plt.plot(aiaa_23333_t, ansi_23333_i, c='b', marker='', ls='-', alpha=0.6)
@@ -281,6 +290,8 @@ plt.plot(aiaa_23333_t, ansi_23333_m, c='g', marker='', ls='-', alpha=0.6)
 plt.subplot(211).set_xlim(xmin, xmax)
 plt.subplot(211).set_xticks(xticksmin, True);
 plt.subplot(211).set_xticks(xticksmaj, False);
+# plt.subplot(211).set_ylim(y1min, y1max)
+# plt.subplot(211).set_yticks(y1ticksmaj, False);
 plt.subplot(211).autoscale(True, 'y', None)
 plt.subplot(211).grid(which='major', axis='both', ls='dashed', alpha=0.7)
 plt.subplot(211).grid(which='minor', axis='x', ls='dotted', alpha=0.3)
@@ -290,13 +301,16 @@ plt.ylabel('Inclination, deg, km')
 plt.subplot(212).set_xlim(xmin, xmax)
 plt.subplot(212).set_xticks(xticksmin, True);
 plt.subplot(212).set_xticks(xticksmaj, False);
-plt.subplot(212).autoscale(True, 'y', None)
+plt.subplot(212).set_ylim(y2min, y2max)
+plt.subplot(212).set_yticks(y2ticksmin, True);
+plt.subplot(212).set_yticks(y2ticksmaj, False);
 plt.subplot(212).grid(which='major', axis='both', ls='dashed', alpha=0.7)
 plt.subplot(212).grid(which='minor', axis='x', ls='dotted', alpha=0.3)
 plt.title('Kepler\'s for 23333, AIAA (black dashed) vs ANSI (color)')
 plt.xlabel('Time from epoch, min')
 plt.ylabel('Mean anomaly, deg, km')
 plt.tight_layout(pad=0.0, w_pad=0.1, h_pad=0.1)
+
   
 # Lunar-solar modifications for Satellite 23599
 fig = plt.figure(4)
