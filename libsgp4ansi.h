@@ -223,5 +223,11 @@ bool sgp4
        double r[3],  double v[3]
      );
 
+void rv2coe
+     (
+       double r[3], double v[3],
+       double* p, double* a, double* ecc, double* incl, double* omega, double* argp,
+       double* nu, double* m, double* arglat, double* truelon, double* lonper
+     );
 
 #endif /* LIBSGP4ANSI_H_ */

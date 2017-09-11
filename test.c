@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include "libsgp4ansi.h"
+#include "const.h"
 
 int
 main (int argc, char** argv)
@@ -57,6 +58,8 @@ main (int argc, char** argv)
   else if (argv[1][0] == 'c')
     outfile  = fopen("ansi.out", "w");
 
+  double p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper;
+
   while (feof(tle_file) == 0)
   {
     s.error = 0;
@@ -73,7 +76,7 @@ main (int argc, char** argv)
 
     tle2orbit(tlestr0, tlestr1, tlestr2, &s);
 
-    fprintf(outfile, "%ld (%12.9lf)\n", s.norad_number, 3.14159265358979323846 * 2 / s.mean_motion);
+    fprintf(outfile, "%ld (%12.9lf)\n", s.norad_number, TWOPI / s.mean_motion);
 
     // Iterate over time range
     for (double t = t_start; t <= t_stop + deltamin - 1.0e-12; t += deltamin)
@@ -83,7 +86,7 @@ main (int argc, char** argv)
       if (s.error != 0)
       {
         printf("[ERROR] Sat %5d (%12.9lf),\tcode %2d at %8.f mfe\n",
-               s.norad_number, 3.14159265358979323846 * 2 / s.mean_motion, s.error, t);
+               s.norad_number, TWOPI / s.mean_motion, s.error, t);
         break;
       }
       else
@@ -93,12 +96,13 @@ main (int argc, char** argv)
 
         if (argv[1][0] == 'v')
         {
-          /*
-          rv2coe(ro, vo, mu, p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper );
-                          fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f\n",
-                                   a, ecc, incl*rad, node*rad, argp*rad, nu*rad, m*rad);
-          */
-          fprintf(outfile, "\n");
+          double ro[3] = {posteme.x, posteme.y, posteme.z};
+          double vo[3] = {velteme.x, velteme.y, velteme.z};
+
+          rv2coe(ro, vo, &p, &a, &ecc, &incl, &node, &argp, &nu, &m,
+                 &arglat, &truelon, &lonper);
+          fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f\n",
+                  a, ecc, incl*RAD2DEG, node*RAD2DEG, argp*RAD2DEG, nu*RAD2DEG, m*RAD2DEG);
         }
         else
         {

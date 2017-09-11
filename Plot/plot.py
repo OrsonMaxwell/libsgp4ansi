@@ -7,9 +7,13 @@ import os, sys
 import subprocess
 import datetime
 
-######################################################
+# Configuration ###############################################################
 
-str3_binary = 'str3'
+dry_run = False
+if (len(sys.argv) > 1):
+  if (sys.argv[1] == 'd'):
+    dry_run = True
+
 aiaa_binary = 'sgp4'
 
 if os.name == 'nt':
@@ -21,60 +25,50 @@ if os.name == 'posix':
 ver_filename = 'SGP4-VER.TLE'
 fullcat_filename = 'full.tle'
 
+aiaa_out_filename = 'i72.out'
+ansi_out_filename = 'ansi.out'
+
 sat_re = re.compile('([0-9]{1,5})\ \(([0-9. ]+)\)')
 
-######################################################
+# Generate output #############################################################
 
-# print('Running AIAA-2006-6753 timing mode...')
-# start = datetime.datetime.now()
-# print(subprocess.Popen([str3_binary, 't'], stdout=subprocess.PIPE).communicate()[0].decode())
-# stop = datetime.datetime.now()
-# tdiff_it = stop - start
+if (not dry_run):
+  print('Running AIAA-2006-6753 timing mode...')
+  start = datetime.datetime.now()
+  print(subprocess.Popen([aiaa_binary, 'i', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
+  stop = datetime.datetime.now()
+  tdiff_it = stop - start
 
-print('Running AIAA-2006-6753 timing mode...')
-start = datetime.datetime.now()
-# print(subprocess.Popen([aiaa_binary, 'i', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
-stop = datetime.datetime.now()
-tdiff_it = stop - start
+  print('Running libsgp4ansi timing mode...')
+  start = datetime.datetime.now()
+  print(subprocess.Popen(['ansi.exe', 't'],stdout=subprocess.PIPE).communicate()[0].decode())
+  stop = datetime.datetime.now()
+  tdiff_ansit = stop - start
 
-print('Running libsgp4ansi timing mode...')
-start = datetime.datetime.now()
-# print(subprocess.Popen(['ansi.exe', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
-stop = datetime.datetime.now()
-tdiff_ansit = stop - start
+  print('Running AIAA-2006-6753 verification mode...')
+  print(subprocess.Popen([aiaa_binary, 'i', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+  print('Running libsgp4ansi verification mode...')
+  print(subprocess.Popen(['ansi.exe', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
 
-# print('Running SatTrack Report #3 verification mode...')
-# print(subprocess.Popen([str3_binary, 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
-print('Running AIAA-2006-6753 verification mode...')
-print(subprocess.Popen([aiaa_binary, 'i', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
-print('Running libsgp4ansi verification mode...')
-print(subprocess.Popen(['ansi.exe', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+  print('Running AIAA-2006-6753 full catalogue mode...')
+  start = datetime.datetime.now()
+  print(subprocess.Popen([aiaa_binary, 'i', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+  stop = datetime.datetime.now()
+  tdiff_ic = stop - start
 
-# print('Running SatTrack Report #3 full catalogue mode...')
-# start = datetime.datetime.now()
-# print(subprocess.Popen([aiaa_binary, 'a', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
-# stop = datetime.datetime.now()
-# tdiff_ac = stop - start
+  print('Running libsgp4ansi full catalogue mode...')
+  start = datetime.datetime.now()
+  print(subprocess.Popen(['ansi.exe', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+  stop = datetime.datetime.now()
+  tdiff_ansic = stop - start
 
-print('Running AIAA-2006-6753 full catalogue mode...')
-start = datetime.datetime.now()
-print(subprocess.Popen([aiaa_binary, 'i', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
-stop = datetime.datetime.now()
-tdiff_ic = stop - start
-
-print('Running libsgp4ansi full catalogue mode...')
-start = datetime.datetime.now()
-print(subprocess.Popen(['ansi.exe', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
-stop = datetime.datetime.now()
-tdiff_ansic = stop - start
-
-######################################################
+# Load generated data #########################################################
 
 print('Loading full catalogue data...')
 
-with open('i72.out') as f:
+with open(aiaa_out_filename) as f:
   aiaa_file = f.readlines()
-with open('ansi.out') as f:
+with open(ansi_out_filename) as f:
   ansi_file = f.readlines()
 
 aiaa_sats = {}
@@ -114,8 +108,6 @@ for i, line in enumerate(ansi_file):
 
 print('')
 
-######################################################
-
 if len(aiaa_sats.keys()) != len(ansi_sats.keys()):
   print('[WARNG] Satellite count discrepancy in full cat. data!')
   for sat in list(aiaa_sats.keys()):
@@ -146,7 +138,7 @@ for sat in list(ansi_sats.keys()):
     if time not in aiaa_sats[sat][2].keys():
       print('[   ->] AIAA list missing data at t={0:7} for satellite {1}'.format(time, sat))
 
-######################################################
+# Get data for verification plots #############################################
 
 print('Loading verification data...')
 
@@ -192,7 +184,23 @@ for i, line in enumerate(ansi_ver_file):
 
 print('')
 
-######################################################
+
+# Plot #3 - Solving Kepler's Equation for satellite 23333 #####################
+
+aiaa_23333_t = []
+aiaa_23333_i = []
+ansi_23333_i = []
+aiaa_23333_m = []
+ansi_23333_m = []
+
+for time in aiaa_ver_sats['23333'][2].keys():
+  aiaa_23333_t.append(time)
+  aiaa_23333_i.append(aiaa_ver_sats['23333'][2][time][5])
+  aiaa_23333_m.append(aiaa_ver_sats['23333'][2][time][9])
+  ansi_23333_i.append(ansi_ver_sats['23333'][2][time][5])
+  ansi_23333_m.append(ansi_ver_sats['23333'][2][time][9])
+
+# Plot #4 - Position components for satellite 23599 ###########################
 
 aiaa_pos23599_x1 = []
 aiaa_pos23599_yx = []
@@ -211,8 +219,8 @@ for time in aiaa_ver_sats['23599'][2].keys():
   ansi_pos23599_yx.append(ansi_ver_sats['23599'][2][time][0])
   ansi_pos23599_yy.append(ansi_ver_sats['23599'][2][time][1])
   ansi_pos23599_yz.append(ansi_ver_sats['23599'][2][time][2])
-
-######################################################
+  
+# Plotting everything #########################################################
 
 # Plotting
 print('Plotting data - please wait...')
@@ -242,18 +250,54 @@ plt.xlabel('Orbital period, min')
 plt.ylabel('Difference, m')
 plt.tight_layout(pad=0.0, w_pad=0.1, h_pad=0.1)
 
+if (not dry_run):
 # Runtime difference between static reference and library code
-fig = plt.figure(2)
-fig.canvas.set_window_title('Timing results') 
+  fig = plt.figure(2)
+  fig.canvas.set_window_title('Timing results') 
+  plt.subplot(111)
+  plt.bar([1,2], [tdiff_it.total_seconds(), tdiff_ansit.total_seconds()])
+  plt.subplot(111).autoscale(True, 'y', None)
+  plt.title('Timing')
+  plt.xlabel('')
+  plt.ylabel('Run time, s')
+  plt.tight_layout(pad=0.0, w_pad=0.1, h_pad=0.1)
 
-plt.subplot(111)
-plt.bar([1,2], [tdiff_it.total_seconds(), tdiff_ansit.total_seconds()])
-plt.subplot(111).autoscale(True, 'y', None)
-plt.title('Timing')
-plt.xlabel('')
-plt.ylabel('Run time, s')
+# Solving Kepler's Equation for satellite 23333
+fig = plt.figure(3)
+fig.canvas.set_window_title('Solving Kepler\'s Equation for satellite 23333') 
+
+xmin = int(min(aiaa_23333_t))
+xmax = int(max(aiaa_23333_t))
+print('***********************', xmin, xmax)
+xticksmin = range(xmin, xmax + 1, 50)
+xticksmaj = range(xmin, xmax + 1, 200)
+plt.subplot(211)
+plt.plot(aiaa_23333_t, aiaa_23333_i, c='k', marker='', ls=':')
+plt.plot(aiaa_23333_t, ansi_23333_i, c='b', marker='', ls='-', alpha=0.6)
+plt.subplot(212)
+plt.plot(aiaa_23333_t, aiaa_23333_m, c='k', marker='', ls=':')
+plt.plot(aiaa_23333_t, ansi_23333_m, c='g', marker='', ls='-', alpha=0.6)
+
+plt.subplot(211).set_xlim(xmin, xmax)
+plt.subplot(211).set_xticks(xticksmin, True);
+plt.subplot(211).set_xticks(xticksmaj, False);
+plt.subplot(211).autoscale(True, 'y', None)
+plt.subplot(211).grid(which='major', axis='both', ls='dashed', alpha=0.7)
+plt.subplot(211).grid(which='minor', axis='x', ls='dotted', alpha=0.3)
+plt.title('Kepler\'s for 23333, AIAA (black dashed) vs ANSI (color)')
+plt.xlabel('Time from epoch, min')
+plt.ylabel('Inclination, deg, km')
+plt.subplot(212).set_xlim(xmin, xmax)
+plt.subplot(212).set_xticks(xticksmin, True);
+plt.subplot(212).set_xticks(xticksmaj, False);
+plt.subplot(212).autoscale(True, 'y', None)
+plt.subplot(212).grid(which='major', axis='both', ls='dashed', alpha=0.7)
+plt.subplot(212).grid(which='minor', axis='x', ls='dotted', alpha=0.3)
+plt.title('Kepler\'s for 23333, AIAA (black dashed) vs ANSI (color)')
+plt.xlabel('Time from epoch, min')
+plt.ylabel('Mean anomaly, deg, km')
 plt.tight_layout(pad=0.0, w_pad=0.1, h_pad=0.1)
-
+  
 # Lunar-solar modifications for Satellite 23599
 fig = plt.figure(4)
 fig.canvas.set_window_title('Lunar-solar modifications for Satellite 23599') 
@@ -263,9 +307,9 @@ xmax = int(max(aiaa_pos23599_x1))
 xticksmin = range(xmin, xmax + 1, 20)
 xticksmaj = range(xmin, xmax + 1, 60)
 
-plt.plot(aiaa_pos23599_x1, aiaa_pos23599_yx, c='b', marker='', ls=':')
-plt.plot(aiaa_pos23599_x1, aiaa_pos23599_yy, c='g', marker='', ls=':')
-plt.plot(aiaa_pos23599_x1, aiaa_pos23599_yz, c='m', marker='', ls=':')
+plt.plot(aiaa_pos23599_x1, aiaa_pos23599_yx, c='k', marker='', ls=':')
+plt.plot(aiaa_pos23599_x1, aiaa_pos23599_yy, c='k', marker='', ls=':')
+plt.plot(aiaa_pos23599_x1, aiaa_pos23599_yz, c='k', marker='', ls=':')
 
 plt.plot(aiaa_pos23599_x1, ansi_pos23599_yx, c='b', marker='', ls='-', alpha=0.6)
 plt.plot(aiaa_pos23599_x1, ansi_pos23599_yy, c='g', marker='', ls='-', alpha=0.6)
@@ -277,7 +321,7 @@ plt.subplot(111).set_xticks(xticksmaj, False);
 plt.subplot(111).autoscale(True, 'y', None)
 plt.subplot(111).grid(which='major', axis='both', ls='dashed', alpha=0.7)
 plt.subplot(111).grid(which='minor', axis='x', ls='dotted', alpha=0.3)
-plt.title('Lunar-solar modifications for Satellite 23599')
+plt.title('L-S mod. for 23599, AIAA (black dashed) vs ANSI (color)')
 plt.xlabel('Time from epoch, min')
 plt.ylabel('Position components, km')
 plt.tight_layout(pad=0.0, w_pad=0.1, h_pad=0.1)

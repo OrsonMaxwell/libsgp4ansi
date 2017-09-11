@@ -2664,7 +2664,7 @@ void newtonnu
 
 void rv2coe
      (
-       double r[3], double v[3], double mu,
+       double r[3], double v[3],
        double* p, double* a, double* ecc, double* incl, double* omega, double* argp,
        double* nu, double* m, double* arglat, double* truelon, double* lonper
      )
@@ -2694,19 +2694,19 @@ void rv2coe
          nbar[1]=  hbar[0];
          nbar[2]=   0.0;
          magn = mag2( nbar );
-         c1 = magv*magv - mu  / magr;
+         c1 = magv*magv - GM  / magr;
          rdotv = dot2( r,v );
          for (i= 0; i <= 2; i++)
-             ebar[i]= (c1*r[i] - rdotv*v[i]) / mu;
+             ebar[i]= (c1*r[i] - rdotv*v[i]) / GM;
          *ecc = mag2( ebar );
 
          // ------------  find *a e and semi-latus rectum   ----------
-         sme= ( magv*magv*0.5  ) - ( mu  / magr );
+         sme= ( magv*magv*0.5  ) - ( GM  / magr );
          if ( fabs( sme ) > small )
-             *a= -mu  / (2.0 *sme);
+             *a= -GM  / (2.0 *sme);
            else
              *a= infinite;
-         *p = magh*magh / mu;
+         *p = magh*magh / GM;
 
          // -----------------  find inclination   -------------------
          hk= hbar[2] / magh;
