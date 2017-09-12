@@ -133,7 +133,6 @@ for sat in list(aiaa_sats.keys()):
         maxdelta = delta
   fullcat_points[sat] = maxdelta * 1000 # Convert to meters
 for sat in list(ansi_sats.keys()):
-  maxdelta = 0
   for time in ansi_sats[sat][2].keys():
     if time not in aiaa_sats[sat][2].keys():
       print('[   ->] AIAA list missing data at t={0:7} for satellite {1}'.format(time, sat))
@@ -184,6 +183,18 @@ for i, line in enumerate(ansi_ver_file):
 
 print('')
 
+verif_points = {}
+verif_annot = []
+
+for sat in list(aiaa_ver_sats.keys()):
+  maxdelta = 0
+  for time in aiaa_ver_sats[sat][2].keys():
+    delta = max(abs(aiaa_ver_sats[sat][2][time][0] - ansi_ver_sats[sat][2][time][0]), abs(aiaa_ver_sats[sat][2][time][1] - ansi_ver_sats[sat][2][time][1]), abs(aiaa_ver_sats[sat][2][time][2] - ansi_ver_sats[sat][2][time][2]))
+    if delta > maxdelta:
+      maxdelta = delta
+  verif_points[sat] = maxdelta * 1000 # Convert to meters
+  verif_annot.append(sat)
+
 # Plotting everything #########################################################
 
 print('Plotting data - please wait...')
@@ -212,13 +223,26 @@ ax.set_xlabel('Orbital period, min')
 ax.set_ylabel('Difference, m')
 fig.set_tight_layout({'pad':0.0, 'w_pad':0.1, 'h_pad':0.1})
 
+# Max difference in verification ephemerides ##################################
+fig, axo = plt.subplots(1, 1)
+fig.canvas.set_window_title('Verif. ephemeris difference') 
+
+for i, sat in enumerate(list(aiaa_ver_sats.keys())):
+  axo.plot(i, verif_points[sat], c='r', marker='o', ls='', mew=0.0, markersize=8, alpha=0.7)
+  axo.annotate(sat, (i, verif_points[sat]))
+
+axo.set_xlim(-1, len(aiaa_ver_sats.keys()) + 5)
+axo.set_yscale('log')
+axo.autoscale(True, 'y', None)
+axo.grid(which='major', axis='both', ls='dashed', alpha=0.7)
+axo.grid(which='minor', axis='x', ls='dotted', alpha=0.3)
+axo.set_title('Max difference in ephemerides: AIAA (zero) vs ANSI (red)')
+axo.set_xlabel('Satellite, number')
+axo.set_ylabel('Difference, m')
+fig.set_tight_layout({'pad':0.0, 'w_pad':0.1, 'h_pad':0.1})
+
 # Runtime difference between static reference and library code ################
 if (not dry_run):
-  tic = 2
-  tansic = 6
-  tit = 80
-  tansit = 49
-
   fig, (axtt, axtc) = plt.subplots(2, 1)
   fig.canvas.set_window_title('Timing results') 
   
