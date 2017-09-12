@@ -72,6 +72,7 @@ main (int argc, char** argv)
       strncpy(timedef, tlestr2 + 69, 35);
       timedef[35] = '\0';
       sscanf(timedef, "%lf %lf %lf", &t_start, &t_stop, &deltamin);
+      strncpy(tlestr2, tlestr2, 69);
     }
 
     tle2orbit(tlestr0, tlestr1, tlestr2, &s);

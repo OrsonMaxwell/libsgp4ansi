@@ -40,7 +40,10 @@ fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
 
   int day_of_year = (int)floor(days);
 
-  res_tm.tm_year = 100 + year;
+  if (year < 57) // TODO: Will be valid only until 2057!
+    res_tm.tm_year = 100 + year;
+  else
+    res_tm.tm_year = year;
 
   // Month and day of month
   if ((year % 4) == 0) // Leap year?
