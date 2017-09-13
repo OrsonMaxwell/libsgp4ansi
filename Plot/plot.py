@@ -14,7 +14,7 @@ if (len(sys.argv) > 1):
   if (sys.argv[1] == 'd'):
     dry_run = True
 
-aiaa_binary = 'sgp4'
+aiaa_binary = 'aiaa'
 
 if os.name == 'nt':
   print("Assuming Windows environment")

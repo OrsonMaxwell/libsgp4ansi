@@ -451,9 +451,9 @@ sat_init(sat* s)
   printf("2/3:    %30.15lf\n", TWOTHIRD);
   double a1      = pow(XKE / s->mean_motion, TWOTHIRD);
   printf("a1:     %30.15lf\n", a1);
-  double cosio   = cos(s->inclination); // +
-  double sinio   = sin(s->inclination); // +
-  double eosq    = pow(s->eccentricity, 2); // +
+  double cosio   = cos(s->inclination);
+  double sinio   = sin(s->inclination);
+  double eosq    = pow(s->eccentricity, 2);
   double theta2  = pow(cosio, 2);
   double x3thm1  = 3 * theta2 - 1;
   double betao2  = 1 - eosq;
@@ -517,19 +517,30 @@ sat_init(sat* s)
 
   // Compute common constants
   double pinv2   = 1 / (pow(s->aodp, 2) * pow(betao2, 2));
-  double tsi     = 1 / (s->aodp - 4);
+  printf("pinv2:  %30.15lf\n", pinv2);
+  double tsi     = 1 / (s->aodp - s4);
+  printf("tsi:    %30.15lf\n", tsi);
   double eta     = s->aodp * s->eccentricity * tsi;
+  printf("eta:    %30.15lf\n", eta);
   double eta2    = eta * eta;
+  printf("eta2:   %30.15lf\n", eta2);
   double eeta    = s->eccentricity * eta;
+  printf("eeta:   %30.15lf\n", eeta);
   double psi2    = fabs(1 - eta2);
+  printf("psi2:   %30.15lf\n", psi2);
   double coef    = qoms24 * pow(tsi, 4);
+  printf("coef:   %30.15lf\n", coef);
   double coef1   = coef / pow(psi2, 3.5);
+  printf("coef1:  %30.15lf\n", coef1);
   double C2      = coef1 * s->xnodp
                  * (s->aodp * (1 + 1.5 * eta2 + eeta * (4 + eta2))
                  + 0.375 * J2 * tsi / psi2 * x3thm1
                  * (8 + 3 * eta2 * (8 + eta2)));
+  printf("C2:     %30.15lf\n", C2);
   double C1      = s->Bstar * C2;
+  printf("C1:     %30.15lf\n", C1);
   double x1mth2  = 1 - theta2;
+  printf("x1mth2: %30.15lf\n", x1mth2);
   double C4      = 2 * s->xnodp * coef1 * s->aodp * betao2
                  * (eta * (2 + 0.5 * eta2) + s->eccentricity
                  * (0.5 + 2 * eta2) - J2 * tsi / (s->aodp * psi2)
@@ -537,6 +548,7 @@ sat_init(sat* s)
                  * (1.5 - 0.5 * eeta)) + 0.75 * x1mth2
                  * (2 * eta2 - eeta * (1 + eta2))
                  * cos(2 * s->argument_perigee)));
+  printf("C4:     %30.15lf\n", C4);
   double theta4  = pow(cosio, 4);
   double temp1   = 1.5 * J2 * pinv2 * s->xnodp;
   double temp2   = 0.5 * temp1 * J2 * pinv2;
