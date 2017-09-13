@@ -140,14 +140,6 @@ orbit_sgp4
     vec3* vel
 )
 {
-  double r[3], v[3];
-  sgp4(1, sat, tdelta, r, v);
-  pos->x = r[0];
-  pos->y = r[1];
-  pos->z = r[2];
-  vel->x = v[0];
-  vel->y = v[1];
-  vel->z = v[2];
   return 0;
 }
 
@@ -182,23 +174,30 @@ orbit_dslongper
 
 }
 
-void print_orbit(sat* sat, char* caption)
+void sat_print(sat* sat, char* caption)
 {
-  FILE *f = fopen("orbit.txt", "a");
+  FILE *f = fopen("sat.txt", "a");
   fprintf(f, "===== %s =====\n", caption);
   fprintf(f, "----- TLE portion -----\n");
-  fprintf(f, "number:\t\t%d\n", sat->norad_number);
-  fprintf(f, "nprimediv2:\t%32.25lf\n", sat->mean_motion_dt2);
-  fprintf(f, "ndprimediv6:\t%32.25lf\n", sat->mean_motion_ddt6);
-  fprintf(f, "Bstar:\t\t%32.25lf\n", sat->Bstar);
-  fprintf(f, "i:\t\t%32.25lf\n", sat->inclination);
-  fprintf(f, "alpha:\t\t%32.25lf\n", sat->right_asc_node);
-  fprintf(f, "e:\t\t%32.25lf\n", sat->eccentricity);
-  fprintf(f, "omega:\t\t%32.25lf\n", sat->argument_perigee);
-  fprintf(f, "Mo:\t\t%32.25lf\n", sat->mean_anomaly);
-  fprintf(f, "no:\t\t%32.25lf\n", sat->mean_motion);
+  fprintf(f, "norad_number    : %d\n", sat->norad_number);
+  fprintf(f, "mean_motion_dt2 : %32.25lf\n", sat->mean_motion_dt2);
+  fprintf(f, "mean_motion_ddt6: %32.25lf\n", sat->mean_motion_ddt6);
+  fprintf(f, "Bstar           : %32.25lf\n", sat->Bstar);
+  fprintf(f, "inclination     : %32.25lf\n", sat->inclination);
+  fprintf(f, "right_asc_node  : %32.25lf\n", sat->right_asc_node);
+  fprintf(f, "eccentricity    : %32.25lf\n", sat->eccentricity);
+  fprintf(f, "argument_perigee: %32.25lf\n", sat->argument_perigee);
+  fprintf(f, "mean_anomaly    : %32.25lf\n", sat->mean_anomaly);
+  fprintf(f, "mean_motion     : %32.25lf\n", sat->mean_motion);
   fprintf(f, "----- Time -----\n");
-  fprintf(f, "epoch:\t\t%s.%lf\n", ctime(&sat->epoch), sat->epoch_ms);
+  fprintf(f, "epoch:\t\t%s%lfms\n", ctime(&sat->epoch), sat->epoch_ms);
+  fprintf(f, "----- Standard orbital elements -----\n");
+  fprintf(f, "xnodp           : %32.25lf\n", sat->xnodp);
+  fprintf(f, "aodp            : %32.25lf\n", sat->aodp);
+  fprintf(f, "perigee         : %32.25lf\n", sat->perigee);
+  fprintf(f, "perigee_alt     : %32.25lf\n", sat->perigee_alt);
+  fprintf(f, "period          : %32.25lf\n", sat->period);
+  /*
   fprintf(f, "julepoch:\t%32.25lf\n", sat->julepoch);
   fprintf(f, "GSTo:\t\t%32.25lf\n", sat->GSTo);
   fprintf(f, "----- Flags -----\n");
@@ -309,7 +308,7 @@ void print_orbit(sat* sat, char* caption)
   fprintf(f, "mo:\t\t%32.25lf\n", sat->mo);
   fprintf(f, "nodeo:\t\t%32.25lf\n", sat->nodeo);
   fprintf(f, "alta:\t\t%32.25lf\n", sat->alta);
-  fprintf(f, "altp:\t\t%32.25lf\n", sat->altp);
+  fprintf(f, "altp:\t\t%32.25lf\n", sat->altp);*/
   fclose(f);
 }
 
@@ -330,7 +329,7 @@ void print_orbit(sat* sat, char* caption)
  * Calls: orbit_init
  */
 int
-tle2orbit(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
+sat_load_tle(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
 {
   // Pre-formatting the raw TLE input
   for (char j = 10; j <= 15; j++)
@@ -403,34 +402,198 @@ tle2orbit(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
     return -1;
   }
 
-  // Make this return milliseconds
   if (fractday2unix(epochyr, epochdays, &s->epoch, &s->epoch_ms) != 0)
   {
     return -1;
   }
 
-  s->julepoch = unix2jul(&s->epoch, s->epoch_ms);
+  s->julian_epoch = unix2jul(&s->epoch, s->epoch_ms);
 
   s->mean_motion_ddt6 = nddot * pow(10, nexp);
   s->Bstar = Bstar * pow(10, Bexp);
 
-  // TODO: Convert to SGP4 units and expand
+  // Converting from TLE to SGP4 units (minutes, radians and kilometres)
+  s->inclination      *= DEG2RAD;
+  s->right_asc_node   *= DEG2RAD;
+  s->argument_perigee *= DEG2RAD;
+  s->mean_anomaly     *= DEG2RAD;
+  s->mean_motion      /= RPD2RADPM;
+  s->mean_motion_dt2  /= (RPD2RADPM * 1440);
+  s->mean_motion_ddt6 /= (RPD2RADPM * 1440 * 1440);
 
-  return orbit_init(s);
+  return sat_init(s);
 }
 
 /*
  * Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
  *
- * Inputs:  sat  - orbit struct pointer to an empty orbit
- * Outputs: sat  - orbit struct pointer with full orbital data
- * Returns: None TODO: add return values
+ * Inputs:  s - orbit struct pointer to an empty orbit
+ * Outputs: s - orbit struct pointer with full orbital data
+ * Returns: 0 - Success
+ *         -1 - Eccentricity out of range [0, 1)
+ *         -2 - Inclination out of range [0, pi]
  */
 int
-orbit_init(sat* sat)
+sat_init(sat* s)
 {
+  if ((s->eccentricity < 0) || (s->eccentricity > 0.999999))
+  {
+    return -1;
+  }
+  if ((s->inclination < 0) || (s->inclination > PI))
+  {
+    return -2;
+  }
 
-  sgp4init(0, 'i', 0101, sat->julepoch-2433281.5, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, sat);
+  // Recovering mean motion and semi-major axis
+  printf("XKE:    %30.15lf\n", XKE);
+  printf("no:     %30.15lf\n", s->mean_motion);
+  printf("2/3:    %30.15lf\n", TWOTHIRD);
+  double a1      = pow(XKE / s->mean_motion, TWOTHIRD);
+  printf("a1:     %30.15lf\n", a1);
+  double cosio   = cos(s->inclination); // +
+  double sinio   = sin(s->inclination); // +
+  double eosq    = pow(s->eccentricity, 2); // +
+  double theta2  = pow(cosio, 2);
+  double x3thm1  = 3 * theta2 - 1;
+  double betao2  = 1 - eosq;
+  double betao   = sqrt(betao2);
+
+  // Un-Kozai mean motion
+  double delta1  = 0.75 * J2 * (3.0 * theta2 - 1.0) / (betao * betao2);
+  printf("theta2: %30.15lf\n", theta2);
+  printf("betao:  %30.15lf\n", betao);
+  printf("betao2: %30.15lf\n", betao2);
+  printf("delta1: %30.15lf\n", delta1);
+  double a0      = a1 * (1.0 - pow(delta1 / pow(a1, 2), 2)
+                 - delta1 / pow(a1, 2) * (1.0 / 3.0 + 134.0
+                 * pow(delta1 / pow(a1, 2), 2) / 81.0));
+  printf("a0:     %30.15lf\n", a0);
+  double delta0  = delta1 / pow(a0, 2);
+  printf("delta0: %30.15lf\n", delta0);
+  s->xnodp       = s->mean_motion / (1 + delta0);
+  printf("xnodp:  %30.15lf\n", s->xnodp);
+  s->aodp        = a0 / (1 - delta0);
+  printf("aodp:   %30.15lf\n", s->aodp);
+  s->perigee     = (s->aodp * (1 - s->eccentricity)) * RE; // TODO: Remove?
+  s->perigee_alt = s->perigee - RE;
+  s->period      = TWOPI / s->xnodp;
+
+  //sat_print(s, "INIT");
+
+  if (s->period >= 225)
+  {
+    s->is_deep_space      = true;
+  }
+  else
+  {
+    s->is_deep_space      = false;
+    s->use_simple_model   = false;
+
+    if (s->perigee_alt < 220)
+    {
+      s->use_simple_model = true;
+    }
+  }
+
+  double qoms24 = pow(42 / RE , 4);
+  double s4     = S;
+
+  // Adjust s4 and qoms4 for different perigee altitudes
+  if (s->perigee_alt < 156)
+  {
+    s4     = s->perigee_alt - 78;
+    if (s->perigee_alt < 98)
+    {
+      s4   = 20;
+    }
+
+    qoms24 = pow((120 - s4) / RE, 4);
+    s4     = s4 / RE + 1; // Get back to AE units
+  }
+
+  printf("qoms24: %30.15lf\n", qoms24);
+  printf("s4:     %30.15lf\n", s4);
+
+  // Compute common constants
+  double pinv2   = 1 / (pow(s->aodp, 2) * pow(betao2, 2));
+  double tsi     = 1 / (s->aodp - 4);
+  double eta     = s->aodp * s->eccentricity * tsi;
+  double eta2    = eta * eta;
+  double eeta    = s->eccentricity * eta;
+  double psi2    = fabs(1 - eta2);
+  double coef    = qoms24 * pow(tsi, 4);
+  double coef1   = coef / pow(psi2, 3.5);
+  double C2      = coef1 * s->xnodp
+                 * (s->aodp * (1 + 1.5 * eta2 + eeta * (4 + eta2))
+                 + 0.375 * J2 * tsi / psi2 * x3thm1
+                 * (8 + 3 * eta2 * (8 + eta2)));
+  double C1      = s->Bstar * C2;
+  double x1mth2  = 1 - theta2;
+  double C4      = 2 * s->xnodp * coef1 * s->aodp * betao2
+                 * (eta * (2 + 0.5 * eta2) + s->eccentricity
+                 * (0.5 + 2 * eta2) - J2 * tsi / (s->aodp * psi2)
+                 * (-3 * x3thm1 * (1 - 2 * eeta + eta2
+                 * (1.5 - 0.5 * eeta)) + 0.75 * x1mth2
+                 * (2 * eta2 - eeta * (1 + eta2))
+                 * cos(2 * s->argument_perigee)));
+  double theta4  = pow(cosio, 4);
+  double temp1   = 1.5 * J2 * pinv2 * s->xnodp;
+  double temp2   = 0.5 * temp1 * J2 * pinv2;
+  double temp3   = -0.46875 * J4 * pow(pinv2, 2) * s->xnodp;
+  double xmdot   = s->xnodp + 0.5 * temp1 * betao * x3thm1 + 0.0625
+                 * temp2 * betao * (13 - 78 * theta2 + 137 * theta4);
+  double x1m5th  = 1 - 5 * theta2;
+  double omgdot  = -0.5 * temp1 * x1m5th
+                 + 0.0625 * temp2 * (7 - 114 * theta2 + 395 * theta4)
+                 + temp3 * (3 - 36 * theta2 + 49 * theta4);
+  double xhdot1  = -temp1 * cosio;
+  double xnodot  = xhdot1 + (0.5 * temp2 * (4 - 19 * theta2)
+                 + 2 * temp3 * (3 - 7 * theta2)) * cosio;
+  double xnodcf  = 3.5 * betao * xhdot1 * C1;
+  double t2cof   = 1.5 * C1; // TODO: Remove?
+  // Division by zero check then inclination = 180 deg
+  double xlcof   = 0.125 * A3OVK2 * sinio * (3 + 5 * cosio)
+                 / (fabs(cosio + 1.0) > 1.5e-12) ? (1 + cosio) : 1.5e-12;
+  double aycof   = 0.25 * A3OVK2 * sinio;
+  double x7thm1  = 7 * theta2 - 1;
+  double GSTo    = jul2gst(s->julian_epoch);
+
+  if (s->is_deep_space){
+    // Deep space init here
+  }
+
+  // Compute near space constants
+  double C3      = 0;
+  double xmcof   = 0;
+
+  if (s->eccentricity > 1.0e-4)
+  {
+    C3           = coef * tsi * A3OVK2 * s->xnodp * sinio / s->eccentricity;
+    xmcof        = -TWOTHIRD * coef * s->Bstar / eeta;
+  }
+
+  double C5      = 2 * coef1 * s->aodp * betao2
+                 * (1 + 2.75 * (eta2 + eeta) + eeta * eta2);
+  double omgcof  = s->Bstar * C3 * cos(s->argument_perigee);
+  double delmo   = pow(1 + eta * cos(s->mean_anomaly), 3);
+  double sinmo   = sin(s->mean_anomaly);
+
+  if (s->use_simple_model == false)
+  {
+    double C12   = pow(C1, 2);
+    double D2    = 4 * s->aodp * tsi * C12;
+    double temp  = D2 * tsi * C1 / 3;
+    double D3    = (17 * s->aodp + s4) * temp;
+    double D4    = 0.5 * temp * s->aodp * tsi * (221 * s->aodp + 31 * s4) * C1;
+    double t3cof = D2 + 2 * C12;
+    double t4cof = 0.25 * (3 * D3 + C1 * (12 * D2 + 10 * C12));
+    double t5cof = 0.2  * (3 * D4 + 12 * C1 * D3 + 6 * D2 * D2 + 15 * C12
+                 * (2 * D2 + C12));
+  }
+
+  // Propagate at zero time since epoch here
+
   return 0;
 }
 
@@ -452,7 +615,7 @@ orbit_init(sat* sat)
  *          5         - Decaying satellite
  */
 int
-orbit_prop
+sat_propagate
 (
     sat* sat,
     double tdelta,
@@ -496,7 +659,7 @@ orbit_prop
  *          5         - Decaying satellite
  */
 int
-orbit_at
+sat_get_teme
 (
     sat* sat,
     time_t* time,
@@ -521,7 +684,7 @@ orbit_at
   double tdelta = difftime(*time + msec / 1000,
                            sat->epoch + sat->epoch_ms / 1000) / 60.0L;
 
-  return orbit_prop(sat, tdelta, maxiter, tolerance, pos, vel);
+  return sat_propagate(sat, tdelta, maxiter, tolerance, pos, vel);
 }
 
 
@@ -1740,705 +1903,6 @@ void initl
 *    vallado, crawford, hujsak, kelso  2006
   ----------------------------------------------------------------------------*/
 
-bool sgp4init
-     (
-       int whichconst, char opsmode,   const int satn,     const double epoch,
-       const double xbstar,  const double xecco, const double xargpo,
-       const double xinclo,  const double xmo,   const double xno,
-       const double xnodeo,  sat* sat
-     )
-{
-     /* --------------------- local variables ------------------------ */
-     double ao, ainv,   con42, cosio, sinio, cosio2, eccsq,
-          omeosq, posq,   rp,     rteosq,
-          cnodm , snodm , cosim , sinim , cosomm, sinomm, cc1sq ,
-          cc2   , cc3   , coef  , coef1 , cosio4, day   , dndt  ,
-          em    , emsq  , eeta  , etasq , gam   , argpm , nodem ,
-          inclm , mm    , nm    , perige, pinvsq, psisq , qzms24,
-          rtemsq, s1    , s2    , s3    , s4    , s5    , s6    ,
-          s7    , sfour , ss1   , ss2   , ss3   , ss4   , ss5   ,
-          ss6   , ss7   , sz1   , sz2   , sz3   , sz11  , sz12  ,
-          sz13  , sz21  , sz22  , sz23  , sz31  , sz32  , sz33  ,
-          tc    , temp  , temp1 , temp2 , temp3 , tsi   , xpidot,
-          xhdot1, z1    , z2    , z3    , z11   , z12   , z13   ,
-          z21   , z22   , z23   , z31   , z32   , z33,
-          qzms2t, ss, j2, j3oj2, j4, x2o3, r[3], v[3],
-          tumin, mu, radiusearthkm, xke, j3, delmotemp, qzms2ttemp, qzms24temp;
-
-     /* ------------------------ initialization --------------------- */
-     // sgp4fix divisor for divide by zero check on inclination
-     // the old check used 1.0 + cos(pi-1.0e-9), but then compared it to
-     // 1.5 e-12, so the threshold was changed to 1.5e-12 for consistency
-     const double temp4    =   1.5e-12;
-     // TODO: Get rid of zeroing out and use a compount initializer
-     /* ----------- set all near earth variables to zero ------------ */
-     sat->isimp   = 0;   sat->method = 'n'; sat->aycof    = 0.0;
-     sat->x3thm1   = 0.0; sat->cc1    = 0.0; sat->cc4      = 0.0;
-     sat->cc5     = 0.0; sat->d2     = 0.0; sat->d3       = 0.0;
-     sat->d4      = 0.0; sat->delmo  = 0.0; sat->eta      = 0.0;
-     sat->argpdot = 0.0; sat->omgcof = 0.0; sat->sinmao   = 0.0;
-     sat->t       = 0.0; sat->t2cof  = 0.0; sat->t3cof    = 0.0;
-     sat->t4cof   = 0.0; sat->t5cof  = 0.0; sat->x1mth2   = 0.0;
-     sat->x7thm1  = 0.0; sat->mdot   = 0.0; sat->nodedot  = 0.0;
-     sat->xlcof   = 0.0; sat->xmcof  = 0.0; sat->nodecf   = 0.0;
-
-     /* ----------- set all deep space variables to zero ------------ */
-     sat->irez  = 0;   sat->d2201 = 0.0; sat->d2211 = 0.0;
-     sat->d3210 = 0.0; sat->d3222 = 0.0; sat->d4410 = 0.0;
-     sat->d4422 = 0.0; sat->d5220 = 0.0; sat->d5232 = 0.0;
-     sat->d5421 = 0.0; sat->d5433 = 0.0; sat->dedt  = 0.0;
-     sat->del1  = 0.0; sat->del2  = 0.0; sat->del3  = 0.0;
-     sat->didt  = 0.0; sat->dmdt  = 0.0; sat->dnodt = 0.0;
-     sat->domdt = 0.0; sat->e3    = 0.0; sat->ee2   = 0.0;
-     sat->peo   = 0.0; sat->pgho  = 0.0; sat->pho   = 0.0;
-     sat->pinco = 0.0; sat->plo   = 0.0; sat->se2   = 0.0;
-     sat->se3   = 0.0; sat->sgh2  = 0.0; sat->sgh3  = 0.0;
-     sat->sgh4  = 0.0; sat->sh2   = 0.0; sat->sh3   = 0.0;
-     sat->si2   = 0.0; sat->si3   = 0.0; sat->sl2   = 0.0;
-     sat->sl3   = 0.0; sat->sl4   = 0.0; sat->gsto  = 0.0;
-     sat->xfact = 0.0; sat->xgh2  = 0.0; sat->xgh3  = 0.0;
-     sat->xgh4  = 0.0; sat->xh2   = 0.0; sat->xh3   = 0.0;
-     sat->xi2   = 0.0; sat->xi3   = 0.0; sat->xl2   = 0.0;
-     sat->xl3   = 0.0; sat->xl4   = 0.0; sat->xlamo = 0.0;
-     sat->zmol  = 0.0; sat->zmos  = 0.0; sat->atime = 0.0;
-     sat->xli   = 0.0; sat->xni   = 0.0;
-
-     // TODO: Only to test legacy math!
-     sat->argpdot = sat->omegaprime; // omegaprime
-     //sat->gsto = sat->GSTo;    // GSTo
-     sat->bstar = sat->Bstar;   // Bstar
-     sat->ecco = sat->eccentricity;    // e
-     sat->argpo = sat->argument_perigee;   // omega
-     sat->inclo = sat->inclination;   // i
-     sat->mo = sat->mean_anomaly;      // Mo
-     sat->nodeo = sat->right_asc_node;   // alpha
-
-     // Convert to SGP4 units
-     // ---- find no, ndot, nddot ----
-     sat->mean_motion   = sat->mean_motion / RPD2RADPM; //* rad/min
-
-     /* ------------------------ earth constants ----------------------- */
-     // sgp4fix identify constants and allow alternate values
-     // TODO: replace by macros
-     tumin = TUMIN;
-     mu = GM;
-     radiusearthkm = RE;
-     xke = XKE;
-     j2 = J2;
-     j3 = J3;
-     j4 = J4;
-     j3oj2 = J3DIVJ2;
-
-     // ---- convert to sgp4 units ----
-     sat->a    = pow( sat->mean_motion*tumin , (-2.0/3.0) );
-     sat->mean_motion_dt2 = sat->mean_motion_dt2  / (RPD2RADPM*1440.0);  //* ? * minperday
-     sat->mean_motion_ddt6= sat->mean_motion_ddt6 / (RPD2RADPM*1440.0*1440);
-
-     // ---- find standard orbital elements ----
-     sat->inclo = sat->inclo  * DEG2RAD;
-     sat->nodeo = sat->nodeo  * DEG2RAD;
-     sat->argpo = sat->argpo  * DEG2RAD;
-     sat->mo    = sat->mo     * DEG2RAD;
-
-     sat->alta = sat->a*(1.0 + sat->ecco) - 1.0;
-     sat->altp = sat->a*(1.0 - sat->ecco) - 1.0;
-     // sgp4fix - note the following variables are also passed directly via sat->
-     // it is possible to streamline the sgp4init call by deleting the "x"
-     // variables, but the user would need to set the sat->* values first. we
-     // include the additional assignments in case twoline2rv is not used.
-     //sat->bstar   = xbstar;
-     //sat->ecco    = xecco;
-     //sat->argpo   = xargpo;
-     //sat->inclo   = xinclo;
-     //sat->mo      = xmo;
-     //sat->no      = xno;
-     //sat->nodeo   = xnodeo;
-
-     // sgp4fix add opsmode
-     sat->operationmode = opsmode;
-
-     ss     = 78.0 / radiusearthkm + 1.0;
-     // sgp4fix use multiply for speed instead of pow
-     qzms2ttemp = (120.0 - 78.0) / radiusearthkm;
-     qzms2t = qzms2ttemp * qzms2ttemp * qzms2ttemp * qzms2ttemp;
-     x2o3   =  2.0 / 3.0;
-
-     sat->init = 'y';
-     sat->t  = 0.0;
-
-     //print_orbit(sat, "sgp4init pre-initl");
-     initl
-         (
-           satn, whichconst, sat->ecco, epoch, sat->inclo, &sat->mean_motion, &sat->method,
-           &ainv, &ao, &sat->x3thm1, &con42, &cosio, &cosio2, &eccsq, &omeosq,
-           &posq, &rp, &rteosq, &sinio, &sat->gsto, sat->operationmode
-         );
-     sat->error = 0;
-
-     //print_orbit(sat, "sgp4init post-initl");
-
-     // sgp4fix remove this check as it is unnecessary
-     // the mrt check in sgp4 handles decaying satellite cases even if the starting
-     // condition is below the surface of te earth
-//     if (rp < 1.0)
-//       {
-//         printf("# *** satn%d epoch elts sub-orbital ***\n", satn);
-//         sat->error = 5;
-//       }
-
-     if ((omeosq >= 0.0 ) || ( sat->mean_motion >= 0.0))
-       {
-         sat->isimp = 0;
-         if (rp < (220.0 / radiusearthkm + 1.0))
-             sat->isimp = 1;
-         sfour  = ss;
-         qzms24 = qzms2t;
-         perige = (rp - 1.0) * radiusearthkm;
-
-         /* - for perigees below 156 km, s and qoms2t are altered - */
-         if (perige < 156.0)
-           {
-             sfour = perige - 78.0;
-             if (perige < 98.0)
-                 sfour = 20.0;
-             // sgp4fix use multiply for speed instead of pow
-             qzms24temp =  (120.0 - sfour) / radiusearthkm;
-             qzms24 = qzms24temp * qzms24temp * qzms24temp * qzms24temp;
-             sfour  = sfour / radiusearthkm + 1.0;
-           }
-         pinvsq = 1.0 / posq;
-
-         tsi  = 1.0 / (ao - sfour);
-         sat->eta  = ao * sat->ecco * tsi;
-         etasq = sat->eta * sat->eta;
-         eeta  = sat->ecco * sat->eta;
-         psisq = fabs(1.0 - etasq);
-         coef  = qzms24 * pow(tsi, 4.0);
-         coef1 = coef / pow(psisq, 3.5);
-         cc2   = coef1 * sat->mean_motion * (ao * (1.0 + 1.5 * etasq + eeta *
-                        (4.0 + etasq)) + 0.375 * j2 * tsi / psisq * sat->x3thm1 *
-                        (8.0 + 3.0 * etasq * (8.0 + etasq)));
-         sat->cc1   = sat->bstar * cc2;
-         cc3   = 0.0;
-         if (sat->ecco > 1.0e-4)
-             cc3 = -2.0 * coef * tsi * j3oj2 * sat->mean_motion * sinio / sat->ecco;
-         sat->x1mth2 = 1.0 - cosio2;
-         sat->cc4    = 2.0* sat->mean_motion * coef1 * ao * omeosq *
-                           (sat->eta * (2.0 + 0.5 * etasq) + sat->ecco *
-                           (0.5 + 2.0 * etasq) - j2 * tsi / (ao * psisq) *
-                           (-3.0 * sat->x3thm1 * (1.0 - 2.0 * eeta + etasq *
-                           (1.5 - 0.5 * eeta)) + 0.75 * sat->x1mth2 *
-                           (2.0 * etasq - eeta * (1.0 + etasq)) * cos(2.0 * sat->argpo)));
-         sat->cc5 = 2.0 * coef1 * ao * omeosq * (1.0 + 2.75 *
-                        (etasq + eeta) + eeta * etasq);
-         cosio4 = cosio2 * cosio2;
-         temp1  = 1.5 * j2 * pinvsq * sat->mean_motion;
-         temp2  = 0.5 * temp1 * j2 * pinvsq;
-         temp3  = -0.46875 * j4 * pinvsq * pinvsq * sat->mean_motion;
-         sat->mdot     = sat->mean_motion + 0.5 * temp1 * rteosq * sat->x3thm1 + 0.0625 *
-                            temp2 * rteosq * (13.0 - 78.0 * cosio2 + 137.0 * cosio4);
-         sat->argpdot  = -0.5 * temp1 * con42 + 0.0625 * temp2 *
-                             (7.0 - 114.0 * cosio2 + 395.0 * cosio4) +
-                             temp3 * (3.0 - 36.0 * cosio2 + 49.0 * cosio4);
-         xhdot1            = -temp1 * cosio;
-         sat->nodedot = xhdot1 + (0.5 * temp2 * (4.0 - 19.0 * cosio2) +
-                              2.0 * temp3 * (3.0 - 7.0 * cosio2)) * cosio;
-         xpidot            =  sat->argpdot+ sat->nodedot;
-         sat->omgcof   = sat->bstar * cc3 * cos(sat->argpo);
-         sat->xmcof    = 0.0;
-         if (sat->ecco > 1.0e-4)
-             sat->xmcof = -x2o3 * coef * sat->bstar / eeta;
-         sat->nodecf = 3.5 * omeosq * xhdot1 * sat->cc1;
-         sat->t2cof   = 1.5 * sat->cc1;
-         // sgp4fix for divide by zero with xinco = 180 deg
-         if (fabs(cosio+1.0) > 1.5e-12)
-             sat->xlcof = -0.25 * j3oj2 * sinio * (3.0 + 5.0 * cosio) / (1.0 + cosio);
-           else
-             sat->xlcof = -0.25 * j3oj2 * sinio * (3.0 + 5.0 * cosio) / temp4;
-         sat->aycof   = -0.5 * j3oj2 * sinio;
-         // sgp4fix use multiply for speed instead of pow
-         delmotemp = 1.0 + sat->eta * cos(sat->mo);
-         sat->delmo   = delmotemp * delmotemp * delmotemp;
-         sat->sinmao  = sin(sat->mo);
-         sat->x7thm1  = 7.0 * cosio2 - 1.0;
-         //print_orbit(sat, "sgp4init pre-deepspace");
-         /* --------------- deep space initialization ------------- */
-         if ((2*PI / sat->mean_motion) >= 225.0)
-           {
-             sat->method = 'd';
-             sat->isimp  = 1;
-             tc    =  0.0;
-             inclm = sat->inclo;
-
-             dscom
-                 (
-                   epoch, sat->ecco, sat->argpo, tc, sat->inclo, sat->nodeo,
-                   sat->mean_motion, &snodm, &cnodm,  &sinim, &cosim, &sinomm,     &cosomm,
-                   &day, &sat->e3, &sat->ee2, &em,         &emsq, &gam,
-                   &sat->peo,  &sat->pgho,   &sat->pho, &sat->pinco,
-                   &sat->plo,  &rtemsq,        &sat->se2, &sat->se3,
-                   &sat->sgh2, &sat->sgh3,   &sat->sgh4,
-                   &sat->sh2,  &sat->sh3,    &sat->si2, &sat->si3,
-                   &sat->sl2,  &sat->sl3,    &sat->sl4, &s1, &s2, &s3, &s4, &s5,
-                   &s6,   &s7,   &ss1,  &ss2,  &ss3,  &ss4,  &ss5,  &ss6,  &ss7, &sz1, &sz2, &sz3,
-                   &sz11, &sz12, &sz13, &sz21, &sz22, &sz23, &sz31, &sz32, &sz33,
-                   &sat->xgh2, &sat->xgh3,   &sat->xgh4, &sat->xh2,
-                   &sat->xh3,  &sat->xi2,    &sat->xi3,  &sat->xl2,
-                   &sat->xl3,  &sat->xl4,    &nm, &z1, &z2, &z3, &z11,
-                   &z12, &z13, &z21, &z22, &z23, &z31, &z32, &z33,
-                   &sat->zmol, &sat->zmos
-                 );
-             //print_orbit(sat, "sgp4init post-dscom");
-             dpper
-                 (
-                   sat->e3, sat->ee2, sat->peo, sat->pgho,
-                   sat->pho, sat->pinco, sat->plo, sat->se2,
-                   sat->se3, sat->sgh2, sat->sgh3, sat->sgh4,
-                   sat->sh2, sat->sh3, sat->si2,  sat->si3,
-                   sat->sl2, sat->sl3, sat->sl4,  sat->t,
-                   sat->xgh2,sat->xgh3,sat->xgh4, sat->xh2,
-                   sat->xh3, sat->xi2, sat->xi3,  sat->xl2,
-                   sat->xl3, sat->xl4, sat->zmol, sat->zmos, inclm, sat->init,
-                   &sat->ecco, &sat->inclo, &sat->nodeo, &sat->argpo, &sat->mo,
-                   sat->operationmode
-                 );
-             //print_orbit(sat, "sgp4init post-dpper");
-             argpm  = 0.0;
-             nodem  = 0.0;
-             mm     = 0.0;
-
-             dsinit
-                 (
-                   whichconst,
-                   cosim, emsq, sat->argpo, s1, s2, s3, s4, s5, sinim, ss1, ss2, ss3, ss4,
-                   ss5, sz1, sz3, sz11, sz13, sz21, sz23, sz31, sz33, sat->t, tc,
-                   sat->gsto, sat->mo, sat->mdot, sat->mean_motion, sat->nodeo,
-                   sat->nodedot, xpidot, z1, z3, z11, z13, z21, z23, z31, z33,
-                   sat->ecco, eccsq, &em, &argpm, &inclm, &mm, &nm, &nodem,
-                   &sat->irez,  &sat->atime,
-                   &sat->d2201, &sat->d2211, &sat->d3210, &sat->d3222 ,
-                   &sat->d4410, &sat->d4422, &sat->d5220, &sat->d5232,
-                   &sat->d5421, &sat->d5433, &sat->dedt,  &sat->didt,
-                   &sat->dmdt,  &dndt,         &sat->dnodt, &sat->domdt ,
-                   &sat->del1,  &sat->del2,  &sat->del3,  &sat->xfact,
-                   &sat->xlamo, &sat->xli,   &sat->xni
-                 );
-             //print_orbit(sat, "sgp4init post-dsinit");
-           }
-
-       /* ----------- set variables if not deep space ----------- */
-       if (sat->isimp != 1)
-         {
-           cc1sq          = sat->cc1 * sat->cc1;
-           sat->d2    = 4.0 * ao * tsi * cc1sq;
-           temp           = sat->d2 * tsi * sat->cc1 / 3.0;
-           sat->d3    = (17.0 * ao + sfour) * temp;
-           sat->d4    = 0.5 * temp * ao * tsi * (221.0 * ao + 31.0 * sfour) *
-                            sat->cc1;
-           sat->t3cof = sat->d2 + 2.0 * cc1sq;
-           sat->t4cof = 0.25 * (3.0 * sat->d3 + sat->cc1 *
-                            (12.0 * sat->d2 + 10.0 * cc1sq));
-           sat->t5cof = 0.2 * (3.0 * sat->d4 +
-                            12.0 * sat->cc1 * sat->d3 +
-                            6.0 * sat->d2 * sat->d2 +
-                            15.0 * cc1sq * (2.0 * sat->d2 + cc1sq));
-         }
-       } // if omeosq = 0 ...
-     //print_orbit(sat, "sgp4init post-simple model");
-       /* finally propogate to zero epoch to initialize all others. */
-       // sgp4fix take out check to let satellites process until they are actually below earth surface
-//       if(sat->error == 0)
-       sgp4(1, sat, 0.0, r, v);
-
-       sat->init = 'n';
-       //print_orbit(sat, "sgp4init post-sgp4 call");
-//#include "debug6.cpp"
-       //sgp4fix return boolean. sat->error contains any error codes
-       return true;
-}  // end sgp4init
-
-/*-----------------------------------------------------------------------------
-*
-*                             procedure sgp4
-*
-*  this procedure is the sgp4 prediction model from space command. this is an
-*    updated and combined version of sgp4 and sdp4, which were originally
-*    published separately in spacetrack report #3. this version follows the
-*    methodology from the aiaa paper (2006) describing the history and
-*    development of the code.
-*
-*  author        : david vallado                  719-573-2600   28 jun 2005
-*
-*  inputs        :
-*    satrec  - initialised structure from sgp4init() call.
-*    tsince  - time eince epoch (minutes)
-*
-*  outputs       :
-*    r           - position vector                     km
-*    v           - velocity                            km/sec
-*  return code - non-zero on error.
-*                   1 - mean elements, ecc >= 1.0 or ecc < -0.001 or a < 0.95 er
-*                   2 - mean motion less than 0.0
-*                   3 - pert elements, ecc < 0.0  or  ecc > 1.0
-*                   4 - semi-latus rectum < 0.0
-*                   5 - epoch elements are sub-orbital
-*                   6 - satellite has decayed
-*
-*  locals        :
-*    am          -
-*    axnl, aynl        -
-*    betal       -
-*    cosim   , sinim   , cosomm  , sinomm  , cnod    , snod    , cos2u   ,
-*    sin2u   , coseo1  , sineo1  , cosi    , sini    , cosip   , sinip   ,
-*    cosisq  , cossu   , sinsu   , cosu    , sinu
-*    delm        -
-*    delomg      -
-*    dndt        -
-*    eccm        -
-*    emsq        -
-*    ecose       -
-*    el2         -
-*    eo1         -
-*    eccp        -
-*    esine       -
-*    argpm       -
-*    argpp       -
-*    omgadf      -
-*    pl          -
-*    r           -
-*    rtemsq      -
-*    rdotl       -
-*    rl          -
-*    rvdot       -
-*    rvdotl      -
-*    su          -
-*    t2  , t3   , t4    , tc
-*    tem5, temp , temp1 , temp2  , tempa  , tempe  , templ
-*    u   , ux   , uy    , uz     , vx     , vy     , vz
-*    inclm       - inclination
-*    mm          - mean anomaly
-*    nm          - mean motion
-*    nodem       - right asc of ascending node
-*    xinc        -
-*    xincp       -
-*    xl          -
-*    xlm         -
-*    mp          -
-*    xmdf        -
-*    xmx         -
-*    xmy         -
-*    nodedf      -
-*    xnode       -
-*    nodep       -
-*    np          -
-*
-*  coupling      :
-*    getgravconst-
-*    dpper
-*    dpspace
-*
-*  references    :
-*    hoots, roehrich, norad spacetrack report #3 1980
-*    hoots, norad spacetrack report #6 1986
-*    hoots, schumacher and glover 2004
-*    vallado, crawford, hujsak, kelso  2006
-  ----------------------------------------------------------------------------*/
-
-bool sgp4
-     (
-       int whichconst, sat* sat,  double tsince,
-       double r[3],  double v[3]
-     )
-{
-     double am   , axnl  , aynl , betal ,  cosim , cnod  ,
-         cos2u, coseo1, cosi , cosip ,  cosisq, cossu , cosu,
-         delm , delomg, em   , emsq  ,  ecose , el2   , eo1 ,
-         ep   , esine , argpm, argpp ,  argpdf, pl,     mrt = 0.0,
-         mvt  , rdotl , rl   , rvdot ,  rvdotl, sinim ,
-         sin2u, sineo1, sini , sinip ,  sinsu , sinu  ,
-         snod , su    , t2   , t3    ,  t4    , tem5  , temp,
-         temp1, temp2 , tempa, tempe ,  templ , u     , ux  ,
-         uy   , uz    , vx   , vy    ,  vz    , inclm , mm  ,
-         nm   , nodem, xinc , xincp ,  xl    , xlm   , mp  ,
-         xmdf , xmx   , xmy  , nodedf, xnode , nodep, tc  , dndt,
-         twopi, x2o3  , j2   , j3    , tumin, j4 , xke   , j3oj2, radiusearthkm,
-         mu, vkmpersec, delmtemp;
-     int ktr;
-
-     /* ------------------ set mathematical constants --------------- */
-     // sgp4fix divisor for divide by zero check on inclination
-     // the old check used 1.0 + cos(pi-1.0e-9), but then compared it to
-     // 1.5 e-12, so the threshold was changed to 1.5e-12 for consistency
-     const double temp4 =   1.5e-12;
-     twopi = 2.0 * PI;
-     x2o3  = 2.0 / 3.0;
-     // sgp4fix identify constants and allow alternate values
-     // TODO: replace by macros
-     tumin = TUMIN;
-     mu = GM;
-     radiusearthkm = RE;
-     xke = XKE;
-     j2 = J2;
-     j3 = J3;
-     j4 = J4;
-     j3oj2 = J3DIVJ2;
-     vkmpersec     = radiusearthkm * xke/60.0;
-
-     /* --------------------- clear sgp4 error flag ----------------- */
-     sat->t     = tsince;
-     sat->error = 0;
-
-     /* ------- update for secular gravity and atmospheric drag ----- */
-     xmdf    = sat->mo + sat->mdot * sat->t;
-     argpdf  = sat->argpo + sat->argpdot * sat->t;
-     nodedf  = sat->nodeo + sat->nodedot * sat->t;
-     argpm   = argpdf;
-     mm      = xmdf;
-     t2      = sat->t * sat->t;
-     nodem   = nodedf + sat->nodecf * t2;
-     tempa   = 1.0 - sat->cc1 * sat->t;
-     tempe   = sat->bstar * sat->cc4 * sat->t;
-     templ   = sat->t2cof * t2;
-
-     if (sat->isimp != 1)
-       {
-         delomg = sat->omgcof * sat->t;
-         // sgp4fix use mutliply for speed instead of pow
-         delmtemp =  1.0 + sat->eta * cos(xmdf);
-         delm   = sat->xmcof *
-                  (delmtemp * delmtemp * delmtemp -
-                  sat->delmo);
-         temp   = delomg + delm;
-         mm     = xmdf + temp;
-         argpm  = argpdf - temp;
-         t3     = t2 * sat->t;
-         t4     = t3 * sat->t;
-         tempa  = tempa - sat->d2 * t2 - sat->d3 * t3 -
-                          sat->d4 * t4;
-         tempe  = tempe + sat->bstar * sat->cc5 * (sin(mm) -
-                          sat->sinmao);
-         templ  = templ + sat->t3cof * t3 + t4 * (sat->t4cof +
-                          sat->t * sat->t5cof);
-       }
-
-     nm    = sat->mean_motion;
-     em    = sat->ecco;
-     inclm = sat->inclo;
-     if (sat->method == 'd')
-       {
-         tc = sat->t;
-         dspace
-             (
-               sat->irez,
-               sat->d2201, sat->d2211, sat->d3210,
-               sat->d3222, sat->d4410, sat->d4422,
-               sat->d5220, sat->d5232, sat->d5421,
-               sat->d5433, sat->dedt,  sat->del1,
-               sat->del2,  sat->del3,  sat->didt,
-               sat->dmdt,  sat->dnodt, sat->domdt,
-               sat->argpo, sat->argpdot, sat->t, tc,
-               sat->gsto, sat->xfact, sat->xlamo,
-               sat->mean_motion, &sat->atime,
-               &em, &argpm, &inclm, &sat->xli, &mm, &sat->xni,
-               &nodem, &dndt, &nm
-             );
-       } // if method = d
-
-     if (nm <= 0.0)
-       {
-//         printf("# error nm %f\n", nm);
-         sat->error = 2;
-         // sgp4fix add return
-         return false;
-       }
-     am = pow((xke / nm),x2o3) * tempa * tempa;
-     nm = xke / pow(am, 1.5);
-     em = em - tempe;
-
-     // fix tolerance for error recognition
-     // sgp4fix am is fixed from the previous nm check
-     if ((em >= 1.0) || (em < -0.001)/* || (am < 0.95)*/ )
-       {
-//         printf("# error em %f\n", em);
-         sat->error = 1;
-         // sgp4fix to return if there is an error in eccentricity
-         return false;
-       }
-     // sgp4fix fix tolerance to avoid a divide by zero
-     if (em < 1.0e-6)
-         em  = 1.0e-6;
-     mm     = mm + sat->mean_motion * templ;
-     xlm    = mm + argpm + nodem;
-     emsq   = em * em;
-     temp   = 1.0 - emsq;
-
-     nodem  = fmod(nodem, twopi);
-     argpm  = fmod(argpm, twopi);
-     xlm    = fmod(xlm, twopi);
-     mm     = fmod(xlm - argpm - nodem, twopi);
-
-     /* ----------------- compute extra mean quantities ------------- */
-     sinim = sin(inclm);
-     cosim = cos(inclm);
-
-     /* -------------------- add lunar-solar periodics -------------- */
-     ep     = em;
-     xincp  = inclm;
-     argpp  = argpm;
-     nodep  = nodem;
-     mp     = mm;
-     sinip  = sinim;
-     cosip  = cosim;
-     if (sat->method == 'd')
-       {
-         dpper
-             (
-               sat->e3,   sat->ee2,  sat->peo,
-               sat->pgho, sat->pho,  sat->pinco,
-               sat->plo,  sat->se2,  sat->se3,
-               sat->sgh2, sat->sgh3, sat->sgh4,
-               sat->sh2,  sat->sh3,  sat->si2,
-               sat->si3,  sat->sl2,  sat->sl3,
-               sat->sl4,  sat->t,    sat->xgh2,
-               sat->xgh3, sat->xgh4, sat->xh2,
-               sat->xh3,  sat->xi2,  sat->xi3,
-               sat->xl2,  sat->xl3,  sat->xl4,
-               sat->zmol, sat->zmos, sat->inclo,
-               'n', &ep, &xincp, &nodep, &argpp, &mp, sat->operationmode
-             );
-         if (xincp < 0.0)
-           {
-             xincp  = -xincp;
-             nodep = nodep + PI;
-             argpp  = argpp - PI;
-           }
-         if ((ep < 0.0 ) || ( ep > 1.0))
-           {
-//            printf("# error ep %f\n", ep);
-             sat->error = 3;
-
-             // sgp4fix add return
-             return false;
-           }
-       } // if method = d
-
-     /* -------------------- long period periodics ------------------ */
-     if (sat->method == 'd')
-       {
-         sinip =  sin(xincp);
-         cosip =  cos(xincp);
-         sat->aycof = -0.5*j3oj2*sinip;
-         // sgp4fix for divide by zero for xincp = 180 deg
-         if (fabs(cosip+1.0) > 1.5e-12)
-             sat->xlcof = -0.25 * j3oj2 * sinip * (3.0 + 5.0 * cosip) / (1.0 + cosip);
-           else
-             sat->xlcof = -0.25 * j3oj2 * sinip * (3.0 + 5.0 * cosip) / temp4;
-       }
-     axnl = ep * cos(argpp);
-     temp = 1.0 / (am * (1.0 - ep * ep));
-     aynl = ep* sin(argpp) + temp * sat->aycof;
-     xl   = mp + argpp + nodep + temp * sat->xlcof * axnl;
-
-     /* --------------------- solve kepler's equation --------------- */
-     u    = fmod(xl - nodep, twopi);
-     eo1  = u;
-     tem5 = 9999.9;
-     ktr = 1;
-     //   sgp4fix for kepler iteration
-     //   the following iteration needs better limits on corrections
-     while (( fabs(tem5) >= 1.0e-12) && (ktr <= 10) )
-       {
-         sineo1 = sin(eo1);
-         coseo1 = cos(eo1);
-         tem5   = 1.0 - coseo1 * axnl - sineo1 * aynl;
-         tem5   = (u - aynl * coseo1 + axnl * sineo1 - eo1) / tem5;
-         if(fabs(tem5) >= 0.95)
-             tem5 = tem5 > 0.0 ? 0.95 : -0.95;
-         eo1    = eo1 + tem5;
-         ktr = ktr + 1;
-       }
-
-     /* ------------- short period preliminary quantities ----------- */
-     ecose = axnl*coseo1 + aynl*sineo1;
-     esine = axnl*sineo1 - aynl*coseo1;
-     el2   = axnl*axnl + aynl*aynl;
-     pl    = am*(1.0-el2);
-     if (pl < 0.0)
-       {
-//         printf("# error pl %f\n", pl);
-         sat->error = 4;
-         // sgp4fix add return
-         return false;
-       }
-       else
-       {
-         rl     = am * (1.0 - ecose);
-         rdotl  = sqrt(am) * esine/rl;
-         rvdotl = sqrt(pl) / rl;
-         betal  = sqrt(1.0 - el2);
-         temp   = esine / (1.0 + betal);
-         sinu   = am / rl * (sineo1 - aynl - axnl * temp);
-         cosu   = am / rl * (coseo1 - axnl + aynl * temp);
-         su     = atan2(sinu, cosu);
-         sin2u  = (cosu + cosu) * sinu;
-         cos2u  = 1.0 - 2.0 * sinu * sinu;
-         temp   = 1.0 / pl;
-         temp1  = 0.5 * j2 * temp;
-         temp2  = temp1 * temp;
-
-         /* -------------- update for short period periodics ------------ */
-         if (sat->method == 'd')
-           {
-             cosisq                 = cosip * cosip;
-             sat->x3thm1  = 3.0*cosisq - 1.0;
-             sat->x1mth2 = 1.0 - cosisq;
-             sat->x7thm1 = 7.0*cosisq - 1.0;
-           }
-         mrt   = rl * (1.0 - 1.5 * temp2 * betal * sat->x3thm1) +
-                 0.5 * temp1 * sat->x1mth2 * cos2u;
-         su    = su - 0.25 * temp2 * sat->x7thm1 * sin2u;
-         xnode = nodep + 1.5 * temp2 * cosip * sin2u;
-         xinc  = xincp + 1.5 * temp2 * cosip * sinip * cos2u;
-         mvt   = rdotl - nm * temp1 * sat->x1mth2 * sin2u / xke;
-         rvdot = rvdotl + nm * temp1 * (sat->x1mth2 * cos2u +
-                 1.5 * sat->x3thm1) / xke;
-
-         /* --------------------- orientation vectors ------------------- */
-         sinsu =  sin(su);
-         cossu =  cos(su);
-         snod  =  sin(xnode);
-         cnod  =  cos(xnode);
-         sini  =  sin(xinc);
-         cosi  =  cos(xinc);
-         xmx   = -snod * cosi;
-         xmy   =  cnod * cosi;
-         ux    =  xmx * sinsu + cnod * cossu;
-         uy    =  xmy * sinsu + snod * cossu;
-         uz    =  sini * sinsu;
-         vx    =  xmx * cossu - cnod * sinsu;
-         vy    =  xmy * cossu - snod * sinsu;
-         vz    =  sini * cossu;
-
-         /* --------- position and velocity (in km and km/sec) ---------- */
-         r[0] = (mrt * ux)* radiusearthkm;
-         r[1] = (mrt * uy)* radiusearthkm;
-         r[2] = (mrt * uz)* radiusearthkm;
-         v[0] = (mvt * ux + rvdot * vx) * vkmpersec;
-         v[1] = (mvt * uy + rvdot * vy) * vkmpersec;
-         v[2] = (mvt * uz + rvdot * vz) * vkmpersec;
-       }  // if pl > 0
-
-     // sgp4fix for decaying satellites
-     if (mrt < 1.0)
-       {
-//         printf("# decay condition %11.6f \n",mrt);
-         sat->error = 6;
-         return false;
-       }
-
-//#include "debug7.cpp"
-     return true;
-}  // end sgp4
 
 double  sgn
         (

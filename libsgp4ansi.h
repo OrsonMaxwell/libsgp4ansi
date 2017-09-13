@@ -44,16 +44,16 @@ typedef struct _vec3
  */
 typedef struct _sat
 {
-  // NORAD TLE portion
+  // NORAD TLE
   char         name[25];          // Satellite name, 24 chars + \0
   char         sec_class;         // Security classification
   char         int_designator[9]; // International designator, 8 chars + \0
   time_t       epoch;             // Epoch of the TLE
   float        epoch_ms;          // Fractional seconds portion of epoch, ms
+  double       julian_epoch;      // Julian time at epoch
   double       mean_motion_dt2;   // 1st derivative of mean motion div2, rev/day2
   double       mean_motion_ddt6;  // 2nd derivative of mean motion div6, rev/day3
   double       Bstar;             // Pseudo-ballistic drag coefficient, 1/Earth r
-  unsigned int elset_number;      // Current element set number
   double       inclination;       // Orbital inclination, 0..180deg
   double       right_asc_node;    // Right ascension of ascension node, 0..360deg
   double       eccentricity;      // Orbital eccentricity, 0.0..1.0
@@ -64,46 +64,14 @@ typedef struct _sat
   unsigned int orbit_number;      // Number of revolutions at epoch
   // Flags
   bool is_deep_space, use_simple_model, is_resonant;
-  // Common terms
-  double a3ovk2, aycof, C1, C4, cosio,  eta,   omgdot, perigee, period, sinio,
-         t2cof, x1mth2, x3thm1, x7thm1, xlcof, xmdot,  xnodcf,  xnodot;
-  // Near space terms
-  double a, altapoR, altperR, C5 , cosi, d2, d3, d4,
-         delMo, mdot,  nodecf, nodedot, omegaprime, omgcof, sinMo, sini,
-         t3cof, t4cof, t5cof, xmcof;
-  // Deep space terms
-  double julepoch, GSTo;
-  double e3,  ee2,  peo, pgho, pho,  pinco, plo, se2,  se3,  sgh2, sgh3, sgh4,
-         sh2, sh3,  si2, si3,  sl2,  sl3,   sl4, xgh2, xgh3, xgh4, xh2,  xh3,
-         xi2, xi3,  xl2, xl3,  xl4,  zmol,  zmos;
-  // Resonant terms
-  double d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421, d5433,
-         dedt,  didt,  dmdt,  dnodt, domdt, del1,  del2,  del3,  xfact, xlamo,
-         xli,   xni;
-  // TODO: REMOVE THIS! DONE FOR BACKWARDS COMPATIBILITY DURING MATH-OVERHAUL
-  int isimp;      // use simple model
-  int error;      //
-  char method;    // unused
-  char operationmode; // unused
-  char init;      // unused
-  double cc1;     // C1
-  double cc4;     // C4
-  double cc5;     // C5
-  double delmo;   // ?
-  double argpdot; // omegaprime
-  double sinmao;  // ?
-  double t;       // ?
-  int    irez;    // ?
-  double gsto;    // GSTo
-  double atime;   // ?
-  double bstar;   // Bstar
-  double ecco;    // e
-  double argpo;   // omega
-  double inclo;   // i
-  double mo;      // Mo
-  double nodeo;   // alpha
-  double alta;    // ?
-  double altp;    // ?
+  // Standard orbital elements
+  double xnodp;                   // Original mean motion recovered from TLE
+  double aodp;                    // Semimajor axis, AE
+  double perigee;                 // Perigee, AE
+  double perigee_alt;             // Altitude of perigee from surface, km
+  double period;                  // Orbital period
+  // Common constants
+
 } sat;
 
 
@@ -113,19 +81,19 @@ typedef struct _sat
 
 // Initialize SGP4/SDP4 orbit model from a raw NORAD TLE lines
 extern int
-tle2orbit(char*, char*, char*, sat*);
+sat_load_tle(char*, char*, char*, sat*);
 
 // Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
 extern int
-orbit_init(sat*);
+sat_init(sat*);
 
 // Get position and velocity vectors in the TEME frame at given time since epoch
 extern int
-orbit_prop(sat*, double, unsigned int, double, vec3*, vec3*);
+sat_propagate(sat*, double, unsigned int, double, vec3*, vec3*);
 
 // Get position and velocity vectors in the TEME frame at given unix time
 extern int
-orbit_at(sat*, time_t*, unsigned int, unsigned int, double, vec3*, vec3*);
+sat_get_teme(sat*, time_t*, unsigned int, unsigned int, double, vec3*, vec3*);
 
 /* ----------- local functions - only ever used internally by sgp4 ---------- */
 void dpper
@@ -207,20 +175,6 @@ void initl
        double* ainv,  double* ao,    double* con41,  double* con42, double* cosio,
        double* cosio2,double* eccsq, double* omeosq, double* posq,
        double* rp,    double* rteosq,double* sinio , double* gsto, char opsmode
-     );
-
-bool sgp4init
-     (
-       int whichconst, char opsmode,   const int satn,     const double epoch,
-       const double xbstar,  const double xecco, const double xargpo,
-       const double xinclo,  const double xmo,   const double xno,
-       const double xnodeo,  sat* sat
-     );
-
-bool sgp4
-     (
-       int whichconst, sat* sat,  double tsince,
-       double r[3],  double v[3]
      );
 
 void rv2coe

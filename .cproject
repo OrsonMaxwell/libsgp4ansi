@@ -64,7 +64,7 @@
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1338588452" name="vector.h" rcbsApplicability="disable" resourcePath="vector.h" toolsToInvoke=""/>
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1201458331" name="transform.h" rcbsApplicability="disable" resourcePath="coord.h" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="oldmath.c|testcpp.cpp|sgp4unit.cpp|sgp4io.cpp|sgp4ext.cpp|test.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Reference/testcpp.cpp|Reference/sgp4unit.h|Reference/sgp4unit.cpp|Reference/sgp4io.h|Reference/sgp4io.cpp|Reference/sgp4ext.h|Reference/sgp4ext.cpp|oldmath.c|testcpp.cpp|sgp4unit.cpp|sgp4io.cpp|sgp4ext.cpp|test.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -139,9 +139,10 @@
 					</fileInfo>
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1829866660.171128842" name="vector.h" rcbsApplicability="disable" resourcePath="vector.h" toolsToInvoke=""/>
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1829866660.2000214599" name="transform.h" rcbsApplicability="disable" resourcePath="coord.h" toolsToInvoke=""/>
+					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1829866660.786467596" name="const.h" rcbsApplicability="disable" resourcePath="const.h" toolsToInvoke=""/>
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1829866660.70670131" name="epoch.h" rcbsApplicability="disable" resourcePath="epoch.h" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="oldmath.c|epoch.h|epoch.c|coord.h|coord.c|vector.h|vector.c|transform.c|transform.h|libsgp4ansi.h|libsgp4ansi.c|ttt.c|ttt.h|sgp4unit.c|sgp4io.c|sgp4ext.c|testcpp.cpp|sgp4unit.h|sgp4unit.cpp|sgp4ext.h|sgp4io.cpp|sgp4ext.cpp|libtle2tcp.h|libtle2tcp.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Reference/testcpp.cpp|Reference/sgp4unit.h|Reference/sgp4unit.cpp|Reference/sgp4io.h|Reference/sgp4io.cpp|Reference/sgp4ext.h|Reference/sgp4ext.cpp|oldmath.c|epoch.h|epoch.c|coord.h|coord.c|vector.h|vector.c|transform.c|transform.h|libsgp4ansi.h|libsgp4ansi.c|ttt.c|ttt.h|sgp4unit.c|sgp4io.c|sgp4ext.c|testcpp.cpp|sgp4unit.h|sgp4unit.cpp|sgp4ext.h|sgp4io.cpp|sgp4ext.cpp|libtle2tcp.h|libtle2tcp.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -208,7 +209,7 @@
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1453114228.vector.h" name="vector.h" rcbsApplicability="disable" resourcePath="vector.h" toolsToInvoke=""/>
 					<fileInfo id="cdt.managedbuild.config.gnu.mingw.so.debug.1220782893.1453114228.coord.h" name="transform.h" rcbsApplicability="disable" resourcePath="coord.h" toolsToInvoke=""/>
 					<sourceEntries>
-						<entry excluding="oldmath.c|testcpp.cpp|sgp4unit.cpp|sgp4io.cpp|sgp4ext.cpp|test.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="Reference/sgp4io.cpp|Reference/sgp4ext.h|Reference/sgp4ext.cpp|oldmath.c|testcpp.cpp|sgp4unit.cpp|sgp4io.cpp|sgp4ext.cpp|test.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -232,6 +233,9 @@
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Test">
 			<resource resourceType="PROJECT" workspacePath="/libtle2tcp"/>
+		</configuration>
+		<configuration configurationName="Reference">
+			<resource resourceType="PROJECT" workspacePath="/libsgp4ansi"/>
 		</configuration>
 		<configuration configurationName="Debug">
 			<resource resourceType="PROJECT" workspacePath="/libtle2tcp"/>

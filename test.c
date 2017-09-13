@@ -36,12 +36,12 @@ main (int argc, char** argv)
     strcpy(tlestr2, "2 16925  62.0906 295.0239 5596327 245.1593  47.9690  4.88511875148616 ");
 
     for (int t = 0; t < 5000000; t++) {
-      tle2orbit(tlestr0, tlestr1, tlestr2, &s);
+      sat_load_tle(tlestr0, tlestr1, tlestr2, &s);
     }
 
     for (int t = 0; t < 5000000; t++) {
       t_start = t % 2880 - 1440;
-      orbit_prop(&s, t_start, 10, 1.0e-12, &posteme, &velteme);
+      sat_propagate(&s, t_start, 10, 1.0e-12, &posteme, &velteme);
     }
     return 0;
   }
@@ -55,15 +55,13 @@ main (int argc, char** argv)
 
   if (argv[1][0] == 'v')
     outfile  = fopen("ansi_ver.out", "w");
-  else if (argv[1][0] == 'c')
+  else
     outfile  = fopen("ansi.out", "w");
 
   double p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper;
 
   while (feof(tle_file) == 0)
   {
-    s.error = 0;
-
     fgets(tlestr0, 130, tle_file);
     fgets(tlestr1, 130, tle_file);
     fgets(tlestr2, 130, tle_file);
@@ -75,19 +73,19 @@ main (int argc, char** argv)
       strncpy(tlestr2, tlestr2, 69);
     }
 
-    tle2orbit(tlestr0, tlestr1, tlestr2, &s);
+    sat_load_tle(tlestr0, tlestr1, tlestr2, &s);
 
     fprintf(outfile, "%ld (%12.9lf)\n", s.norad_number, TWOPI / s.mean_motion);
 
     // Iterate over time range
     for (double t = t_start; t <= t_stop + deltamin - 1.0e-12; t += deltamin)
     {
-      orbit_prop(&s, t, 10, 1.0e-12, &posteme, &velteme);
+      int retval = sat_propagate(&s, t, 10, 1.0e-12, &posteme, &velteme);
 
-      if (s.error != 0)
+      if (retval != 0)
       {
         printf("[ERROR] Sat %5d (%12.9lf),\tcode %2d at %8.f mfe\n",
-               s.norad_number, TWOPI / s.mean_motion, s.error, t);
+               s.norad_number, TWOPI / s.mean_motion, retval, t);
         break;
       }
       else

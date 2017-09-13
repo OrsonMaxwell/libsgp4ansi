@@ -32,7 +32,7 @@
 #define RAD2DEG     (180 / PI)             // Radians to degrees coefficient
 #define RPD2RADPM   (1440.0 / (2.0 * PI))  // Revolutions per day
                                            // to radians per minute coefficient
-#define TWOTHIRD    (2.0L / 3.0L)
+#define TWOTHIRD    (2.0 / 3.0)
 
 // ************************************************************************* //
 //                               GEODETIC DATUM                              //
@@ -56,7 +56,7 @@
 #define ECC       0.0818188              // Eccentricity
 #define OMEGAE    7.292115147e-5         // Angular velocity, rad/sec
 #define FLATT     0.00335277945416750486 // Flattening of the Earth ellipsoid
-#define XKE       0.07436691613317341324 // (60.0 / sqrt(Re*Re*Re/GM))
+#define XKE       0.07436691613317342186 // (60.0 / sqrt(Re^3/GM))
 #define J2        0.001082616            // 2nd grav zonal harmonic of the Earth
 #define J3       -0.00000253881          // 3rd grav zonal harmonic of the Earth
 #define J4       -0.00000165597          // 4th grav zonal harmonic of the Earth
@@ -74,10 +74,17 @@
 #define J4       -0.00000161098761       // 4th grav zonal harmonic of the Earth
 #endif /* USE_WGS84 */
 
-#define RPTIM     (OMEGAE * 60)          // Angular velocity, rad/min
-#define TUMIN     (1 / XKE)              // Time units in minute
-#define J3DIVJ2   (J3 / J2)
-#define J2DIV2    (J2 / 2.0L)
-#define THDT      4.37526908801129966e-3;
+// ************************************************************************* //
+//                                 SECTION 12                                //
+// ************************************************************************* //
+
+#define K2        (J2 / 2.0)
+#define S         (78.0 / RE) + 1
+#define A3OVK2    (-J3 / K2)
+
+#define RPTIM     (OMEGAE * 60.0)        // Angular velocity, rad/min
+#define TUMIN     (1 / XKE)              // Time units in minute TODO: Remove?
+#define J3DIVJ2   (J3 / J2)              // TODO: Remove?
+#define THDT      4.37526908801129966e-3 // TODO: Remove?
 
 #endif /* CONST_H_ */
