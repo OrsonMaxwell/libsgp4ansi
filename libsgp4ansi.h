@@ -46,19 +46,19 @@ typedef struct _sat
 {
   // NORAD TLE
   char         name[25];          // Satellite name, 24 chars + \0
-  char         sec_class;         // Security classification
+  char         sec_class;         // Security classification, 1 char
   char         int_designator[9]; // International designator, 8 chars + \0
   time_t       epoch;             // Epoch of the TLE
   float        epoch_ms;          // Fractional seconds portion of epoch, ms
   double       julian_epoch;      // Julian time at epoch
-  double       mean_motion_dt2;   // 1st derivative of mean motion div2, rev/day2
-  double       mean_motion_ddt6;  // 2nd derivative of mean motion div6, rev/day3
-  double       Bstar;             // Pseudo-ballistic drag coefficient, 1/Earth r
-  double       inclination;       // Orbital inclination, 0..180deg
-  double       right_asc_node;    // Right ascension of ascension node, 0..360deg
-  double       eccentricity;      // Orbital eccentricity, 0.0..1.0
-  double       argument_perigee;  // Argument of perigee, 0..360deg
-  double       mean_anomaly;      // Mean anomaly at epoch, 0..360deg
+  double       mean_motion_dt2;   // 1st deriv. of mean motion div2, rev/day2
+  double       mean_motion_ddt6;  // 2nd deriv. of mean motion div6, rev/day3
+  double       Bstar;             // Pseudo-ballistic drag coefficient, 1/AE
+  double       inclination;       // Orbital inclination, [0;180) deg
+  double       right_asc_node;    // Right ascension of asc. node, [0;360) deg
+  double       eccentricity;      // Orbital eccentricity, [0;1)
+  double       argument_perigee;  // Argument of perigee, [0;360) deg
+  double       mean_anomaly;      // Mean anomaly at epoch, [0;360) deg
   double       mean_motion;       // Mean motion at epoch, rev/day
   unsigned int norad_number;      // Catalogue number
   unsigned int orbit_number;      // Number of revolutions at epoch
@@ -71,7 +71,9 @@ typedef struct _sat
   double perigee_alt;             // Altitude of perigee from surface, km
   double period;                  // Orbital period
   // Common constants
-
+  double C1, C4, eta, omgdot, t2cof, xnodcf, xnodot, xmdot;
+  // Near space constants
+  double C5, D2, D3, D4, delmo, omgcof, sinmo, t3cof, t4cof, t5cof, xmcof;
 } sat;
 
 
@@ -93,7 +95,7 @@ sat_propagate(sat*, double, unsigned int, double, vec3*, vec3*);
 
 // Get position and velocity vectors in the TEME frame at given unix time
 extern int
-sat_get_teme(sat*, time_t*, unsigned int, unsigned int, double, vec3*, vec3*);
+sat_get_teme_at(sat*, time_t*, unsigned int, unsigned int, double, vec3*, vec3*);
 
 /* ----------- local functions - only ever used internally by sgp4 ---------- */
 void dpper
