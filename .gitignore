@@ -6,3 +6,7 @@
 /Plot/*.so
 /Plot/*.dll
 /Plot/ansi
+/.settings/
+/.project
+/.cproject
+/.pydevproject
