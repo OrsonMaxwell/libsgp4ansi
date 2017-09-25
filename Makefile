@@ -50,14 +50,15 @@ lib_clean:
 	rm -f epoch.o
 	rm -f coord.o
 	rm -f vector.o
-	rm -f Plot/${LIB_NAME}
+	rm -f ${OUTPUTDIR}/${LIB_NAME}
 
 ref_test_clean:
 	rm -f AIAA/*.o
-	rm -f Plot/${REF_TEST_NAME}
+	rm -f ${OUTPUTDIR}/${REF_TEST_NAME}
 
 test_clean:
-	rm -f Plot/${TEST_NAME}
+	rm -f ${OUTPUTDIR}/${TEST_NAME}
+test_data_clean:
+	rm -f ${OUTPUTDIR}/*.out
 
-clean: lib_clean ref_test_clean test_clean
-	rm -f Plot/*.out
+clean: lib_clean ref_test_clean test_clean test_data_clean
