@@ -52,12 +52,13 @@ lib_clean:
 	rm -f vector.o
 	rm -f ${OUTPUTDIR}/${LIB_NAME}
 
-ref_test_clean:
-	rm -f AIAA/*.o
+ref_test_clean: #<- походу дело в маске
 	rm -f ${OUTPUTDIR}/${REF_TEST_NAME}
+	rm -f AIAA/*.o
 
 test_clean:
 	rm -f ${OUTPUTDIR}/${TEST_NAME}
+
 test_data_clean:
 	rm -f ${OUTPUTDIR}/*.out
 
