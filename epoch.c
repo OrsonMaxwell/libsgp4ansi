@@ -114,7 +114,7 @@ jul2gst(double julian)
 {
   double result, tempUT1;
 
-  tempUT1 = (julian - 2451545.0) / 36525.0;
+  tempUT1 = (julian - JAN1_2000_1200H) / 36525.0;
   result = -6.2e-6* tempUT1 * tempUT1 * tempUT1 + 0.093104 * tempUT1 * tempUT1 +
       (876600.0*3600 + 8640184.812866) * tempUT1 + 67310.54841;
 

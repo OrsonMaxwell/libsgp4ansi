@@ -11,7 +11,8 @@
 //                                    TIME                                   //
 // ************************************************************************* //
 
-#define JULIAN_JAN1_12H_2000 2451545.0     // Jan 1 2000 12h UTC Julian date
+#define DEC31_1949_0000H 2433281.5     // Dec 31 1949 0000h UTC Julian date
+#define JAN1_2000_1200H  2451545.0     // Jan  1 2000 1200h UTC Julian date
 
 #ifdef __unix__
 #define TIMEZONE __timezone
