@@ -80,8 +80,8 @@ main (int argc, char** argv)
     // Iterate over time range
     for (double t = t_start; t <= t_stop + deltamin - 1.0e-12; t += deltamin)
     {
-      //int retval = sat_propagate(&s, t, 10, 1.0e-12, &posteme, &velteme);
-      int retval = 0;
+      int retval = sat_propagate(&s, t, 10, 1.0e-12, &posteme, &velteme);
+      //int retval = 0;
 
       if (retval != 0)
       {

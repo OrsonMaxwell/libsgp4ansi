@@ -479,10 +479,10 @@ sat_init(sat* s)
     //double tc    =  0.0;
     //double inclm = s->inclination;
 
-    double GSTo  = jul2gst(s->julian_epoch);
+    s->GSTo  = jul2gst(s->julian_epoch);
 
     // Constants
-    const double zes     =  0.01675;
+    const double zes     =  0.01675; // TODO: Move to macros?
     const double zel     =  0.05490;
     const double c1ss    =  2.9864797e-6;
     const double c1l     =  4.7968065e-7;
@@ -492,11 +492,11 @@ sat_init(sat* s)
     const double zsings  = -0.98088458;
 
     double snodm  = sin(s->right_asc_node); // TODO: duplicates?
-    double cnodm  = cos(s->right_asc_node); // TODO: duplicates?
-    double sinomm = sin(s->argument_perigee); // TODO: duplicates?
-    double cosomm = cos(s->argument_perigee); // TODO: duplicates?
-    double sinim  = sin(s->inclination); // TODO: duplicates?
-    double cosim  = cos(s->inclination); // TODO: duplicates?
+    double cnodm  = cos(s->right_asc_node);
+    double sinomm = sin(s->argument_perigee);
+    double cosomm = cos(s->argument_perigee);
+    double sinim  = sin(s->inclination);
+    double cosim  = cos(s->inclination);
 
     // Initialize lunar solar terms
     s->peo    = 0;
@@ -772,8 +772,7 @@ sat_init(sat* s)
          )*/
 
 
-    // Replace these
-    const double q22    = 1.7891679e-6;
+    const double q22    = 1.7891679e-6;  // TODO: Move to macros?
     const double q31    = 2.1460748e-6;
     const double q33    = 2.2123015e-7;
     const double root22 = 1.7891679e-6;
@@ -1028,7 +1027,7 @@ sat_init(sat* s)
         double d5421 = temp * f542 * g521;
         double d5433 = temp * f543 * g533;
             s->xlamo = fmod(s->mean_anomaly + 2 * s->right_asc_node
-                     - 2 * GSTo, TWOPI);
+                     - 2 * s->GSTo, TWOPI);
             s->xfact = s->xmdot + s->dmdt
                      + 2 * (s->xnodot + s->dnodt - rptim) - s->xnodp;
         //double em    = emo;
@@ -1068,7 +1067,7 @@ sat_init(sat* s)
         s->xfact = s->xmdot + (s->omgdot + s->xnodot) - rptim + s->dmdt
                  + s->domdt + s->dnodt - s->xnodp;
         s->xlamo = fmod(s->mean_anomaly + s->right_asc_node
-                 + s->argument_perigee - GSTo, TWOPI);
+                 + s->argument_perigee - s->GSTo, TWOPI);
 
 //        printf("----------------------------\n");
 //        printf("g200:   %22.15lf\n", g200);
@@ -1238,35 +1237,48 @@ void dspace
        double* atime, double* em,    double* argpm,  double* inclm, double* xli,
        double* mm,    double* xni,   double* nodem,  double* dndt,  double* nm
      )
-*/
+
 
      int iretn , iret;
      double delt, ft, theta, x2li, x2omi, xl, xldot , xnddt, xndt, xomi, g22, g32,
           g44, g52, g54, fasx2, fasx4, fasx6, rptim , step2, stepn , stepp;
-
-     fasx2 = 0.13130908;
-     fasx4 = 2.8843198;
-     fasx6 = 0.37448087;
-     g22   = 5.7686396;
-     g32   = 0.95240898;
-     g44   = 1.8014998;
-     g52   = 1.0508330;
-     g54   = 4.4108898;
-     rptim = 4.37526908801129966e-3;
-     stepp =    720.0;
-     stepn =   -720.0;
-     step2 = 259200.0;
+*/
+     const double fasx2 = 0.13130908;
+     const double fasx4 = 2.8843198;
+     const double fasx6 = 0.37448087;
+     const double g22   = 5.7686396;
+     const double g32   = 0.95240898;
+     const double g44   = 1.8014998;
+     const double g52   = 1.0508330;
+     const double g54   = 4.4108898;
+     const double rptim = 4.37526908801129966e-3;
+     const double stepp =    720.0;
+     const double stepn =   -720.0;
+     const double step2 = 259200.0;
 
      // ----------- calculate deep space resonance effects -----------
-     *dndt   = 0.0;
-     theta  = fmod(gsto + tc * rptim, twopi);
-     *em     = *em + dedt * t;
+     s->dndt       = 0;
+     double theta  = fmod(s->GSTo + tdelta * rptim, TWOPI); // TODO: Move to struct?
 
-     *inclm  = *inclm + didt * t;
-     *argpm  = *argpm + domdt * t;
-     *nodem  = *nodem + dnodt * t;
-     *mm     = *mm + dmdt * t;
+     // TODO: Are these really required?
+     double em     = s->eccentricity + s->dedt * tdelta;
+     double inclm  = s->inclination + s->didt * tdelta;
+     double argpm  = s->argument_perigee + s->domdt * tdelta;
+     double nodem  = s->right_asc_node + s->dnodt * tdelta;
+     double mm     = s->mean_anomaly + s->dmdt * tdelta;
 
+     if (tdelta != 0)
+     {
+       printf("tdelta: %22.15lf\n", tdelta);
+       printf("theta:  %22.15lf\n", theta);
+       printf("em:     %22.15lf\n", em);
+       printf("inclm:  %22.15lf\n", inclm);
+       printf("argpm:  %22.15lf\n", argpm);
+       printf("nodem:  %22.15lf\n", nodem);
+       printf("mm:     %22.15lf\n", mm);
+     }
+
+/*
      //   sgp4fix for negative inclinations
      //   the following if statement should be commented out
      //  if (*inclm < 0.0)

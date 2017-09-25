@@ -1321,6 +1321,17 @@ static void dspace
      nodem  = nodem + dnodt * t;
      mm     = mm + dmdt * t;
 
+     if (tc != 0)
+     {
+       printf("tdelta: %22.15lf\n", tc);
+       printf("theta:  %22.15lf\n", theta);
+       printf("em:     %22.15lf\n", em);
+       printf("inclm:  %22.15lf\n", inclm);
+       printf("argpm:  %22.15lf\n", argpm);
+       printf("nodem:  %22.15lf\n", nodem);
+       printf("mm:     %22.15lf\n", mm);
+     }
+
      //   sgp4fix for negative inclinations
      //   the following if statement should be commented out
        if ((inclm < 0.0) && (opsmode == 'a'))

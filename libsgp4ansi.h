@@ -66,6 +66,7 @@ typedef struct _sat
   // Flags
   bool is_deep_space, use_simple_model, is_24h_resonant, is_12h_resonant;
   // Standard orbital elements
+  double GSTo;                     // Greenwich Sidereal Time at epoch
   double xnodp;                   // Original mean motion recovered from TLE
   double aodp;                    // Semimajor axis, AE
   double perigee;                 // Perigee, AE
