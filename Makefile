@@ -1,7 +1,7 @@
 GCC = gcc
 GPP = g++
 OBJ_LIB = libsgp4ansi.o epoch.o coord.o vector.o
-OBJ_REF_TEST = sgp4ext.o sgp4io.o sgp4unit.o testcpp.o
+OBJ_REF_TEST = $(addprefix AIAA/, sgp4ext.o sgp4io.o sgp4unit.o testcpp.o )
 OUTPUTDIR=Plot
 LIBFLAGS = -fPIC -DUSE_WGS72
 CCFLAGS = -std=c11 -lm
@@ -34,13 +34,13 @@ lib: ${OBJ_LIB}
 	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared ${OBJ_LIB} -o ./${OUTPUTDIR}/${LIB_NAME}
 
 ref_test: ${OBJ_REF_TEST}
-	cd AIAA && ${GPP} ${CXXFLAGS} ${OBJ_REF_TEST} -o ../${OUTPUTDIR}/${REF_TEST_NAME}
+	${GPP} ${CXXFLAGS} ${OBJ_REF_TEST} -o ./${OUTPUTDIR}/${REF_TEST_NAME}
 
 test: lib
 	${GCC} ${CCFLAGS} test.c -o ./${OUTPUTDIR}/${TEST_NAME} -L./${OUTPUTDIR}/ -lsgp4ansi
 
-%.o: AIAA/%.cpp
-	cd AIAA && ${GPP} ${CXXFLAGS} -c $*.cpp
+${OBJ_REF_TEST}: %.o: %.cpp
+	${GPP} ${CXXFLAGS} -c $< -o $@
 
 ${OBJ_LIB}: %.o: %.c
 	${GCC} ${CCFLAGS} ${LIBFLAGS} -c $< -o $@
@@ -52,7 +52,7 @@ lib_clean:
 	rm -f vector.o
 	rm -f ${OUTPUTDIR}/${LIB_NAME}
 
-ref_test_clean: #<- походу дело в маске
+ref_test_clean:
 	rm -f ${OUTPUTDIR}/${REF_TEST_NAME}
 	rm -f AIAA/*.o
 
