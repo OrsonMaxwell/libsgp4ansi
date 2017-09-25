@@ -11,13 +11,13 @@ DEBUGFLAGS = -g3
 DEBUG = 0
 
 ifeq ($(OS),Windows_NT)
-	LIB_NAME = libsgp4ansi.dll
-	TEST_NAME = ansi.exe
-	REF_TEST_NAME = aiaa.exe
+	LIB_NAME = ($addprefix ${OUTPUTDIR}/, libsgp4ansi.dll)
+	TEST_NAME = ($addprefix ${OUTPUTDIR}/, ansi.exe)
+	REF_TEST_NAME = ($addprefix ${OUTPUTDIR}/, aiaa.exe)
 else
-	LIB_NAME = libsgp4ansi.so
-	TEST_NAME = ansi
-	REF_TEST_NAME = aiaa
+	LIB_NAME = $(addprefix ${OUTPUTDIR}/, libsgp4ansi.so)
+	TEST_NAME = $(addprefix ${OUTPUTDIR}/, ansi)
+	REF_TEST_NAME = $(addprefix ${OUTPUTDIR}/, aiaa)
 endif
 
 ifeq ($(DEBUG), 1)
@@ -28,16 +28,16 @@ else
 	CXXFLAGS += ${RELEASEFLAGS}
 endif
 
-all: test ref_test
+all: ${LIB_NAME} ${TEST_NAME} ${REF_TEST_NAME}
 
-lib: ${OBJ_LIB}
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared ${OBJ_LIB} -o ./${OUTPUTDIR}/${LIB_NAME}
+${LIB_NAME}: ${OBJ_LIB}
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared ${OBJ_LIB} -o ${LIB_NAME}
 
-ref_test: ${OBJ_REF_TEST}
-	${GPP} ${CXXFLAGS} ${OBJ_REF_TEST} -o ./${OUTPUTDIR}/${REF_TEST_NAME}
+${REF_TEST_NAME}: ${OBJ_REF_TEST}
+	${GPP} ${CXXFLAGS} ${OBJ_REF_TEST} -o ${REF_TEST_NAME}
 
-test: lib
-	${GCC} ${CCFLAGS} test.c -o ./${OUTPUTDIR}/${TEST_NAME} -L./${OUTPUTDIR}/ -lsgp4ansi
+${TEST_NAME}:
+	${GCC} ${CCFLAGS} -L${OUTPUTDIR}/ -lsgp4ansi test.c -o $@
 
 ${OBJ_REF_TEST}: %.o: %.cpp
 	${GPP} ${CXXFLAGS} -c $< -o $@
@@ -50,14 +50,14 @@ lib_clean:
 	rm -f epoch.o
 	rm -f coord.o
 	rm -f vector.o
-	rm -f ${OUTPUTDIR}/${LIB_NAME}
+	rm -f ${LIB_NAME}
 
 ref_test_clean:
-	rm -f ${OUTPUTDIR}/${REF_TEST_NAME}
+	rm -f ${REF_TEST_NAME}
 	rm -f AIAA/*.o
 
 test_clean:
-	rm -f ${OUTPUTDIR}/${TEST_NAME}
+	rm -f ${TEST_NAME}
 
 test_data_clean:
 	rm -f ${OUTPUTDIR}/*.out
