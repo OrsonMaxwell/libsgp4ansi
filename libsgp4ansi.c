@@ -1198,6 +1198,17 @@ sat_propagate
   if (s->is_deep_space == true)
   {
     /*tc = tdelta;
+*-----------------------------------------------------------------------------
+*
+*                           procedure dspace
+*
+*  this procedure provides deep space contributions to mean elements for
+*    perturbing third body.  these effects have been averaged over one
+*    revolution of the sun and moon.  for earth resonance effects, the
+*    effects have been averaged over no revolutions of the satellite.
+*    (mean motion)
+
+  ----------------------------------------------------------------------------
     dspace
     (
         s->irez,
@@ -1212,7 +1223,155 @@ sat_propagate
         s->no, s->atime,
         em, argpm, inclm, s->xli, mm, s->xni,
         nodem, dndt, nm, s->operationmode
-    );*/
+    );
+
+
+void dspace
+     (
+       int irez,
+       double d2201,  double d2211,  double d3210,   double d3222,  double d4410,
+       double d4422,  double d5220,  double d5232,   double d5421,  double d5433,
+       double dedt,   double del1,   double del2,    double del3,   double didt,
+       double dmdt,   double dnodt,  double domdt,   double argpo,  double argpdot,
+       double t,      double tc,     double gsto,    double xfact,  double xlamo,
+       double no,
+       double* atime, double* em,    double* argpm,  double* inclm, double* xli,
+       double* mm,    double* xni,   double* nodem,  double* dndt,  double* nm
+     )
+*/
+
+     int iretn , iret;
+     double delt, ft, theta, x2li, x2omi, xl, xldot , xnddt, xndt, xomi, g22, g32,
+          g44, g52, g54, fasx2, fasx4, fasx6, rptim , step2, stepn , stepp;
+
+     fasx2 = 0.13130908;
+     fasx4 = 2.8843198;
+     fasx6 = 0.37448087;
+     g22   = 5.7686396;
+     g32   = 0.95240898;
+     g44   = 1.8014998;
+     g52   = 1.0508330;
+     g54   = 4.4108898;
+     rptim = 4.37526908801129966e-3;
+     stepp =    720.0;
+     stepn =   -720.0;
+     step2 = 259200.0;
+
+     // ----------- calculate deep space resonance effects -----------
+     *dndt   = 0.0;
+     theta  = fmod(gsto + tc * rptim, twopi);
+     *em     = *em + dedt * t;
+
+     *inclm  = *inclm + didt * t;
+     *argpm  = *argpm + domdt * t;
+     *nodem  = *nodem + dnodt * t;
+     *mm     = *mm + dmdt * t;
+
+     //   sgp4fix for negative inclinations
+     //   the following if statement should be commented out
+     //  if (*inclm < 0.0)
+     // {
+     //    *inclm = -*inclm;
+     //    *argpm = *argpm - pi;
+     //    *nodem = *nodem + pi;
+     //  }
+
+     // - update resonances : numerical (euler-maclaurin) integration -
+     // ------------------------- epoch restart ----------------------
+     //   sgp4fix for propagator problems
+     //   the following integration works for negative time steps and periods
+     //   the specific changes are unknown because the original code was so convoluted
+
+     // sgp4fix take out *atime = 0.0 and fix for faster operation
+     ft    = 0.0;
+     if (irez != 0)
+       {
+         // sgp4fix streamline check
+         if ((*atime == 0.0) || (t * *atime <= 0.0) || (fabs(t) < fabs(*atime)) )
+           {
+             *atime  = 0.0;
+             *xni    = no;
+             *xli    = xlamo;
+           }
+           // sgp4fix move check outside loop
+           if (t > 0.0)
+               delt = stepp;
+             else
+               delt = stepn;
+
+         iretn = 381; // added for do loop
+         iret  =   0; // added for loop
+         while (iretn == 381)
+           {
+             // ------------------- dot terms calculated -------------
+             // ----------- near - synchronous resonance terms -------
+             if (irez != 2)
+               {
+                 xndt  = del1 * sin(*xli - fasx2) + del2 * sin(2.0 * (*xli - fasx4)) +
+                         del3 * sin(3.0 * (*xli - fasx6));
+                 xldot = *xni + xfact;
+                 xnddt = del1 * cos(*xli - fasx2) +
+                         2.0 * del2 * cos(2.0 * (*xli - fasx4)) +
+                         3.0 * del3 * cos(3.0 * (*xli - fasx6));
+                 xnddt = xnddt * xldot;
+               }
+               else
+               {
+                 // --------- near - half-day resonance terms
+                 xomi  = argpo + argpdot * *atime;
+                 x2omi = xomi + xomi;
+                 x2li  = *xli + *xli;
+                 xndt  = d2201 * sin(x2omi + *xli - g22) + d2211 * sin(*xli - g22) +
+                       d3210 * sin(xomi + *xli - g32)  + d3222 * sin(-xomi + *xli - g32)+
+                       d4410 * sin(x2omi + x2li - g44)+ d4422 * sin(x2li - g44) +
+                       d5220 * sin(xomi + *xli - g52)  + d5232 * sin(-xomi + *xli - g52)+
+                       d5421 * sin(xomi + x2li - g54) + d5433 * sin(-xomi + x2li - g54);
+                 xldot = *xni + xfact;
+                 xnddt = d2201 * cos(x2omi + *xli - g22) + d2211 * cos(*xli - g22) +
+                       d3210 * cos(xomi + *xli - g32) + d3222 * cos(-xomi + *xli - g32) +
+                       d5220 * cos(xomi + *xli - g52) + d5232 * cos(-xomi + *xli - g52) +
+                       2.0 * (d4410 * cos(x2omi + x2li - g44) +
+                       d4422 * cos(x2li - g44) + d5421 * cos(xomi + x2li - g54) +
+                       d5433 * cos(-xomi + x2li - g54));
+                 xnddt = xnddt * xldot;
+               }
+
+             // ----------------------- integrator
+             // sgp4fix move end checks to end of routine
+             if (fabs(t - *atime) >= stepp)
+               {
+                 iret  = 0;
+                 iretn = 381;
+               }
+               else // exit here
+               {
+                 ft    = t - *atime;
+                 iretn = 0;
+               }
+
+             if (iretn == 381)
+               {
+                 *xli   = *xli + xldot * delt + xndt * step2;
+                 *xni   = *xni + xndt * delt + xnddt * step2;
+                 *atime = *atime + delt;
+               }
+           }  // while iretn = 381
+
+         *nm = *xni + xndt * ft + xnddt * ft * ft * 0.5;
+         xl = *xli + xldot * ft + xndt * ft * ft * 0.5;
+         if (irez != 1)
+           {
+             *mm   = xl - 2.0 * *nodem + 2.0 * theta;
+             *dndt = *nm - no;
+           }
+           else
+           {
+             *mm   = xl - *nodem - *argpm + theta;
+             *dndt = *nm - no;
+           }
+         *nm = no + *dndt;
+       }
+    */
   }
 /*
   if (nm <= 0.0)
@@ -1617,378 +1776,21 @@ dpper(sat* s, double tdelta) // TODO: Rename
   }
 }
 
-
-/*-----------------------------------------------------------------------------
-*
-*                           procedure dspace
-*
-*  this procedure provides deep space contributions to mean elements for
-*    perturbing third body.  these effects have been averaged over one
-*    revolution of the sun and moon.  for earth resonance effects, the
-*    effects have been averaged over no revolutions of the satellite.
-*    (mean motion)
-*
-*  author        : david vallado                  719-573-2600   28 jun 2005
-*
-*  inputs        :
-*    d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421, d5433 -
-*    dedt        -
-*    del1, del2, del3  -
-*    didt        -
-*    dmdt        -
-*    dnodt       -
-*    domdt       -
-*    irez        - flag for resonance           0-none, 1-one day, 2-half day
-*    argpo       - argument of perigee
-*    argpdot     - argument of perigee dot (rate)
-*    t           - time
-*    tc          -
-*    gsto        - gst
-*    xfact       -
-*    xlamo       -
-*    no          - mean motion
-*    atime       -
-*    em          - eccentricity
-*    ft          -
-*    argpm       - argument of perigee
-*    inclm       - inclination
-*    xli         -
-*    mm          - mean anomaly
-*    xni         - mean motion
-*    nodem       - right ascension of ascending node
-*
-*  outputs       :
-*    atime       -
-*    em          - eccentricity
-*    argpm       - argument of perigee
-*    inclm       - inclination
-*    xli         -
-*    mm          - mean anomaly
-*    xni         -
-*    nodem       - right ascension of ascending node
-*    dndt        -
-*    nm          - mean motion
-*
-*  locals        :
-*    delt        -
-*    ft          -
-*    theta       -
-*    x2li        -
-*    x2omi       -
-*    xl          -
-*    xldot       -
-*    xnddt       -
-*    xndt        -
-*    xomi        -
-*
-*  coupling      :
-*    none        -
-*
-*  references    :
-*    hoots, roehrich, norad spacetrack report #3 1980
-*    hoots, norad spacetrack report #6 1986
-*    hoots, schumacher and glover 2004
-*    vallado, crawford, hujsak, kelso  2006
-  ----------------------------------------------------------------------------*/
-
-void dspace
-     (
-       int irez,
-       double d2201,  double d2211,  double d3210,   double d3222,  double d4410,
-       double d4422,  double d5220,  double d5232,   double d5421,  double d5433,
-       double dedt,   double del1,   double del2,    double del3,   double didt,
-       double dmdt,   double dnodt,  double domdt,   double argpo,  double argpdot,
-       double t,      double tc,     double gsto,    double xfact,  double xlamo,
-       double no,
-       double* atime, double* em,    double* argpm,  double* inclm, double* xli,
-       double* mm,    double* xni,   double* nodem,  double* dndt,  double* nm
-     )
-{
-     const double twopi = 2.0 * PI;
-     int iretn , iret;
-     double delt, ft, theta, x2li, x2omi, xl, xldot , xnddt, xndt, xomi, g22, g32,
-          g44, g52, g54, fasx2, fasx4, fasx6, rptim , step2, stepn , stepp;
-
-     fasx2 = 0.13130908;
-     fasx4 = 2.8843198;
-     fasx6 = 0.37448087;
-     g22   = 5.7686396;
-     g32   = 0.95240898;
-     g44   = 1.8014998;
-     g52   = 1.0508330;
-     g54   = 4.4108898;
-     rptim = 4.37526908801129966e-3; // this equates to 7.29211514668855e-5 rad/sec
-     stepp =    720.0;
-     stepn =   -720.0;
-     step2 = 259200.0;
-
-     /* ----------- calculate deep space resonance effects ----------- */
-     *dndt   = 0.0;
-     theta  = fmod(gsto + tc * rptim, twopi);
-     *em     = *em + dedt * t;
-
-     *inclm  = *inclm + didt * t;
-     *argpm  = *argpm + domdt * t;
-     *nodem  = *nodem + dnodt * t;
-     *mm     = *mm + dmdt * t;
-
-     //   sgp4fix for negative inclinations
-     //   the following if statement should be commented out
-     //  if (*inclm < 0.0)
-     // {
-     //    *inclm = -*inclm;
-     //    *argpm = *argpm - pi;
-     //    *nodem = *nodem + pi;
-     //  }
-
-     /* - update resonances : numerical (euler-maclaurin) integration - */
-     /* ------------------------- epoch restart ----------------------  */
-     //   sgp4fix for propagator problems
-     //   the following integration works for negative time steps and periods
-     //   the specific changes are unknown because the original code was so convoluted
-
-     // sgp4fix take out *atime = 0.0 and fix for faster operation
-     ft    = 0.0;
-     if (irez != 0)
-       {
-         // sgp4fix streamline check
-         if ((*atime == 0.0) || (t * *atime <= 0.0) || (fabs(t) < fabs(*atime)) )
-           {
-             *atime  = 0.0;
-             *xni    = no;
-             *xli    = xlamo;
-           }
-           // sgp4fix move check outside loop
-           if (t > 0.0)
-               delt = stepp;
-             else
-               delt = stepn;
-
-         iretn = 381; // added for do loop
-         iret  =   0; // added for loop
-         while (iretn == 381)
-           {
-             /* ------------------- dot terms calculated ------------- */
-             /* ----------- near - synchronous resonance terms ------- */
-             if (irez != 2)
-               {
-                 xndt  = del1 * sin(*xli - fasx2) + del2 * sin(2.0 * (*xli - fasx4)) +
-                         del3 * sin(3.0 * (*xli - fasx6));
-                 xldot = *xni + xfact;
-                 xnddt = del1 * cos(*xli - fasx2) +
-                         2.0 * del2 * cos(2.0 * (*xli - fasx4)) +
-                         3.0 * del3 * cos(3.0 * (*xli - fasx6));
-                 xnddt = xnddt * xldot;
-               }
-               else
-               {
-                 /* --------- near - half-day resonance terms -------- */
-                 xomi  = argpo + argpdot * *atime;
-                 x2omi = xomi + xomi;
-                 x2li  = *xli + *xli;
-                 xndt  = d2201 * sin(x2omi + *xli - g22) + d2211 * sin(*xli - g22) +
-                       d3210 * sin(xomi + *xli - g32)  + d3222 * sin(-xomi + *xli - g32)+
-                       d4410 * sin(x2omi + x2li - g44)+ d4422 * sin(x2li - g44) +
-                       d5220 * sin(xomi + *xli - g52)  + d5232 * sin(-xomi + *xli - g52)+
-                       d5421 * sin(xomi + x2li - g54) + d5433 * sin(-xomi + x2li - g54);
-                 xldot = *xni + xfact;
-                 xnddt = d2201 * cos(x2omi + *xli - g22) + d2211 * cos(*xli - g22) +
-                       d3210 * cos(xomi + *xli - g32) + d3222 * cos(-xomi + *xli - g32) +
-                       d5220 * cos(xomi + *xli - g52) + d5232 * cos(-xomi + *xli - g52) +
-                       2.0 * (d4410 * cos(x2omi + x2li - g44) +
-                       d4422 * cos(x2li - g44) + d5421 * cos(xomi + x2li - g54) +
-                       d5433 * cos(-xomi + x2li - g54));
-                 xnddt = xnddt * xldot;
-               }
-
-             /* ----------------------- integrator ------------------- */
-             // sgp4fix move end checks to end of routine
-             if (fabs(t - *atime) >= stepp)
-               {
-                 iret  = 0;
-                 iretn = 381;
-               }
-               else // exit here
-               {
-                 ft    = t - *atime;
-                 iretn = 0;
-               }
-
-             if (iretn == 381)
-               {
-                 *xli   = *xli + xldot * delt + xndt * step2;
-                 *xni   = *xni + xndt * delt + xnddt * step2;
-                 *atime = *atime + delt;
-               }
-           }  // while iretn = 381
-
-         *nm = *xni + xndt * ft + xnddt * ft * ft * 0.5;
-         xl = *xli + xldot * ft + xndt * ft * ft * 0.5;
-         if (irez != 1)
-           {
-             *mm   = xl - 2.0 * *nodem + 2.0 * theta;
-             *dndt = *nm - no;
-           }
-           else
-           {
-             *mm   = xl - *nodem - *argpm + theta;
-             *dndt = *nm - no;
-           }
-         *nm = no + *dndt;
-       }
-
-//#include "debug4.cpp"
-}  // end dsspace
-
-/*-----------------------------------------------------------------------------
-*
-*                           procedure initl
-*
-*  this procedure initializes the spg4 propagator. all the initialization is
-*    consolidated here instead of having multiple loops inside other routines.
-*
-*  author        : david vallado                  719-573-2600   28 jun 2005
-*
-*  inputs        :
-*    ecco        - eccentricity                           0.0 - 1.0
-*    epoch       - epoch time in days from jan 0, 1950. 0 hr
-*    inclo       - inclination of satellite
-*    no          - mean motion of satellite
-*    satn        - satellite number
-*
-*  outputs       :
-*    ainv        - 1.0 / a
-*    ao          - semi major axis
-*    con41       -
-*    con42       - 1.0 - 5.0 cos(i)
-*    cosio       - cosine of inclination
-*    cosio2      - cosio squared
-*    eccsq       - eccentricity squared
-*    method      - flag for deep space                    'd', 'n'
-*    omeosq      - 1.0 - ecco * ecco
-*    posq        - semi-parameter squared
-*    rp          - radius of perigee
-*    rteosq      - square root of (1.0 - ecco*ecco)
-*    sinio       - sine of inclination
-*    gsto        - gst at time of observation               rad
-*    no          - mean motion of satellite
-*
-*  locals        :
-*    ak          -
-*    d1          -
-*    del         -
-*    adel        -
-*    po          -
-*
-*  coupling      :
-*    getgravconst
-*    gstime      - find greenwich sidereal time from the julian date
-*
-*  references    :
-*    hoots, roehrich, norad spacetrack report #3 1980
-*    hoots, norad spacetrack report #6 1986
-*    hoots, schumacher and glover 2004
-*    vallado, crawford, hujsak, kelso  2006
-  ----------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
-*
-*                             procedure sgp4init
-*
-*  this procedure initializes variables for sgp4.
-*
-*  author        : david vallado                  719-573-2600   28 jun 2005
-*
-*  inputs        :
-*    opsmode     - mode of operation afspc or improved 'a', 'i'
-*    whichconst  - which set of constants to use  72, 84
-*    satn        - satellite number
-*    bstar       - sgp4 type drag coefficient              kg/m2er
-*    ecco        - eccentricity
-*    epoch       - epoch time in days from jan 0, 1950. 0 hr
-*    argpo       - argument of perigee (output if ds)
-*    inclo       - inclination
-*    mo          - mean anomaly (output if ds)
-*    no          - mean motion
-*    nodeo       - right ascension of ascending node
-*
-*  outputs       :
-*    satrec      - common values for subsequent calls
-*    return code - non-zero on error.
-*                   1 - mean elements, ecc >= 1.0 or ecc < -0.001 or a < 0.95 er
-*                   2 - mean motion less than 0.0
-*                   3 - pert elements, ecc < 0.0  or  ecc > 1.0
-*                   4 - semi-latus rectum < 0.0
-*                   5 - epoch elements are sub-orbital
-*                   6 - satellite has decayed
-*
-*  locals        :
-*    cnodm  , snodm  , cosim  , sinim  , cosomm , sinomm
-*    cc1sq  , cc2    , cc3
-*    coef   , coef1
-*    cosio4      -
-*    day         -
-*    dndt        -
-*    em          - eccentricity
-*    emsq        - eccentricity squared
-*    eeta        -
-*    etasq       -
-*    gam         -
-*    argpm       - argument of perigee
-*    nodem       -
-*    inclm       - inclination
-*    mm          - mean anomaly
-*    nm          - mean motion
-*    perige      - perigee
-*    pinvsq      -
-*    psisq       -
-*    qzms24      -
-*    rtemsq      -
-*    s1, s2, s3, s4, s5, s6, s7          -
-*    sfour       -
-*    ss1, ss2, ss3, ss4, ss5, ss6, ss7         -
-*    sz1, sz2, sz3
-*    sz11, sz12, sz13, sz21, sz22, sz23, sz31, sz32, sz33        -
-*    tc          -
-*    temp        -
-*    temp1, temp2, temp3       -
-*    tsi         -
-*    xpidot      -
-*    xhdot1      -
-*    z1, z2, z3          -
-*    z11, z12, z13, z21, z22, z23, z31, z32, z33         -
-*
-*  coupling      :
-*    getgravconst-
-*    initl       -
-*    dscom       -
-*    dpper       -
-*    dsinit      -
-*    sgp4        -
-*
-*  references    :
-*    hoots, roehrich, norad spacetrack report #3 1980
-*    hoots, norad spacetrack report #6 1986
-*    hoots, schumacher and glover 2004
-*    vallado, crawford, hujsak, kelso  2006
-  ----------------------------------------------------------------------------*/
-
-
 double  sgn
-        (
-          double x
-        )
-   {
-     if (x < 0.0)
-       {
-          return -1.0;
-       }
-       else
-       {
-          return 1.0;
-       }
+(
+    double x
+)
+{
+  if (x < 0.0)
+  {
+    return -1.0;
+  }
+  else
+  {
+    return 1.0;
+  }
 
-   }
+}
 
 double  mag2
 (
