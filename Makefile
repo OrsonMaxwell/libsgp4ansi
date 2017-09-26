@@ -1,6 +1,5 @@
 GCC = gcc
 GPP = g++
-OBJ_LIB = libsgp4ansi.o epoch.o coord.o vector.o
 OUTPUTDIR=Plot
 LIBFLAGS = -fPIC -DUSE_WGS72
 CCFLAGS = -std=c11
@@ -30,31 +29,31 @@ endif
 
 all: test ref_test
 
-test: library ${TEST_NAME}
-	cp ${TEST_NAME} ${OUTPUTDIR}/${TEST_NAME}
+test: library ${OUTPUTDIR}/${TEST_NAME}
+	@echo "${CURDIR}/${OUTPUTDIR}/${TEST_NAME} done"
 
-${TEST_NAME}:
-	${GCC} ${CCFLAGS} -L${CURDIR} -o ${TEST_NAME} test.c ${LIBS} -lsgp4ansi
+${OUTPUTDIR}/${TEST_NAME}: test.c const.h libsgp4ansi.h
+	${GCC} ${CCFLAGS} -L${CURDIR}/${OUTPUTDIR} -o ${OUTPUTDIR}/${TEST_NAME} test.c ${LIBS} -lsgp4ansi
 
 ref_test:
 	${MAKE} -C AIAA DEBUG=${DEBUG} all
 
-library: ${LIB_NAME}
-	cp ${LIB_NAME} ${OUTPUTDIR}/${LIB_NAME}
+library: ${OUTPUTDIR}/${LIB_NAME}
+	@echo "${CURDIR}/${OUTPUTDIR}/${LIB_NAME} done"
 
-${LIB_NAME}: libsgp4ansi.o epoch.o coord.o vector.o
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared libsgp4ansi.o epoch.o coord.o vector.o -o ${LIB_NAME} ${LIBS}
+${OUTPUTDIR}/${LIB_NAME}: libsgp4ansi.o epoch.o coord.o vector.o
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared libsgp4ansi.o epoch.o coord.o vector.o -o ${OUTPUTDIR}/${LIB_NAME} ${LIBS}
 
-libsgp4ansi.o:
+libsgp4ansi.o: libsgp4ansi.c libsgp4ansi.h const.h
 	${GCC} ${CCFLAGS} ${LIBFLAGS} -c libsgp4ansi.c ${LIBS}
 
-epoch.o:
+epoch.o: epoch.c epoch.h const.h
 	${GCC} ${CCFLAGS} ${LIBFLAGS} -c epoch.c ${LIBS}
 
-coord.o:
+coord.o: coord.c coord.h const.h
 	${GCC} ${CCFLAGS} ${LIBFLAGS} -c coord.c ${LIBS}
 
-vector.o:
+vector.o: vector.c vector.h
 	${GCC} ${CCFLAGS} ${LIBFLAGS} -c vector.c ${LIBS}
 
 lib_clean:

@@ -17,24 +17,23 @@ else
 	CXXFLAGS += ${RELEASEFLAGS}
 endif
 
-all: ${REF_TEST_NAME}
-	cp ${REF_TEST_NAME} ../${OUTPUTDIR}/${REF_TEST_NAME}
+all: ../${OUTPUTDIR}/${REF_TEST_NAME}
+	@echo "${CURDIR}/../${OUTPUTDIR}/${REF_TEST_NAME} done"
 
-${REF_TEST_NAME}: sgp4ext.o sgp4io.o sgp4unit.o testcpp.o
-	${GPP} ${CXXFLAGS} sgp4ext.o sgp4io.o sgp4unit.o testcpp.o -o ${REF_TEST_NAME}
+../${OUTPUTDIR}/${REF_TEST_NAME}: sgp4ext.o sgp4io.o sgp4unit.o testcpp.o
+	${GPP} ${CXXFLAGS} sgp4ext.o sgp4io.o sgp4unit.o testcpp.o -o ../${OUTPUTDIR}/${REF_TEST_NAME}
 
-sgp4ext.o:
+sgp4ext.o: sgp4ext.cpp sgp4ext.h
 	${GPP} ${CXXFLAGS} -c sgp4ext.cpp
 
-sgp4io.o:
+sgp4io.o: sgp4io.cpp sgp4io.h
 	${GPP} ${CXXFLAGS} -c sgp4io.cpp
 
-sgp4unit.o:
+sgp4unit.o: sgp4unit.cpp sgp4unit.h
 	${GPP} ${CXXFLAGS} -c sgp4unit.cpp
 
-testcpp.o:
+testcpp.o: testcpp.cpp sgp4ext.h sgp4io.h sgp4unit.h
 	${GPP} ${CXXFLAGS} -c testcpp.cpp
 
 clean:
-	rm -f ${REF_TEST_NAME}
 	rm -f *.o
