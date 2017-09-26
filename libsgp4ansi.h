@@ -21,7 +21,7 @@
 // ************************************************************************* //
 
 #define VERSION "0.1"
-extern const char library_version[];
+extern const char libsgp4ansi_version[];
 
 // ************************************************************************* //
 //                               CUSTOM TYPES                                //
@@ -90,9 +90,11 @@ typedef struct _sat
   double right_asc_node_lp;
   double argument_perigee_lp;
   double mean_anomaly_lp;
-  // Deep space resonant terms
+  // Deep space resonance terms
   double dedt, didt, dmdt, dndt, dnodt, domdt;
   double xlamo, xfact;
+  double d2201, d2211, d3210, d3222 , d4410, d4422, d5220, d5232, d5421, d5433;
+  double del1, del2, del3; // TODO: Rename
   // Deep space integrator terms
   double xli, xni, atime;
 } sat;

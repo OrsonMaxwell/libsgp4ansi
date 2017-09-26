@@ -13,6 +13,8 @@ main (int argc, char** argv)
   if ((argv[1][0] != 'c') && (argv[1][0] != 'v') && (argv[1][0] != 't'))
     return 0;
 
+  printf("libsgp4ansi v%s\n", libsgp4ansi_version);
+
   char tlestr0[130];
   char tlestr1[130];
   char tlestr2[130];

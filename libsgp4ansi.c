@@ -27,7 +27,7 @@
 //                                VERSION                                    //
 // ************************************************************************* //
 
-const char library_version[] = VERSION;
+const char libsgp4ansi_version[] = VERSION;
 
 // ************************************************************************* //
 //                            PRIVATE PROTOTYPES                             //
@@ -518,22 +518,22 @@ sat_init(sat* s)
     double zx     = gam + atan2(0.39785416 * stem / zsinil, zy) - xnodce;
     double zcosgl = cos(zx);
     double zsingl = sin(zx);
-    // printf("day:    %22.15lf\n", day);
-    // printf("xnodce: %22.15lf\n", xnodce);
-    // printf("stem:   %22.15lf\n", stem);
-    // printf("ctem:   %22.15lf\n", ctem);
-    // printf("zcosil: %22.15lf\n", zcosil);
-    // printf("zsinil: %22.15lf\n", zsinil);
-    // printf("zsinhl: %22.15lf\n", zsinhl);
-    // printf("zcoshl: %22.15lf\n", zcoshl);
-    // printf("gam:    %22.15lf\n", gam);
-    // printf("zy:     %22.15lf\n", zy);
-    // printf("zx:     %22.15lf\n", zx);
-    // printf("zcosgl: %22.15lf\n", zcosgl);
-    // printf("zsingl: %22.15lf\n", zsingl);
+    // printf("day:    %+.15e\n", day);
+    // printf("xnodce: %+.15e\n", xnodce);
+    // printf("stem:   %+.15e\n", stem);
+    // printf("ctem:   %+.15e\n", ctem);
+    // printf("zcosil: %+.15e\n", zcosil);
+    // printf("zsinil: %+.15e\n", zsinil);
+    // printf("zsinhl: %+.15e\n", zsinhl);
+    // printf("zcoshl: %+.15e\n", zcoshl);
+    // printf("gam:    %+.15e\n", gam);
+    // printf("zy:     %+.15e\n", zy);
+    // printf("zx:     %+.15e\n", zx);
+    // printf("zcosgl: %+.15e\n", zcosgl);
+    // printf("zsingl: %+.15e\n", zsingl);
 
     s->zmos = fmod(6.2565837 + 0.017201977 * day, TWOPI);
-//    printf("zmos:   %22.15lf\n", zmos);
+//    printf("zmos:   %+.15e\n", zmos);
 
     // Do solar terms
     double cosq  = cos(s->right_asc_node);
@@ -546,9 +546,9 @@ sat_init(sat* s)
     double zsinh = sinq; // TODO: Move down?
     double cc    = c1ss;
     double xnoi  = 1.0 / s->xnodp;
-   // printf("zcosh:  %22.15lf\n", zcosh);
-   // printf("zsinh:  %22.15lf\n", zsinh);
-   // printf("xnoi:   %22.15lf\n", xnoi);
+   // printf("zcosh:  %+.15e\n", zcosh);
+   // printf("zsinh:  %+.15e\n", zsinh);
+   // printf("xnoi:   %+.15e\n", xnoi);
 
     // Iterative terms
     double a1,  a2,  a3,  a4,   a5,   a6,   a7,   a8,   a9,   a10;
@@ -570,16 +570,16 @@ sat_init(sat* s)
       a4  =  cosim * a9 + sinim * a10;
       a5  = -sinim * a7 + cosim * a8;
       a6  = -sinim * a9 + cosim * a10;
-//      printf("a1:     %22.15lf\n", a1);
-//      printf("a3:     %22.15lf\n", a3);
-//      printf("a7:     %22.15lf\n", a7);
-//      printf("a8:     %22.15lf\n", a8);
-//      printf("a9:     %22.15lf\n", a9);
-//      printf("a10:    %22.15lf\n", a10);
-//      printf("a2:     %22.15lf\n", a2);
-//      printf("a4:     %22.15lf\n", a4);
-//      printf("a5:     %22.15lf\n", a5);
-//      printf("a6:     %22.15lf\n", a6);
+//      printf("a1:     %+.15e\n", a1);
+//      printf("a3:     %+.15e\n", a3);
+//      printf("a7:     %+.15e\n", a7);
+//      printf("a8:     %+.15e\n", a8);
+//      printf("a9:     %+.15e\n", a9);
+//      printf("a10:    %+.15e\n", a10);
+//      printf("a2:     %+.15e\n", a2);
+//      printf("a4:     %+.15e\n", a4);
+//      printf("a5:     %+.15e\n", a5);
+//      printf("a6:     %+.15e\n", a6);
 
       x1  =  a1 * cosomm + a2 * sinomm;
       x2  =  a3 * cosomm + a4 * sinomm;
@@ -589,14 +589,14 @@ sat_init(sat* s)
       x6  =  a6 * sinomm;
       x7  =  a5 * cosomm;
       x8  =  a6 * cosomm;
-//      printf("x1:     %22.15lf\n", x1);
-//      printf("x2:     %22.15lf\n", x2);
-//      printf("x3:     %22.15lf\n", x3);
-//      printf("x4:     %22.15lf\n", x4);
-//      printf("x5:     %22.15lf\n", x5);
-//      printf("x6:     %22.15lf\n", x6);
-//      printf("x7:     %22.15lf\n", x7);
-//      printf("x8:     %22.15lf\n", x8);
+//      printf("x1:     %+.15e\n", x1);
+//      printf("x2:     %+.15e\n", x2);
+//      printf("x3:     %+.15e\n", x3);
+//      printf("x4:     %+.15e\n", x4);
+//      printf("x5:     %+.15e\n", x5);
+//      printf("x6:     %+.15e\n", x6);
+//      printf("x7:     %+.15e\n", x7);
+//      printf("x8:     %+.15e\n", x8);
 
       z31 = 12.0 * x1 * x1 - 3.0 * x3 * x3;
       z32 = 24.0 * x1 * x2 - 6.0 * x3 * x4;
@@ -622,25 +622,25 @@ sat_init(sat* s)
       s5  = x1 * x3 + x2 * x4;
       s6  = x2 * x3 + x1 * x4;
       s7  = x2 * x4 - x1 * x3;
-//      printf("z31:    %22.15lf\n", z31);
-//      printf("z32:    %22.15lf\n", z32);
-//      printf("z33:    %22.15lf\n", z33);
-//      printf("z1:     %22.15lf\n", z1);
-//      printf("z2:     %22.15lf\n", z2);
-//      printf("z3:     %22.15lf\n", z3);
-//      printf("z11:    %22.15lf\n", z11);
-//      printf("z12:    %22.15lf\n", z12);
-//      printf("z13:    %22.15lf\n", z13);
-//      printf("z21:    %22.15lf\n", z21);
-//      printf("z22:    %22.15lf\n", z22);
-//      printf("z23:    %22.15lf\n", z23);
-//      printf("s3:     %22.15lf\n", s3);
-//      printf("s2:     %22.15lf\n", s2);
-//      printf("s4:     %22.15lf\n", s4);
-//      printf("s1:     %22.15lf\n", s1);
-//      printf("s5:     %22.15lf\n", s5);
-//      printf("s6:     %22.15lf\n", s6);
-//      printf("s7:     %22.15lf\n", s7);
+//      printf("z31:    %+.15e\n", z31);
+//      printf("z32:    %+.15e\n", z32);
+//      printf("z33:    %+.15e\n", z33);
+//      printf("z1:     %+.15e\n", z1);
+//      printf("z2:     %+.15e\n", z2);
+//      printf("z3:     %+.15e\n", z3);
+//      printf("z11:    %+.15e\n", z11);
+//      printf("z12:    %+.15e\n", z12);
+//      printf("z13:    %+.15e\n", z13);
+//      printf("z21:    %+.15e\n", z21);
+//      printf("z22:    %+.15e\n", z22);
+//      printf("z23:    %+.15e\n", z23);
+//      printf("s3:     %+.15e\n", s3);
+//      printf("s2:     %+.15e\n", s2);
+//      printf("s4:     %+.15e\n", s4);
+//      printf("s1:     %+.15e\n", s1);
+//      printf("s5:     %+.15e\n", s5);
+//      printf("s6:     %+.15e\n", s6);
+//      printf("s7:     %+.15e\n", s7);
 
       // Do lunar terms
       if (ls_flag == 1)
@@ -675,7 +675,7 @@ sat_init(sat* s)
     }
 
     s->zmol = fmod(4.7199672 + 0.22997150  * day - gam, TWOPI);
-//    printf("zmol:   %22.15lf\n", zmol);
+//    printf("zmol:   %+.15e\n", zmol);
 //    printf("------------------------------\n");
     // Do final solar terms
     s->se2  =   2 * ss1 * ss6;
@@ -690,18 +690,18 @@ sat_init(sat* s)
     s->sgh4 = -18 * ss4 * zes;
     s->sh2  =  -2 * ss2 * sz22;
     s->sh3  =  -2 * ss2 * (sz23 - sz21);
-//    printf("se2:    %22.15lf\n", s->se2);
-//    printf("se3:    %22.15lf\n", s->se3);
-//    printf("si2:    %22.15lf\n", s->si2);
-//    printf("si3:    %22.15lf\n", s->si3);
-//    printf("sl2:    %22.15lf\n", s->sl2);
-//    printf("sl3:    %22.15lf\n", s->sl3);
-//    printf("sl4:    %22.15lf\n", s->sl4);
-//    printf("sgh2:   %22.15lf\n", s->sgh2);
-//    printf("sgh3:   %22.15lf\n", s->sgh3);
-//    printf("sgh4:   %22.15lf\n", s->sgh4);
-//    printf("sh2:    %22.15lf\n", s->sh2);
-//    printf("sh3:    %22.15lf\n", s->sh3);
+//    printf("se2:    %+.15e\n", s->se2);
+//    printf("se3:    %+.15e\n", s->se3);
+//    printf("si2:    %+.15e\n", s->si2);
+//    printf("si3:    %+.15e\n", s->si3);
+//    printf("sl2:    %+.15e\n", s->sl2);
+//    printf("sl3:    %+.15e\n", s->sl3);
+//    printf("sl4:    %+.15e\n", s->sl4);
+//    printf("sgh2:   %+.15e\n", s->sgh2);
+//    printf("sgh3:   %+.15e\n", s->sgh3);
+//    printf("sgh4:   %+.15e\n", s->sgh4);
+//    printf("sh2:    %+.15e\n", s->sh2);
+//    printf("sh3:    %+.15e\n", s->sh3);
 
     // Do final lunar terms
     s->ee2  =   2 * s1 * s6;
@@ -716,18 +716,18 @@ sat_init(sat* s)
     s->xgh4 = -18 * s4 * zel;
     s->xh2  =  -2 * s2 * z22;
     s->xh3  =  -2 * s2 * (z23 - z21);
-//    printf("ee2:    %22.15lf\n", s->ee2);
-//    printf("e3:     %22.15lf\n", s->e3);
-//    printf("xi2:    %22.15lf\n", s->xi2);
-//    printf("xi3:    %22.15lf\n", s->xi3);
-//    printf("xl2:    %22.15lf\n", s->xl2);
-//    printf("xl3:    %22.15lf\n", s->xl3);
-//    printf("xl4:    %22.15lf\n", s->xl4);
-//    printf("xgh2:   %22.15lf\n", s->xgh2);
-//    printf("xgh3:   %22.15lf\n", s->xgh3);
-//    printf("xgh4:   %22.15lf\n", s->xgh4);
-//    printf("xh2:    %22.15lf\n", s->xh2);
-//    printf("xh3:    %22.15lf\n", s->xh3);
+//    printf("ee2:    %+.15e\n", s->ee2);
+//    printf("e3:     %+.15e\n", s->e3);
+//    printf("xi2:    %+.15e\n", s->xi2);
+//    printf("xi3:    %+.15e\n", s->xi3);
+//    printf("xl2:    %+.15e\n", s->xl2);
+//    printf("xl3:    %+.15e\n", s->xl3);
+//    printf("xl4:    %+.15e\n", s->xl4);
+//    printf("xgh2:   %+.15e\n", s->xgh2);
+//    printf("xgh3:   %+.15e\n", s->xgh3);
+//    printf("xgh4:   %+.15e\n", s->xgh4);
+//    printf("xh2:    %+.15e\n", s->xh2);
+//    printf("xh3:    %+.15e\n", s->xh3);
 //
 //    printf("------------------------------\n");
     // dpper(s, 0, true); TODO: Investigate further
@@ -820,12 +820,12 @@ sat_init(sat* s)
 
     double sgs  = sghs - cosim * shs;
 
-//    printf("ses:    %22.15lf\n", ses);
-//    printf("sis:    %22.15lf\n", sis);
-//    printf("sls:    %22.15lf\n", sls);
-//    printf("sghs:   %22.15lf\n", sghs);
-//    printf("shs:    %22.15lf\n", shs);
-//    printf("sgs:    %22.15lf\n", sgs);
+//    printf("ses:    %+.15e\n", ses);
+//    printf("sis:    %+.15e\n", sis);
+//    printf("sls:    %+.15e\n", sls);
+//    printf("sghs:   %+.15e\n", sghs);
+//    printf("shs:    %+.15e\n", shs);
+//    printf("sgs:    %+.15e\n", sgs);
 
     // Do lunar terms
     s->dedt = ses + s1 * znl * s5;
@@ -851,14 +851,14 @@ sat_init(sat* s)
       s->dnodt += shll / sinim;
     }
 
-//    printf("dedt:   %22.15lf\n", s->dedt);
-//    printf("didt:   %22.15lf\n", s->didt);
-//    printf("dmdt:   %22.15lf\n", s->dmdt);
-//    printf("dndt:   %22.15lf\n", s->dndt);
-//    printf("sghl:   %22.15lf\n", sghl);
-//    printf("shll:   %22.15lf\n", shll);
-//    printf("domdt:  %22.15lf\n", s->domdt);
-//    printf("dnodt:  %22.15lf\n", s->dnodt);
+//    printf("dedt:   %+.15e\n", s->dedt);
+//    printf("didt:   %+.15e\n", s->didt);
+//    printf("dmdt:   %+.15e\n", s->dmdt);
+//    printf("dndt:   %+.15e\n", s->dndt);
+//    printf("sghl:   %+.15e\n", sghl);
+//    printf("shll:   %+.15e\n", shll);
+//    printf("domdt:  %+.15e\n", s->domdt);
+//    printf("dnodt:  %+.15e\n", s->dnodt);
 
     // Calculate deep space resonance effects
 
@@ -871,9 +871,9 @@ sat_init(sat* s)
      */
 
 //    printf("----------------------------\n");
-//    printf("theta:  %22.15lf\n", GSTo);
-//    printf("em:     %22.15lf\n", s->eccentricity);
-//    printf("inclm:  %22.15lf\n", s->inclination);
+//    printf("theta:  %+.15e\n", GSTo);
+//    printf("em:     %+.15e\n", s->eccentricity);
+//    printf("inclm:  %+.15e\n", s->inclination);
 
     double aonv  = pow(s->xnodp / XKE, TWOTHIRD); // TODO: Duplicate?
     double ainv2 = pow(aonv, 2);
@@ -959,16 +959,16 @@ sat_init(sat* s)
         }
 
 //        printf("----------------------------\n");
-//        printf("g201:   %22.15lf\n", g201);
-//        printf("g211:   %22.15lf\n", g211);
-//        printf("g310:   %22.15lf\n", g310);
-//        printf("g322:   %22.15lf\n", g322);
-//        printf("g410:   %22.15lf\n", g410);
-//        printf("g422:   %22.15lf\n", g422);
-//        printf("g520:   %22.15lf\n", g520);
-//        printf("g533:   %22.15lf\n", g533);
-//        printf("g521:   %22.15lf\n", g521);
-//        printf("g532:   %22.15lf\n", g532);
+//        printf("g201:   %+.15e\n", g201);
+//        printf("g211:   %+.15e\n", g211);
+//        printf("g310:   %+.15e\n", g310);
+//        printf("g322:   %+.15e\n", g322);
+//        printf("g410:   %+.15e\n", g410);
+//        printf("g422:   %+.15e\n", g422);
+//        printf("g520:   %+.15e\n", g520);
+//        printf("g533:   %+.15e\n", g533);
+//        printf("g521:   %+.15e\n", g521);
+//        printf("g532:   %+.15e\n", g532);
 
         double sini2  =  sinim * sinim; // TODO: Copy of a copy of a copy?
         double cosisq =  cosim * cosim; // TODO: Copy of a copy of a copy?
@@ -991,36 +991,36 @@ sat_init(sat* s)
              * (12.0 + 8.0 * cosim - 10.0 * cosisq));
 
 //        printf("----------------------------\n");
-//        printf("f220:   %22.15lf\n", f220);
-//        printf("f221:   %22.15lf\n", f221);
-//        printf("f321:   %22.15lf\n", f321);
-//        printf("f322:   %22.15lf\n", f322);
-//        printf("f441:   %22.15lf\n", f441);
-//        printf("f442:   %22.15lf\n", f442);
-//        printf("f522:   %22.15lf\n", f522);
-//        printf("f523:   %22.15lf\n", f523);
-//        printf("f542:   %22.15lf\n", f542);
-//        printf("f543:   %22.15lf\n", f543);
+//        printf("f220:   %+.15e\n", f220);
+//        printf("f221:   %+.15e\n", f221);
+//        printf("f321:   %+.15e\n", f321);
+//        printf("f322:   %+.15e\n", f322);
+//        printf("f441:   %+.15e\n", f441);
+//        printf("f442:   %+.15e\n", f442);
+//        printf("f522:   %+.15e\n", f522);
+//        printf("f523:   %+.15e\n", f523);
+//        printf("f542:   %+.15e\n", f542);
+//        printf("f543:   %+.15e\n", f543);
 
                temp1 = 3.0 * pow(s->xnodp, 2) * ainv2;
         double temp  = temp1 * root22;
-        double d2201 = temp * f220 * g201;
-        double d2211 = temp * f221 * g211;
-               temp1 = temp1 * aonv;
+            s->d2201 = temp * f220 * g201;
+            s->d2211 = temp * f221 * g211;
+               temp1 = temp1 * aonv; // TODO: Rename/Remove?
                temp  = temp1 * root32;
-        double d3210 = temp * f321 * g310;
-        double d3222 = temp * f322 * g322;
+            s->d3210 = temp * f321 * g310;
+            s->d3222 = temp * f322 * g322;
                temp1 = temp1 * aonv;
                temp  = 2.0 * temp1 * root44;
-        double d4410 = temp * f441 * g410;
-        double d4422 = temp * f442 * g422;
+            s->d4410 = temp * f441 * g410;
+            s->d4422 = temp * f442 * g422;
                temp1 = temp1 * aonv;
                temp  = temp1 * root52;
-        double d5220 = temp * f522 * g520;
-        double d5232 = temp * f523 * g532;
+            s->d5220 = temp * f522 * g520;
+            s->d5232 = temp * f523 * g532;
                temp  = 2.0 * temp1 * root54;
-        double d5421 = temp * f542 * g521;
-        double d5433 = temp * f543 * g533;
+            s->d5421 = temp * f542 * g521;
+            s->d5433 = temp * f543 * g533;
             s->xlamo = fmod(s->mean_anomaly + 2 * s->right_asc_node
                      - 2 * s->GSTo, TWOPI);
             s->xfact = s->xmdot + s->dmdt
@@ -1029,51 +1029,51 @@ sat_init(sat* s)
         //double emsq  = emsqo;
 
 //        printf("----------------------------\n");
-//        printf("ainv2:  %22.15lf\n", ainv2);
-//        printf("d2201:  %22.15lf\n", d2201);
-//        printf("d2211:  %22.15lf\n", d2211);
-//        printf("d3210:  %22.15lf\n", d3210);
-//        printf("d3222:  %22.15lf\n", d3222);
-//        printf("d4410:  %22.15lf\n", d4410);
-//        printf("d4422:  %22.15lf\n", d4422);
-//        printf("d5220:  %22.15lf\n", d5220);
-//        printf("d5232:  %22.15lf\n", d5232);
-//        printf("d5232:  %22.15lf\n", d5232);
-//        printf("d5433:  %22.15lf\n", d5433);
+//        printf("ainv2:  %+.15e\n", ainv2);
+//        printf("d2201:  %+.15e\n", d2201);
+//        printf("d2211:  %+.15e\n", d2211);
+//        printf("d3210:  %+.15e\n", d3210);
+//        printf("d3222:  %+.15e\n", d3222);
+//        printf("d4410:  %+.15e\n", d4410);
+//        printf("d4422:  %+.15e\n", d4422);
+//        printf("d5220:  %+.15e\n", d5220);
+//        printf("d5232:  %+.15e\n", d5232);
+//        printf("d5232:  %+.15e\n", d5232);
+//        printf("d5433:  %+.15e\n", d5433);
       }
 
       // Synchronous resonance terms
 
-      double g200, g310, g300, f220, f311, f330, del1, del2, del3;
+      double g200, g310, g300, f220, f311, f330;
 
       if (s->is_24h_resonant == true)
       {
-            g200 = 1.0 + eosq * (-2.5 + 0.8125 * eosq);
-            g310 = 1.0 + 2.0 * eosq;
-            g300 = 1.0 + eosq * (-6.0 + 6.60937 * eosq);
-            f220 = 0.75 * (1.0 + cosim) * (1.0 + cosim);
-            f311 = 0.9375 * sinim * sinim * (1.0 + 3.0 * cosim) - 0.75 * (1.0 + cosim);
-            f330 = 1.0 + cosim;
+            g200 = 1 + eosq * (-2.5 + 0.8125 * eosq);
+            g310 = 1 + 2 * eosq;
+            g300 = 1 + eosq * (-6 + 6.60937 * eosq);
+            f220 = 0.75 * (1 + cosim) * (1 + cosim);
+            f311 = 0.9375 * sinim * sinim * (1 + 3 * cosim) - 0.75 * (1 + cosim);
+            f330 = 1 + cosim;
             f330 = 1.875 * f330 * f330 * f330;
-            del1 = 3.0 * pow(s->xnodp, 2) * ainv2;
-            del2 = 2.0 * del1 * f220 * g200 * q22;
-            del3 = 3.0 * del1 * f330 * g300 * q33 * aonv;
-            del1 = del1 * f311 * g310 * q31 * aonv;
+         s->del1 = 3 * pow(s->xnodp, 2) * ainv2;
+         s->del2 = 2 * s->del1 * f220 * g200 * q22;
+         s->del3 = 3 * s->del1 * f330 * g300 * q33 * aonv;
+         s->del1 = s->del1 * f311 * g310 * q31 * aonv;
         s->xfact = s->xmdot + (s->omgdot + s->xnodot) - rptim + s->dmdt
                  + s->domdt + s->dnodt - s->xnodp;
         s->xlamo = fmod(s->mean_anomaly + s->right_asc_node
                  + s->argument_perigee - s->GSTo, TWOPI);
 
 //        printf("----------------------------\n");
-//        printf("g200:   %22.15lf\n", g200);
-//        printf("g310:   %22.15lf\n", g310);
-//        printf("g300:   %22.15lf\n", g300);
-//        printf("f220:   %22.15lf\n", f220);
-//        printf("f311:   %22.15lf\n", f311);
-//        printf("f330:   %22.15lf\n", f330);
-//        printf("del1:   %22.15lf\n", del1);
-//        printf("del2:   %22.15lf\n", del2);
-//        printf("del3:   %22.15lf\n", del3);
+//        printf("g200:   %+.15e\n", g200);
+//        printf("g310:   %+.15e\n", g310);
+//        printf("g300:   %+.15e\n", g300);
+//        printf("f220:   %+.15e\n", f220);
+//        printf("f311:   %+.15e\n", f311);
+//        printf("f330:   %+.15e\n", f330);
+//        printf("del1:   %+.15e\n", del1);
+//        printf("del2:   %+.15e\n", del2);
+//        printf("del3:   %+.15e\n", del3);
       }
 
       // Initialize the integrator
@@ -1081,11 +1081,11 @@ sat_init(sat* s)
       s->xni    = s->xnodp;
       s->atime  = 0.0;
 
-//      printf("xfact:  %22.15lf\n", s->xfact);
-//      printf("xlamo:  %22.15lf\n", s->xlamo);
-//      printf("xli:    %22.15lf\n", s->xli);
-//      printf("xni:    %22.15lf\n", s->xni);
-//      printf("atime:  %22.15lf\n", s->atime);
+//      printf("xfact:  %+.15e\n", s->xfact);
+//      printf("xlamo:  %+.15e\n", s->xlamo);
+//      printf("xli:    %+.15e\n", s->xli);
+//      printf("xni:    %+.15e\n", s->xni);
+//      printf("atime:  %+.15e\n", s->atime);
     }
   }
 
@@ -1185,59 +1185,14 @@ sat_propagate
     templ         = templ + s->t3cof * t3 + t4 * (s->t4cof + tdelta * s->t5cof);
   }
 
-  double nm    = s->mean_motion; // TODO: Optimize?
+  double nm    = s->xnodp; // TODO: Rename? Optimize?
   double em    = s->eccentricity; // TODO: Optimize?
   double inclm = s->inclination; // TODO: Optimize?
 
   if (s->is_deep_space == true)
   {
-    /*tc = tdelta;
-*-----------------------------------------------------------------------------
-*
-*                           procedure dspace
-*
-*  this procedure provides deep space contributions to mean elements for
-*    perturbing third body.  these effects have been averaged over one
-*    revolution of the sun and moon.  for earth resonance effects, the
-*    effects have been averaged over no revolutions of the satellite.
-*    (mean motion)
-
-  ----------------------------------------------------------------------------
-    dspace
-    (
-        s->irez,
-        s->d2201, s->d2211, s->d3210,
-        s->d3222, s->d4410, s->d4422,
-        s->d5220, s->d5232, s->d5421,
-        s->d5433, s->dedt,  s->del1,
-        s->del2,  s->del3,  s->didt,
-        s->dmdt,  s->dnodt, s->domdt,
-        s->argpo, s->argpdot, tdelta, tc,
-        s->gsto, s->xfact, s->xlamo,
-        s->no, s->atime,
-        em, argpm, inclm, s->xli, mm, s->xni,
-        nodem, dndt, nm, s->operationmode
-    );
-
-
-void dspace
-     (
-       int irez,
-       double d2201,  double d2211,  double d3210,   double d3222,  double d4410,
-       double d4422,  double d5220,  double d5232,   double d5421,  double d5433,
-       double dedt,   double del1,   double del2,    double del3,   double didt,
-       double dmdt,   double dnodt,  double domdt,   double argpo,  double argpdot,
-       double t,      double tc,     double gsto,    double xfact,  double xlamo,
-       double no,
-       double* atime, double* em,    double* argpm,  double* inclm, double* xli,
-       double* mm,    double* xni,   double* nodem,  double* dndt,  double* nm
-     )
-
-
-     int iretn , iret;
-     double delt, ft, theta, x2li, x2omi, xl, xldot , xnddt, xndt, xomi, g22, g32,
-          g44, g52, g54, fasx2, fasx4, fasx6, rptim , step2, stepn , stepp;
-*/
+    //tc = tdelta;
+    // Deep space contributions to mean elements for perturbing third body
     const double fasx2 = 0.13130908;
     const double fasx4 = 2.8843198;
     const double fasx6 = 0.37448087;
@@ -1261,30 +1216,29 @@ void dspace
     omega        += s->domdt * tdelta;
     xnode        += s->dnodt * tdelta;
     xmp          += s->dmdt * tdelta;
-//
-//     if (tdelta != 0)
-//     {
-//       printf("tdelta: %22.15lf\n", tdelta);
-//       printf("theta:  %22.15lf\n", theta);
-//       printf("em:     %22.15lf\n", em);
-//       printf("inclm:  %22.15lf\n", inclm);
-//       printf("argpm:  %22.15lf\n", omega);
-//       printf("nodem:  %22.15lf\n", xnode);
-//       printf("dmdt:   %22.15lf\n", s->dmdt);
-//       printf("mm:     %22.15lf\n", xmp);
-//     }
+    //
+    //     if (tdelta != 0)
+    //     {
+    //       printf("tdelta: %+.15e\n", tdelta);
+    //       printf("theta:  %+.15e\n", theta);
+    //       printf("em:     %+.15e\n", em);
+    //       printf("inclm:  %+.15e\n", inclm);
+    //       printf("argpm:  %+.15e\n", omega);
+    //       printf("nodem:  %+.15e\n", xnode);
+    //       printf("dmdt:   %+.15e\n", s->dmdt);
+    //       printf("mm:     %+.15e\n", xmp);
+    //     }
 
 
 
-     // - update resonances : numerical (euler-maclaurin) integration -
-     // ------------------------- epoch restart ----------------------
-     //   sgp4fix for propagator problems
-     //   the following integration works for negative time steps and periods
-     //   the specific changes are unknown because the original code was so convoluted
+    // - update resonances : numerical (euler-maclaurin) integration -
+    // ------------------------- epoch restart ----------------------
+    //   sgp4fix for propagator problems
+    //   the following integration works for negative time steps and periods
+    //   the specific changes are unknown because the original code was so convoluted
 
     double ft = 0; // TODO:Remove?
-    int iretn = 381; // added for do loop TODO: Alternatives?
-    int iret  =   0; // added for loop
+    double delt; // TODO: Rename
     if ((s->is_12h_resonant == true) || (s->is_24h_resonant == true))
     {
       // sgp4fix streamline check
@@ -1297,90 +1251,107 @@ void dspace
         s->xli   = s->xlamo;
       }
 
-      double delt; // TODO: Rename
       if (tdelta > 0.0)
         delt = stepp;
       else
         delt = stepn;
 
-      if (tdelta != 0)
+      //      if (tdelta != 0)
+      //      {
+      //        printf("atime:  %+.15e\n", s->atime);
+      //        printf("xni:    %+.15e\n", s->xni);
+      //        printf("xli:    %+.15e\n", s->xli);
+      //        printf("delt:   %+.15e\n", delt);
+      //      }
+
+      int iretn = 381; // added for do loop TODO: Alternatives?
+      int iret  =   0; // added for loop
+      double xndt, xldot, xnddt, xomi, x2omi, x2li;
+
+      while (iretn == 381)
       {
-        printf("atime:  %22.15lf\n", s->atime);
-        printf("xni:    %22.15lf\n", s->xni);
-        printf("xli:    %22.15lf\n", s->xli);
-        printf("delt:   %22.15lf\n", delt);
+        // Synchronous resonance dot terms
+        if (s->is_24h_resonant == true)
+        {
+          xndt  = s->del1 * sin(s->xli - fasx2) + s->del2
+                * sin(2 * (s->xli - fasx4))
+                + s->del3 * sin(3 * (s->xli - fasx6));
+          xldot = s->xni + s->xfact;
+          xnddt = s->del1 * cos(s->xli - fasx2) +
+              2 * s->del2 * cos(2 * (s->xli - fasx4)) +
+              3 * s->del3 * cos(3 * (s->xli - fasx6));
+          xnddt = xnddt * xldot;
+        }
+        else
+        {
+          // Geopotential resonance terms
+          xomi  = s->argument_perigee + s->omgdot * s->atime;
+          x2omi = xomi + xomi;
+          x2li  = s->xli + s->xli;
+          xndt  = s->d2201 * sin(x2omi + s->xli - g22) + s->d2211 * sin(s->xli - g22) +
+              s->d3210 * sin(xomi + s->xli - g32)  + s->d3222 * sin(-xomi + s->xli - g32)+
+              s->d4410 * sin(x2omi + x2li - g44)+ s->d4422 * sin(x2li - g44) +
+              s->d5220 * sin(xomi + s->xli - g52)  + s->d5232 * sin(-xomi + s->xli - g52)+
+              s->d5421 * sin(xomi + x2li - g54) + s->d5433 * sin(-xomi + x2li - g54);
+          xldot = s->xni + s->xfact;
+          xnddt = s->d2201 * cos(x2omi + s->xli - g22) + s->d2211 * cos(s->xli - g22) +
+              s->d3210 * cos(xomi + s->xli - g32) + s->d3222 * cos(-xomi + s->xli - g32) +
+              s->d5220 * cos(xomi + s->xli - g52) + s->d5232 * cos(-xomi + s->xli - g52) +
+              2.0 * (s->d4410 * cos(x2omi + x2li - g44) +
+                  s->d4422 * cos(x2li - g44) + s->d5421 * cos(xomi + x2li - g54) +
+                  s->d5433 * cos(-xomi + x2li - g54));
+          xnddt = xnddt * xldot;
+        }
+
+        // Integrator
+        if (fabs(tdelta - s->atime) >= stepp)
+        {
+          iret  = 0;
+          iretn = 381;
+        }
+        else // exit here
+        {
+          ft    = tdelta - s->atime;
+          iretn = 0;
+        }
+
+        if (iretn == 381)
+        {
+          s->xli   = s->xli + xldot * delt + xndt * step2;
+          s->xni   = s->xni + xndt * delt + xnddt * step2;
+          s->atime = s->atime + delt;
+        }
+//        printf("tdelta: %+.15e\n", tdelta);
+//        printf("atime:  %+.15e\n", s->atime);
+//        printf("xndt:   %+.15e\n", xndt);
+//        printf("xldot:  %+.15e\n", xldot);
+//        printf("xnddt:  %+.15e\n", xnddt);
+//        printf("xomi:   %+.15e\n", xomi);
+//        printf("x2omi:  %+.15e\n", x2omi);
+//        printf("x2li:   %+.15e\n", x2li);
+//        printf("xli:    %+.15e\n", s->xli);
+//        printf("xni:    %+.15e\n", s->xni );
+//        printf("---------------------------------\n");
       }
-    }
-    while (iretn == 381)
-    {/*
-      // ------------------- dot terms calculated -------------
-      // ----------- near - synchronous resonance terms -------
-      if (irez != 2)
+
+      nm = s->xni + xndt * ft + xnddt * ft * ft * 0.5;
+      double xl = s->xli + xldot * ft + xndt * ft * ft * 0.5;
+
+      if (s->is_12h_resonant)
       {
-        xndt  = del1 * sin(*xli - fasx2) + del2 * sin(2.0 * (*xli - fasx4)) +
-            del3 * sin(3.0 * (*xli - fasx6));
-        xldot = *xni + xfact;
-        xnddt = del1 * cos(*xli - fasx2) +
-            2.0 * del2 * cos(2.0 * (*xli - fasx4)) +
-            3.0 * del3 * cos(3.0 * (*xli - fasx6));
-        xnddt = xnddt * xldot;
+        xmp     = xl - 2 * xnode + 2 * theta;
+        s->dndt = nm - s->xnodp;
       }
       else
       {
-        // --------- near - half-day resonance terms
-        xomi  = argpo + argpdot * *atime;
-        x2omi = xomi + xomi;
-        x2li  = *xli + *xli;
-        xndt  = d2201 * sin(x2omi + *xli - g22) + d2211 * sin(*xli - g22) +
-            d3210 * sin(xomi + *xli - g32)  + d3222 * sin(-xomi + *xli - g32)+
-            d4410 * sin(x2omi + x2li - g44)+ d4422 * sin(x2li - g44) +
-            d5220 * sin(xomi + *xli - g52)  + d5232 * sin(-xomi + *xli - g52)+
-            d5421 * sin(xomi + x2li - g54) + d5433 * sin(-xomi + x2li - g54);
-        xldot = *xni + xfact;
-        xnddt = d2201 * cos(x2omi + *xli - g22) + d2211 * cos(*xli - g22) +
-            d3210 * cos(xomi + *xli - g32) + d3222 * cos(-xomi + *xli - g32) +
-            d5220 * cos(xomi + *xli - g52) + d5232 * cos(-xomi + *xli - g52) +
-            2.0 * (d4410 * cos(x2omi + x2li - g44) +
-                d4422 * cos(x2li - g44) + d5421 * cos(xomi + x2li - g54) +
-                d5433 * cos(-xomi + x2li - g54));
-        xnddt = xnddt * xldot;
+        xmp   = xl - xnode - omega + theta;
+        s->dndt = nm - s->xnodp;
       }
-
-      // ----------------------- integrator
-      // sgp4fix move end checks to end of routine
-      if (fabs(t - *atime) >= stepp)
-      {
-        iret  = 0;
-        iretn = 381;
-      }
-      else // exit here
-      {
-        ft    = t - *atime;
-        iretn = 0;
-      }
-
-      if (iretn == 381)
-      {
-        *xli   = *xli + xldot * delt + xndt * step2;
-        *xni   = *xni + xndt * delt + xnddt * step2;
-        *atime = *atime + delt;
-      }
+      nm = s->xnodp + s->dndt;
     }
-/*
-         *nm = *xni + xndt * ft + xnddt * ft * ft * 0.5;
-         xl = *xli + xldot * ft + xndt * ft * ft * 0.5;
-         if (irez != 1)
-           {
-             *mm   = xl - 2.0 * *nodem + 2.0 * theta;
-             *dndt = *nm - no;
-           }
-           else
-           {
-             *mm   = xl - *nodem - *argpm + theta;
-             *dndt = *nm - no;
-           }
-         *nm = no + *dndt;*/
-       }
+//    printf("nm:     %+.15e\n", nm);
+//    printf("xmp:    %+.15e\n", xmp);
+//    printf("dndt:   %+.15e\n", s->dndt);
   }
 /*
   if (nm <= 0.0)
