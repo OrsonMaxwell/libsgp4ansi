@@ -3,7 +3,8 @@ GPP = g++
 OBJ_LIB = libsgp4ansi.o epoch.o coord.o vector.o
 OUTPUTDIR=Plot
 LIBFLAGS = -fPIC -DUSE_WGS72
-CCFLAGS = -std=c11 -lm
+CCFLAGS = -std=c11
+LIBS = -lm
 CXXFLAGS = -lm
 RELEASEFLAGS = -O3 -flto
 DEBUGFLAGS = -g3
@@ -33,7 +34,7 @@ test: library ${TEST_NAME}
 	cp ${TEST_NAME} ${OUTPUTDIR}/${TEST_NAME}
 
 ${TEST_NAME}:
-	${GCC} ${CCFLAGS} -L. -l sgp4ansi test.c -o ${TEST_NAME}
+	${GCC} ${CCFLAGS} -L${CURDIR} -o ${TEST_NAME} test.c ${LIBS} -lsgp4ansi
 
 ref_test:
 	${MAKE} -C AIAA DEBUG=${DEBUG} all
@@ -42,19 +43,19 @@ library: ${LIB_NAME}
 	cp ${LIB_NAME} ${OUTPUTDIR}/${LIB_NAME}
 
 ${LIB_NAME}: libsgp4ansi.o epoch.o coord.o vector.o
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared libsgp4ansi.o epoch.o coord.o vector.o -o ${LIB_NAME}
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared libsgp4ansi.o epoch.o coord.o vector.o -o ${LIB_NAME} ${LIBS}
 
 libsgp4ansi.o:
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -c libsgp4ansi.c
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -c libsgp4ansi.c ${LIBS}
 
 epoch.o:
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -c epoch.c
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -c epoch.c ${LIBS}
 
 coord.o:
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -c coord.c
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -c coord.c ${LIBS}
 
 vector.o:
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -c vector.c
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -c vector.c ${LIBS}
 
 lib_clean:
 	rm -f libsgp4ansi.o
