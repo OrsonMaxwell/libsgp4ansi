@@ -1,5 +1,4 @@
 GCC = gcc
-GPP = g++
 OUTPUTDIR=Plot
 LIBFLAGS = -fPIC -DUSE_WGS72
 CCFLAGS = -std=c11

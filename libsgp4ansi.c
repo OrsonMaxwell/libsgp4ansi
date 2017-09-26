@@ -901,11 +901,6 @@ sat_init(sat* s)
         // 12h Resonant polynomials
         double g211, g310, g322, g410, g422, g520, g521, g523, g532, g533;
 
-        // TODO: Starting from here, the results of the polynomial calculations
-        // begin to differ slightly due to numerical garbage in insignificant
-        // decimal places of the eccentricity parameter. Requires testing to
-        // fully understand the net impact of this on the resulting ephemerides.
-
         if (s->eccentricity <= 0.65)
         {
           g211 =    3.616  -  13.2470 * s->eccentricity
@@ -1256,16 +1251,16 @@ void dspace
      const double stepn =   -720.0;
      const double step2 = 259200.0;
 
-     // ----------- calculate deep space resonance effects -----------
+     // Calculate deep space resonance effects
      s->dndt       = 0;
      double theta  = fmod(s->GSTo + tdelta * rptim, TWOPI); // TODO: Move to struct?
 
      // TODO: Are these really required?
      double em     = s->eccentricity + s->dedt * tdelta;
      double inclm  = s->inclination + s->didt * tdelta;
-     double argpm  = s->argument_perigee + s->domdt * tdelta;
+     omega        += s->domdt * tdelta;
      double nodem  = s->right_asc_node + s->dnodt * tdelta;
-     double mm     = s->mean_anomaly + s->dmdt * tdelta;
+     xmp          += s->dmdt * tdelta;
 
      if (tdelta != 0)
      {
@@ -1273,9 +1268,10 @@ void dspace
        printf("theta:  %22.15lf\n", theta);
        printf("em:     %22.15lf\n", em);
        printf("inclm:  %22.15lf\n", inclm);
-       printf("argpm:  %22.15lf\n", argpm);
+       printf("argpm:  %22.15lf\n", omega);
        printf("nodem:  %22.15lf\n", nodem);
-       printf("mm:     %22.15lf\n", mm);
+       printf("dmdt:   %22.15lf\n", s->dmdt);
+       printf("mm:     %22.15lf\n", xmp);
      }
 
 /*

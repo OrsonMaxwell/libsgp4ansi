@@ -1329,6 +1329,7 @@ static void dspace
        printf("inclm:  %22.15lf\n", inclm);
        printf("argpm:  %22.15lf\n", argpm);
        printf("nodem:  %22.15lf\n", nodem);
+       printf("dmdt:   %22.15lf\n", dmdt);
        printf("mm:     %22.15lf\n", mm);
      }
 
