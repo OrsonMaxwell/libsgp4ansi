@@ -1238,51 +1238,43 @@ void dspace
      double delt, ft, theta, x2li, x2omi, xl, xldot , xnddt, xndt, xomi, g22, g32,
           g44, g52, g54, fasx2, fasx4, fasx6, rptim , step2, stepn , stepp;
 */
-     const double fasx2 = 0.13130908;
-     const double fasx4 = 2.8843198;
-     const double fasx6 = 0.37448087;
-     const double g22   = 5.7686396;
-     const double g32   = 0.95240898;
-     const double g44   = 1.8014998;
-     const double g52   = 1.0508330;
-     const double g54   = 4.4108898;
-     const double rptim = 4.37526908801129966e-3;
-     const double stepp =    720.0;
-     const double stepn =   -720.0;
-     const double step2 = 259200.0;
+    const double fasx2 = 0.13130908;
+    const double fasx4 = 2.8843198;
+    const double fasx6 = 0.37448087;
+    const double g22   = 5.7686396;
+    const double g32   = 0.95240898;
+    const double g44   = 1.8014998;
+    const double g52   = 1.0508330;
+    const double g54   = 4.4108898;
+    const double rptim = 4.37526908801129966e-3; // TODO: Move to macros?
+    const double stepp =    720.0;
+    const double stepn =   -720.0;
+    const double step2 = 259200.0;
 
-     // Calculate deep space resonance effects
-     s->dndt       = 0;
-     double theta  = fmod(s->GSTo + tdelta * rptim, TWOPI); // TODO: Move to struct?
+    // Calculate deep space resonance effects
+    s->dndt       = 0;
+    double theta  = fmod(s->GSTo + tdelta * rptim, TWOPI); // TODO: Move to struct?
 
-     // TODO: Are these really required?
-     double em     = s->eccentricity + s->dedt * tdelta;
-     double inclm  = s->inclination + s->didt * tdelta;
-     omega        += s->domdt * tdelta;
-     double nodem  = s->right_asc_node + s->dnodt * tdelta;
-     xmp          += s->dmdt * tdelta;
+    // TODO: Are these really required?
+    double em     = s->eccentricity + s->dedt * tdelta;
+    double inclm  = s->inclination + s->didt * tdelta;
+    omega        += s->domdt * tdelta;
+    xnode        += s->dnodt * tdelta;
+    xmp          += s->dmdt * tdelta;
+//
+//     if (tdelta != 0)
+//     {
+//       printf("tdelta: %22.15lf\n", tdelta);
+//       printf("theta:  %22.15lf\n", theta);
+//       printf("em:     %22.15lf\n", em);
+//       printf("inclm:  %22.15lf\n", inclm);
+//       printf("argpm:  %22.15lf\n", omega);
+//       printf("nodem:  %22.15lf\n", xnode);
+//       printf("dmdt:   %22.15lf\n", s->dmdt);
+//       printf("mm:     %22.15lf\n", xmp);
+//     }
 
-     if (tdelta != 0)
-     {
-       printf("tdelta: %22.15lf\n", tdelta);
-       printf("theta:  %22.15lf\n", theta);
-       printf("em:     %22.15lf\n", em);
-       printf("inclm:  %22.15lf\n", inclm);
-       printf("argpm:  %22.15lf\n", omega);
-       printf("nodem:  %22.15lf\n", nodem);
-       printf("dmdt:   %22.15lf\n", s->dmdt);
-       printf("mm:     %22.15lf\n", xmp);
-     }
 
-/*
-     //   sgp4fix for negative inclinations
-     //   the following if statement should be commented out
-     //  if (*inclm < 0.0)
-     // {
-     //    *inclm = -*inclm;
-     //    *argpm = *argpm - pi;
-     //    *nodem = *nodem + pi;
-     //  }
 
      // - update resonances : numerical (euler-maclaurin) integration -
      // ------------------------- epoch restart ----------------------
@@ -1290,81 +1282,91 @@ void dspace
      //   the following integration works for negative time steps and periods
      //   the specific changes are unknown because the original code was so convoluted
 
-     // sgp4fix take out *atime = 0.0 and fix for faster operation
-     ft    = 0.0;
-     if (irez != 0)
-       {
-         // sgp4fix streamline check
-         if ((*atime == 0.0) || (t * *atime <= 0.0) || (fabs(t) < fabs(*atime)) )
-           {
-             *atime  = 0.0;
-             *xni    = no;
-             *xli    = xlamo;
-           }
-           // sgp4fix move check outside loop
-           if (t > 0.0)
-               delt = stepp;
-             else
-               delt = stepn;
+    double ft = 0; // TODO:Remove?
+    int iretn = 381; // added for do loop TODO: Alternatives?
+    int iret  =   0; // added for loop
+    if ((s->is_12h_resonant == true) || (s->is_24h_resonant == true))
+    {
+      // sgp4fix streamline check
+      if ((s->atime == 0)
+          || (tdelta * s->atime <= 0.0)
+          || (fabs(tdelta) < fabs(s->atime)))
+      {
+        s->atime = 0.0;
+        s->xni   = s->xnodp;
+        s->xli   = s->xlamo;
+      }
 
-         iretn = 381; // added for do loop
-         iret  =   0; // added for loop
-         while (iretn == 381)
-           {
-             // ------------------- dot terms calculated -------------
-             // ----------- near - synchronous resonance terms -------
-             if (irez != 2)
-               {
-                 xndt  = del1 * sin(*xli - fasx2) + del2 * sin(2.0 * (*xli - fasx4)) +
-                         del3 * sin(3.0 * (*xli - fasx6));
-                 xldot = *xni + xfact;
-                 xnddt = del1 * cos(*xli - fasx2) +
-                         2.0 * del2 * cos(2.0 * (*xli - fasx4)) +
-                         3.0 * del3 * cos(3.0 * (*xli - fasx6));
-                 xnddt = xnddt * xldot;
-               }
-               else
-               {
-                 // --------- near - half-day resonance terms
-                 xomi  = argpo + argpdot * *atime;
-                 x2omi = xomi + xomi;
-                 x2li  = *xli + *xli;
-                 xndt  = d2201 * sin(x2omi + *xli - g22) + d2211 * sin(*xli - g22) +
-                       d3210 * sin(xomi + *xli - g32)  + d3222 * sin(-xomi + *xli - g32)+
-                       d4410 * sin(x2omi + x2li - g44)+ d4422 * sin(x2li - g44) +
-                       d5220 * sin(xomi + *xli - g52)  + d5232 * sin(-xomi + *xli - g52)+
-                       d5421 * sin(xomi + x2li - g54) + d5433 * sin(-xomi + x2li - g54);
-                 xldot = *xni + xfact;
-                 xnddt = d2201 * cos(x2omi + *xli - g22) + d2211 * cos(*xli - g22) +
-                       d3210 * cos(xomi + *xli - g32) + d3222 * cos(-xomi + *xli - g32) +
-                       d5220 * cos(xomi + *xli - g52) + d5232 * cos(-xomi + *xli - g52) +
-                       2.0 * (d4410 * cos(x2omi + x2li - g44) +
-                       d4422 * cos(x2li - g44) + d5421 * cos(xomi + x2li - g54) +
-                       d5433 * cos(-xomi + x2li - g54));
-                 xnddt = xnddt * xldot;
-               }
+      double delt; // TODO: Rename
+      if (tdelta > 0.0)
+        delt = stepp;
+      else
+        delt = stepn;
 
-             // ----------------------- integrator
-             // sgp4fix move end checks to end of routine
-             if (fabs(t - *atime) >= stepp)
-               {
-                 iret  = 0;
-                 iretn = 381;
-               }
-               else // exit here
-               {
-                 ft    = t - *atime;
-                 iretn = 0;
-               }
+      if (tdelta != 0)
+      {
+        printf("atime:  %22.15lf\n", s->atime);
+        printf("xni:    %22.15lf\n", s->xni);
+        printf("xli:    %22.15lf\n", s->xli);
+        printf("delt:   %22.15lf\n", delt);
+      }
+    }
+    while (iretn == 381)
+    {/*
+      // ------------------- dot terms calculated -------------
+      // ----------- near - synchronous resonance terms -------
+      if (irez != 2)
+      {
+        xndt  = del1 * sin(*xli - fasx2) + del2 * sin(2.0 * (*xli - fasx4)) +
+            del3 * sin(3.0 * (*xli - fasx6));
+        xldot = *xni + xfact;
+        xnddt = del1 * cos(*xli - fasx2) +
+            2.0 * del2 * cos(2.0 * (*xli - fasx4)) +
+            3.0 * del3 * cos(3.0 * (*xli - fasx6));
+        xnddt = xnddt * xldot;
+      }
+      else
+      {
+        // --------- near - half-day resonance terms
+        xomi  = argpo + argpdot * *atime;
+        x2omi = xomi + xomi;
+        x2li  = *xli + *xli;
+        xndt  = d2201 * sin(x2omi + *xli - g22) + d2211 * sin(*xli - g22) +
+            d3210 * sin(xomi + *xli - g32)  + d3222 * sin(-xomi + *xli - g32)+
+            d4410 * sin(x2omi + x2li - g44)+ d4422 * sin(x2li - g44) +
+            d5220 * sin(xomi + *xli - g52)  + d5232 * sin(-xomi + *xli - g52)+
+            d5421 * sin(xomi + x2li - g54) + d5433 * sin(-xomi + x2li - g54);
+        xldot = *xni + xfact;
+        xnddt = d2201 * cos(x2omi + *xli - g22) + d2211 * cos(*xli - g22) +
+            d3210 * cos(xomi + *xli - g32) + d3222 * cos(-xomi + *xli - g32) +
+            d5220 * cos(xomi + *xli - g52) + d5232 * cos(-xomi + *xli - g52) +
+            2.0 * (d4410 * cos(x2omi + x2li - g44) +
+                d4422 * cos(x2li - g44) + d5421 * cos(xomi + x2li - g54) +
+                d5433 * cos(-xomi + x2li - g54));
+        xnddt = xnddt * xldot;
+      }
 
-             if (iretn == 381)
-               {
-                 *xli   = *xli + xldot * delt + xndt * step2;
-                 *xni   = *xni + xndt * delt + xnddt * step2;
-                 *atime = *atime + delt;
-               }
-           }  // while iretn = 381
+      // ----------------------- integrator
+      // sgp4fix move end checks to end of routine
+      if (fabs(t - *atime) >= stepp)
+      {
+        iret  = 0;
+        iretn = 381;
+      }
+      else // exit here
+      {
+        ft    = t - *atime;
+        iretn = 0;
+      }
 
+      if (iretn == 381)
+      {
+        *xli   = *xli + xldot * delt + xndt * step2;
+        *xni   = *xni + xndt * delt + xnddt * step2;
+        *atime = *atime + delt;
+      }
+    }
+/*
          *nm = *xni + xndt * ft + xnddt * ft * ft * 0.5;
          xl = *xli + xldot * ft + xndt * ft * ft * 0.5;
          if (irez != 1)
@@ -1377,9 +1379,8 @@ void dspace
              *mm   = xl - *nodem - *argpm + theta;
              *dndt = *nm - no;
            }
-         *nm = no + *dndt;
+         *nm = no + *dndt;*/
        }
-    */
   }
 /*
   if (nm <= 0.0)

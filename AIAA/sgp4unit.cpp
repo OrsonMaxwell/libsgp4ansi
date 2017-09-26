@@ -1365,6 +1365,14 @@ static void dspace
              else
                delt = stepn;
 
+           if (tc != 0)
+           {
+             printf("atime:  %22.15lf\n", atime);
+             printf("xni:    %22.15lf\n", xni);
+             printf("xli:    %22.15lf\n", xli);
+             printf("delt:   %22.15lf\n", delt);
+           }
+
          iretn = 381; // added for do loop
          iret  =   0; // added for loop
          while (iretn == 381)
