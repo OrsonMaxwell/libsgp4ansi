@@ -1,7 +1,6 @@
 GCC = gcc
 GPP = g++
 OBJ_LIB = libsgp4ansi.o epoch.o coord.o vector.o
-OBJ_REF_TEST = $(addprefix AIAA/, sgp4ext.o sgp4io.o sgp4unit.o testcpp.o )
 OUTPUTDIR=Plot
 LIBFLAGS = -fPIC -DUSE_WGS72
 CCFLAGS = -std=c11 -lm
@@ -11,13 +10,13 @@ DEBUGFLAGS = -g3
 DEBUG = 0
 
 ifeq ($(OS),Windows_NT)
-	LIB_NAME = ($addprefix ${OUTPUTDIR}/, libsgp4ansi.dll)
-	TEST_NAME = ($addprefix ${OUTPUTDIR}/, ansi.exe)
-	REF_TEST_NAME = ($addprefix ${OUTPUTDIR}/, aiaa.exe)
+	LIB_NAME = libsgp4ansi.dll
+	TEST_NAME = ansi.exe
+	REF_TEST_NAME = aiaa.exe
 else
-	LIB_NAME = $(addprefix ${OUTPUTDIR}/, libsgp4ansi.so)
-	TEST_NAME = $(addprefix ${OUTPUTDIR}/, ansi)
-	REF_TEST_NAME = $(addprefix ${OUTPUTDIR}/, aiaa)
+	LIB_NAME = libsgp4ansi.so
+	TEST_NAME = ansi
+	REF_TEST_NAME = aiaa
 endif
 
 ifeq ($(DEBUG), 1)
@@ -28,22 +27,34 @@ else
 	CXXFLAGS += ${RELEASEFLAGS}
 endif
 
-all: ${LIB_NAME} ${TEST_NAME} ${REF_TEST_NAME}
+all: test ref_test
 
-${LIB_NAME}: ${OBJ_LIB}
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared ${OBJ_LIB} -o ${LIB_NAME}
-
-${REF_TEST_NAME}: ${OBJ_REF_TEST}
-	${GPP} ${CXXFLAGS} ${OBJ_REF_TEST} -o ${REF_TEST_NAME}
+test: library ${TEST_NAME}
+	cp ${TEST_NAME} ${OUTPUTDIR}/${TEST_NAME}
 
 ${TEST_NAME}:
-	${GCC} ${CCFLAGS} -L${OUTPUTDIR}/ -lsgp4ansi test.c -o $@
+	${GCC} ${CCFLAGS} -L. -l sgp4ansi test.c -o ${TEST_NAME}
 
-${OBJ_REF_TEST}: %.o: %.cpp
-	${GPP} ${CXXFLAGS} -c $< -o $@
+ref_test:
+	${MAKE} -C AIAA DEBUG=${DEBUG} all
 
-${OBJ_LIB}: %.o: %.c
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -c $< -o $@
+library: ${LIB_NAME}
+	cp ${LIB_NAME} ${OUTPUTDIR}/${LIB_NAME}
+
+${LIB_NAME}: libsgp4ansi.o epoch.o coord.o vector.o
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared libsgp4ansi.o epoch.o coord.o vector.o -o ${LIB_NAME}
+
+libsgp4ansi.o:
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -c libsgp4ansi.c
+
+epoch.o:
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -c epoch.c
+
+coord.o:
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -c coord.c
+
+vector.o:
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -c vector.c
 
 lib_clean:
 	rm -f libsgp4ansi.o
@@ -51,13 +62,15 @@ lib_clean:
 	rm -f coord.o
 	rm -f vector.o
 	rm -f ${LIB_NAME}
+	rm -f ${OUTPUTDIR}/${LIB_NAME}
 
 ref_test_clean:
-	rm -f ${REF_TEST_NAME}
-	rm -f AIAA/*.o
+	rm -f ${OUTPUTDIR}/${REF_TEST_NAME}
+	${MAKE} -C AIAA clean
 
 test_clean:
 	rm -f ${TEST_NAME}
+	rm -f ${OUTPUTDIR}/${TEST_NAME}
 
 test_data_clean:
 	rm -f ${OUTPUTDIR}/*.out
