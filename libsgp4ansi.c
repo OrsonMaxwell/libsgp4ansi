@@ -403,6 +403,7 @@ sat_init(sat* s)
   if (s->period >= 225)
   {
     s->is_deep_space      = true;
+    s->use_simple_model   = true;
   }
   else
   {
@@ -731,46 +732,6 @@ sat_init(sat* s)
 //
 //    printf("------------------------------\n");
     // dpper(s, 0, true); TODO: Investigate further
-
-
-    /*dsinit
-    (
-        whichconst,
-        cosim, emsq, satrec.argpo, s1, s2, s3, s4, s5, sinim, ss1, ss2, ss3, ss4,
-        ss5, sz1, sz3, sz11, sz13, sz21, sz23, sz31, sz33, satrec.t, tc,
-        satrec.gsto, satrec.mo, satrec.mdot, satrec.no, satrec.nodeo,
-        satrec.nodedot, xpidot, z1, z3, z11, z13, z21, z23, z31, z33,
-        satrec.ecco, eccsq, em, argpm, inclm, mm, nm, nodem,
-        satrec.irez,  satrec.atime,
-        satrec.d2201, satrec.d2211, satrec.d3210, satrec.d3222 ,
-        satrec.d4410, satrec.d4422, satrec.d5220, satrec.d5232,
-        satrec.d5421, satrec.d5433, satrec.dedt,  satrec.didt,
-        satrec.dmdt,  dndt,         satrec.dnodt, satrec.domdt ,
-        satrec.del1,  satrec.del2,  satrec.del3,  satrec.xfact,
-        satrec.xlamo, satrec.xli,   satrec.xni, opsmode
-    );*/
-
-    /*void dsinit
-         (
-           int whichconst,
-           double cosim,  double emsq,   double argpo,   double s1,     double s2,
-           double s3,     double s4,     double s5,      double sinim,  double ss1,
-           double ss2,    double ss3,    double ss4,     double ss5,    double sz1,
-           double sz3,    double sz11,   double sz13,    double sz21,   double sz23,
-           double sz31,   double sz33,   double t,       double tc,     double gsto,
-           double mo,     double mdot,   double no,      double nodeo,  double nodedot,
-           double xpidot, double z1,     double z3,      double z11,    double z13,
-           double z21,    double z23,    double z31,     double z33,    double ecco,
-           double eccsq,  double* em,    double* argpm,  double* inclm, double* mm,
-           double* nm,    double* nodem,
-           int* irez,
-           double* atime, double* d2201, double* d2211,  double* d3210, double* d3222,
-           double* d4410, double* d4422, double* d5220,  double* d5232, double* d5421,
-           double* d5433, double* dedt,  double* didt,   double* dmdt,  double* dndt,
-           double* dnodt, double* domdt, double* del1,   double* del2,  double* del3,
-           double* xfact, double* xlamo, double* xli,    double* xni
-         )*/
-
 
     const double q22    = 1.7891679e-6;  // TODO: Move to macros?
     const double q31    = 2.1460748e-6;
@@ -1219,12 +1180,12 @@ sat_propagate
     s->dndt       = 0;
     double theta  = fmod(s->GSTo + tdelta * rptim, TWOPI); // TODO: Move to struct?
 
-    // TODO: Are these really required?
-    double em     = s->eccentricity + s->dedt * tdelta;
-    double inclm  = s->inclination + s->didt * tdelta;
-    omega        += s->domdt * tdelta;
-    xnode        += s->dnodt * tdelta;
-    xmp          += s->dmdt * tdelta;
+    // Perturbed quantities
+    em += s->dedt * tdelta;
+    inclm += s->didt  * tdelta;
+    omega += s->domdt * tdelta;
+    xnode += s->dnodt * tdelta;
+    xmp   += s->dmdt  * tdelta;
     //
     //     if (tdelta != 0)
     //     {
@@ -1240,12 +1201,7 @@ sat_propagate
 
 
 
-    // - update resonances : numerical (euler-maclaurin) integration -
-    // ------------------------- epoch restart ----------------------
-    //   sgp4fix for propagator problems
-    //   the following integration works for negative time steps and periods
-    //   the specific changes are unknown because the original code was so convoluted
-
+    // Euler-Maclaurin numerical integration
     double ft = 0; // TODO:Remove?
     double delt; // TODO: Rename
     if ((s->is_12h_resonant == true) || (s->is_24h_resonant == true))
@@ -1358,6 +1314,7 @@ sat_propagate
       }
       nm = s->xnodp + s->dndt;
     }
+
 //    printf("nm:     %+.15e\n", nm);
 //    printf("xmp:    %+.15e\n", xmp);
 //    printf("dndt:   %+.15e\n", s->dndt);
@@ -1367,14 +1324,17 @@ sat_propagate
   {
     return -2;
   }
-  printf("-------------------------------\n");
+
   double am = pow((XKE / nm), TWOTHIRD) * pow(tempa, 2); // TODO: Unroll
   nm = XKE / pow(am, 1.5);
-  printf("em:     %+.15e\n", em);
   em = em - tempe;
-  printf("em:     %+.15e\n", em);
 
-  if ((em >= 1) || (em < -1.0e-12)) // TODO: check tolerance
+//  printf("-------------------------------\n");
+//  printf("am:     %+.15e\n", am);
+//  printf("nm:     %+.15e\n", nm);
+//  printf("em:     %+.15e\n", em);
+
+  if ((em >= 1) || (em < -1.0e-12))
   {
     return -3;
   }
@@ -1384,63 +1344,49 @@ sat_propagate
   {
     em  = 1.0e-12;
   }
-/*
-  mm     = mm + s->no * templ;
-  xlm    = mm + argpm + nodem;
-  emsq   = em * em;
-  temp   = 1.0 - emsq;
 
-  nodem  = fmod(nodem, twopi);
-  argpm  = fmod(argpm, twopi);
-  xlm    = fmod(xlm, twopi);
-  mm     = fmod(xlm - argpm - nodem, twopi);
-/*
-  // ----------------- compute extra mean quantities -------------
-  sinim = sin(inclm);
-  cosim = cos(inclm);
+         xmp += s->xnodp * templ;
+  double xlm  = xmp + omega + xnode;
+  double em2  = pow(em, 2); // TODO: Unroll?
+  //double temp = 1 - em2; // TODO: Remove?
 
-  // -------------------- add lunar-solar periodics --------------
-  ep     = em;
-  xincp  = inclm;
-  argpp  = argpm;
-  nodep  = nodem;
-  mp     = mm;
-  sinip  = sinim;
-  cosip  = cosim;
+  xnode  = fmod(xnode, TWOPI);
+  omega  = fmod(omega, TWOPI);
+  xlm    = fmod(xlm, TWOPI);
+  xmp     = fmod(xlm - omega - xnode, TWOPI);
 
-  /*
-  if (s->method == 'd')
+  // Add lunar-solar periodics
+  if (s->is_deep_space == true)
   {
-    dpper
-    (
-        s->e3,   s->ee2,  s->peo,
-        s->pgho, s->pho,  s->pinco,
-        s->plo,  s->se2,  s->se3,
-        s->sgh2, s->sgh3, s->sgh4,
-        s->sh2,  s->sh3,  s->si2,
-        s->si3,  s->sl2,  s->sl3,
-        s->sl4,  tdelta,    s->xgh2,
-        s->xgh3, s->xgh4, s->xh2,
-        s->xh3,  s->xi2,  s->xi3,
-        s->xl2,  s->xl3,  s->xl4,
-        s->zmol, s->zmos, s->inclo,
-        'n', ep, xincp, nodep, argpp, mp, s->operationmode
-    );
-    if (xincp < 0.0)
-    {
-      xincp  = -xincp;
-      nodep = nodep + pi;
-      argpp  = argpp - pi;
-    }
-    if ((ep < 0.0 ) || ( ep > 1.0))
-    {
-      //           // printf("# error ep %f\n", ep);
-      s->error = 3;
-      // sgp4fix add return
-      return false;
-    }
-  } // if method = d
+    dpper(s, tdelta);
 
+    printf("-------------------------------\n");
+    printf("xmp:    %+.15e\n", xmp);
+    printf("xlm:    %+.15e\n", xlm);
+    printf("em2:    %+.15e\n", em2);
+    printf("xnode:  %+.15e\n", xnode);
+    printf("omega:  %+.15e\n", omega);
+    printf("incl_lp:%+.15e\n", s->inclination_lp);
+    printf("node_lp:%+.15e\n", s->right_asc_node_lp);
+    printf("argplp: %+.15e\n", s->argument_perigee_lp);
+    printf("ecc_lp: %+.15e\n", s->eccentricity_lp);
+    printf("mo_lp:  %+.15e\n", s->mean_anomaly_lp);
+
+    if (s->inclination_lp < 0)
+    {
+      s->inclination_lp      *= -1;
+      s->right_asc_node_lp   += PI;
+      s->argument_perigee_lp -= PI;
+    }
+
+    if ((s->eccentricity_lp < 0)
+     || (s->eccentricity_lp > 1))
+    {
+      return -3;
+    }
+  }
+
+/*
   // -------------------- long period periodics ------------------
   if (s->method == 'd')
   {

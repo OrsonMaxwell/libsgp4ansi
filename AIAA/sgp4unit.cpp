@@ -2193,16 +2193,15 @@ bool sgp4
     // sgp4fix add return
     return false;
   }
-  printf("-------------------------------\n");
-//  printf("tempa:  %+.15e\n", tempa);
+
   am = pow((xke / nm),x2o3) * tempa * tempa;
-//  printf("nm:     %+.15e\n", nm);
   nm = xke / pow(am, 1.5);
-  printf("em:     %+.15e\n", em);
   em = em - tempe;
+
+//  printf("-------------------------------\n");
 //  printf("am:     %+.15e\n", am);
 //  printf("nm:     %+.15e\n", nm);
-  printf("em:     %+.15e\n", em);
+//  printf("em:     %+.15e\n", em);
 
   // fix tolerance for error recognition
   // sgp4fix am is fixed from the previous nm check
@@ -2227,8 +2226,8 @@ bool sgp4
   mm     = fmod(xlm - argpm - nodem, twopi);
 
   /* ----------------- compute extra mean quantities ------------- */
-  sinim = sin(inclm);
   cosim = cos(inclm);
+  sinim = sin(inclm);
 
   /* -------------------- add lunar-solar periodics -------------- */
   ep     = em;
@@ -2238,6 +2237,7 @@ bool sgp4
   mp     = mm;
   sinip  = sinim;
   cosip  = cosim;
+
   if (satrec.method == 'd')
   {
     dpper
@@ -2255,6 +2255,19 @@ bool sgp4
         satrec.zmol, satrec.zmos, satrec.inclo,
         'n', ep, xincp, nodep, argpp, mp, satrec.operationmode
     );
+
+    printf("-------------------------------\n");
+    printf("xmp:    %+.15e\n", mm);
+    printf("xlm:    %+.15e\n", xlm);
+    printf("em2:    %+.15e\n", emsq);
+    printf("xnode:  %+.15e\n", nodem);
+    printf("omega:  %+.15e\n", argpm);
+    printf("incl_lp:%+.15e\n", xincp);
+    printf("node_lp:%+.15e\n", nodep);
+    printf("argplp: %+.15e\n", argpp);
+    printf("ecc_lp: %+.15e\n", ep);
+    printf("mo_lp:  %+.15e\n", mp);
+
     if (xincp < 0.0)
     {
       xincp  = -xincp;
