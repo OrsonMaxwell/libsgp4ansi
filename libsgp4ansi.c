@@ -444,9 +444,9 @@ sat_init(sat* s)
                  * (s->aodp * (1 + 1.5 * eta2 + eeta * (4 + eta2))
                  + 0.375 * J2 * tsi / psi2 * x3thm1
                  * (8 + 3 * eta2 * (8 + eta2)));
-  double C1      = s->Bstar * C2;
+      s->C1      = s->Bstar * C2;
   double x1mth2  = 1 - theta2;
-  double C4      = 2 * s->xnodp * coef1 * s->aodp * betao2
+      s->C4      = 2 * s->xnodp * coef1 * s->aodp * betao2
                  * (s->eta * (2 + 0.5 * eta2) + s->eccentricity
                  * (0.5 + 2 * eta2) - J2 * tsi / (s->aodp * psi2)
                  * (-3 * x3thm1 * (1 - 2 * eeta + eta2
@@ -466,8 +466,8 @@ sat_init(sat* s)
   double xhdot1  = -temp1 * cosio;
       s->xnodot  = xhdot1 + (0.5 * temp2 * (4 - 19 * theta2)
                  + 2 * temp3 * (3 - 7 * theta2)) * cosio;
-      s->xnodcf  = 3.5 * betao * xhdot1 * C1;
-  double t2cof   = 1.5 * C1; // TODO: Remove?
+      s->xnodcf  = 3.5 * betao * xhdot1 * s->C1;
+      s->t2cof   = 1.5 * s->C1; // TODO: Remove?
   // Division by zero check then inclination = 180 deg
   double xlcof = 0.125 * A3OVK2 * sinio * (3.0 + 5.0 * cosio)
             / ((fabs(cosio+1.0) > 1.5e-12)?((1.0 + cosio)):(1.5e-12));
@@ -1108,14 +1108,15 @@ sat_init(sat* s)
 
   if (s->use_simple_model == false)
   {
-    double C12   = pow(C1, 2);
+    double C12   = pow(s->C1, 2);
         s->D2    = 4 * s->aodp * tsi * C12;
-    double temp  = s->D2 * tsi * C1 / 3;
+    double temp  = s->D2 * tsi * s->C1 / 3;
         s->D3    = (17 * s->aodp + sfour) * temp;
-        s->D4    = 0.5 * temp * s->aodp * tsi * (221 * s->aodp + 31 * sfour) * C1;
+        s->D4    = 0.5 * temp * s->aodp * tsi
+                 * (221 * s->aodp + 31 * sfour) * s->C1;
         s->t3cof = s->D2 + 2 * C12;
-        s->t4cof = 0.25 * (3 * s->D3 + C1 * (12 * s->D2 + 10 * C12));
-        s->t5cof = 0.2  * (3 * s->D4 + 12 * C1 * s->D3 + 6 * pow(s->D2, 2)
+        s->t4cof = 0.25 * (3 * s->D3 + s->C1 * (12 * s->D2 + 10 * C12));
+        s->t5cof = 0.2  * (3 * s->D4 + 12 * s->C1 * s->D3 + 6 * pow(s->D2, 2)
                  + 15 * C12 * (2 * s->D2 + C12));
   }
 
@@ -1164,9 +1165,17 @@ sat_propagate
   double xnoddf   = s->right_asc_node + s->xnodot * tdelta;
   double t2       = pow(tdelta, 2);
   double xnode    = xnoddf + s->xnodcf * t2;
-  double tempa    = 1.0 - s->C1 * tdelta;
+  double tempa    = 1 - s->C1 * tdelta;
   double tempe    = s->Bstar * s->C4 * tdelta;
   double templ    = s->t2cof * t2;
+
+//  printf("C1:     %+.15e\n", s->C1);
+//  printf("tdelta: %+.15e\n", tdelta);
+//  printf("tempa:  %+.15e\n", tempa);
+//  printf("Bstar:  %+.15e\n", s->Bstar);
+//  printf("C4:     %+.15e\n", s->C4);
+//  printf("tempe:  %+.15e\n", tempe);
+//  printf("templ:  %+.15e\n", templ);
 
   double omega    = omgadf;
   double xmp      = xmdf;
@@ -1353,27 +1362,29 @@ sat_propagate
 //    printf("xmp:    %+.15e\n", xmp);
 //    printf("dndt:   %+.15e\n", s->dndt);
   }
-/*
-  if (nm <= 0.0)
+
+  if (nm <= 0)
   {
     return -2;
   }
-
-  am = pow((xke / nm),x2o3) * tempa * tempa;
-  nm = xke / pow(am, 1.5);
+  printf("-------------------------------\n");
+  double am = pow((XKE / nm), TWOTHIRD) * pow(tempa, 2); // TODO: Unroll
+  nm = XKE / pow(am, 1.5);
+  printf("em:     %+.15e\n", em);
   em = em - tempe;
+  printf("em:     %+.15e\n", em);
 
-  if ((em >= 1.0) || (em < -1.0e-6)) // TODO: check tolerance
+  if ((em >= 1) || (em < -1.0e-12)) // TODO: check tolerance
   {
     return -3;
   }
 
   // Avoid division by zero
-  if ((em < 1.0e-12) && (s->operationmode != 'a'))
+  if (em < 1.0e-12) // TODO: Move tolerance to a constant?
   {
-    em  = 1.0e-6;
+    em  = 1.0e-12;
   }
-
+/*
   mm     = mm + s->no * templ;
   xlm    = mm + argpm + nodem;
   emsq   = em * em;
@@ -1383,7 +1394,7 @@ sat_propagate
   argpm  = fmod(argpm, twopi);
   xlm    = fmod(xlm, twopi);
   mm     = fmod(xlm - argpm - nodem, twopi);
-
+/*
   // ----------------- compute extra mean quantities -------------
   sinim = sin(inclm);
   cosim = cos(inclm);

@@ -2128,6 +2128,14 @@ bool sgp4
   tempe   = satrec.bstar * satrec.cc4 * satrec.t;
   templ   = satrec.t2cof * t2;
 
+//  printf("C1:     %+.15e\n", satrec.cc1);
+//  printf("tdelta: %+.15e\n", satrec.t);
+//  printf("tempa:  %+.15e\n", tempa);
+//  printf("Bstar:  %+.15e\n", satrec.bstar);
+//  printf("C4:     %+.15e\n", satrec.cc4);
+//  printf("tempe:  %+.15e\n", tempe);
+//  printf("templ:  %+.15e\n", templ);
+
   if (satrec.isimp != 1)
   {
     delomg = satrec.omgcof * satrec.t;
@@ -2185,9 +2193,16 @@ bool sgp4
     // sgp4fix add return
     return false;
   }
+  printf("-------------------------------\n");
+//  printf("tempa:  %+.15e\n", tempa);
   am = pow((xke / nm),x2o3) * tempa * tempa;
+//  printf("nm:     %+.15e\n", nm);
   nm = xke / pow(am, 1.5);
+  printf("em:     %+.15e\n", em);
   em = em - tempe;
+//  printf("am:     %+.15e\n", am);
+//  printf("nm:     %+.15e\n", nm);
+  printf("em:     %+.15e\n", em);
 
   // fix tolerance for error recognition
   // sgp4fix am is fixed from the previous nm check
