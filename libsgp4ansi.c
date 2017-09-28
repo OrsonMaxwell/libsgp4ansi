@@ -1132,6 +1132,7 @@ sat_propagate
 
   printf("----------------------------------------\n");
   printf("xmdf   %+.15e\n", xmdf);
+  printf("xmp    %+.15e\n", xmp);
   printf("omgadf %+.15e\n", omgadf);
   printf("xnoddf %+.15e\n", xnoddf);
   printf("t2     %+.15e\n", t2);
@@ -1333,15 +1334,32 @@ sat_propagate
   xnode  = fmod(xnode, TWOPI);
   omega  = fmod(omega, TWOPI);
   xlm    = fmod(xlm, TWOPI);
-  xmp     = fmod(xlm - omega - xnode, TWOPI);
+  xmp    = fmod(xlm - omega - xnode, TWOPI);
 
   s->inclination_lp      = s->inclination;
   s->eccentricity_lp     = s->eccentricity;
   s->right_asc_node_lp   = s->xnodp;
   s->argument_perigee_lp = s->argument_perigee;
-  s->mean_anomaly_lp     = s->mean_anomaly;
+  s->mean_anomaly_lp     = xmp;
   double sinip = sin(s->inclination_lp);
   double cosip = cos(s->inclination_lp);
+
+  printf("----------------------------------------\n");
+  printf("am     %+.15e\n", am);
+  printf("nm     %+.15e\n", nm);
+  printf("em     %+.15e\n", em);
+  printf("xlm    %+.15e\n", xlm);
+  printf("em2    %+.15e\n", em2);
+  printf("em     %+.15e\n", em);
+  printf("xnode  %+.15e\n", xnode);
+  printf("omega  %+.15e\n", omega);
+  printf("inclp  %+.15e\n", s->inclination_lp);
+  printf("ep     %+.15e\n", s->eccentricity_lp);
+  printf("nodep  %+.15e\n", s->right_asc_node_lp);
+  printf("argpp  %+.15e\n", s->argument_perigee_lp);
+  printf("mp     %+.15e\n", s->mean_anomaly_lp);
+  printf("sinip  %+.15e\n", sinip);
+  printf("cosip  %+.15e\n", cosip);
 
   // Add lunar-solar periodics
   if (s->is_deep_space == true)

@@ -2100,10 +2100,10 @@ bool sgp4
 
   printf("----------------------------------------\n");
   printf("xmdf   %+.15e\n", xmdf);
+  printf("xmp    %+.15e\n", mm);
   printf("omgadf %+.15e\n", argpdf);
   printf("xnoddf %+.15e\n", nodedf);
   printf("t2     %+.15e\n", t2);
-  printf("xnode  %+.15e\n", xnode);
   printf("tempa  %+.15e\n", tempa);
   printf("tempe  %+.15e\n", tempe);
   printf("templ  %+.15e\n", templ);
@@ -2183,6 +2183,23 @@ bool sgp4
   mp     = mm;
   sinip  = sinim;
   cosip  = cosim;
+
+  printf("----------------------------------------\n");
+  printf("am     %+.15e\n", am);
+  printf("nm     %+.15e\n", nm);
+  printf("em     %+.15e\n", em);
+  printf("xlm    %+.15e\n", xlm);
+  printf("em2    %+.15e\n", emsq);
+  printf("em     %+.15e\n", em);
+  printf("xnode  %+.15e\n", xnode);
+  printf("omega  %+.15e\n", argpm);
+  printf("inclp  %+.15e\n", xincp);
+  printf("ep     %+.15e\n", ep);
+  printf("nodep  %+.15e\n", nodep);
+  printf("argpp  %+.15e\n", argpp);
+  printf("mp     %+.15e\n", mp);
+  printf("sinip  %+.15e\n", sinip);
+  printf("cosip  %+.15e\n", cosip);
 
   //if (satrec.method == 'd') // TODO: Debug dpper
   if (false)
