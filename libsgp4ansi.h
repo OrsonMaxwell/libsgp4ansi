@@ -73,7 +73,8 @@ typedef struct _sat
   double perigee_alt;             // Altitude of perigee from surface, km
   double period;                  // Orbital period
   // Common constants
-  double C1, C4, eta, omgdot, t2cof, xnodcf, xnodot, xmdot;
+  double aycof, C1, C4, eta, omgdot, t2cof, x1mth2, x1m5th2, x1m7th2, x7thm1,
+         xlcof, xnodcf, xnodot, xmdot;
   // Near space constants
   double C5, D2, D3, D4, delmo, omgcof, sinmo, t3cof, t4cof, t5cof, xmcof;
   // Deep space solar terms

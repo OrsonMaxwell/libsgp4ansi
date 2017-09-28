@@ -54,134 +54,54 @@
 const char help = 'n';
 FILE *dbgfile;
 
-void print_orbit(elsetrec& sat, char* caption)
+void sat_print(elsetrec s, char* caption)
 {
-  FILE *f = fopen("orbit.txt", "a");
-  fprintf(f, "===== %s =====\n", caption);
-  fprintf(f, "----- TLE portion -----\n");
-  fprintf(f, "number:\t\t%d\n", 0);
-  fprintf(f, "nprimediv2:\t%32.25lf\n", .0);
-  fprintf(f, "ndprimediv6:\t%32.25lf\n", .0);
-  fprintf(f, "Bstar:\t\t%32.25lf\n", .0);
-  fprintf(f, "i:\t\t%32.25lf\n", .0);
-  fprintf(f, "alpha:\t\t%32.25lf\n", .0);
-  fprintf(f, "e:\t\t%32.25lf\n", .0);
-  fprintf(f, "omega:\t\t%32.25lf\n", .0);
-  fprintf(f, "Mo:\t\t%32.25lf\n", .0);
-  fprintf(f, "no:\t\t%32.25lf\n", sat.no);
-  fprintf(f, "----- Time -----\n");
-  fprintf(f, "epoch:\t\t%s.%lf\n", "", .0);
-  fprintf(f, "julepoch:\t%32.25lf\n", .0);
-  fprintf(f, "GSTo:\t\t%32.25lf\n", .0);
-  fprintf(f, "----- Flags -----\n");
-  fprintf(f, "Deepsp:\t\t%d\n", 0);
-  fprintf(f, "Loworb:\t\t%d\n", 0);
-  fprintf(f, "----- Standard terms -----\n");
-  fprintf(f, "a:\t\t%32.25lf\n", sat.a);
-  fprintf(f, "altapoR:\t\t%32.25lf\n", .0);
-  fprintf(f, "altperR:\t\t%32.25lf\n", .0);
-  fprintf(f, "aycof:\t\t%32.25lf\n", sat.aycof);
-  fprintf(f, "C1:\t\t%32.25lf\n", .0);
-  fprintf(f, "C4:\t\t%32.25lf\n", .0);
-  fprintf(f, "C5:\t\t%32.25lf\n", .0);
-  fprintf(f, "con41:\t\t%32.25lf\n", sat.con41);
-  fprintf(f, "d2:\t\t%32.25lf\n", sat.d2);
-  fprintf(f, "d3:\t\t%32.25lf\n", sat.d3);
-  fprintf(f, "d4:\t\t%32.25lf\n", sat.d4);
-  fprintf(f, "delMo:\t\t%32.25lf\n", .0);
-  fprintf(f, "eta:\t\t%32.25lf\n", sat.eta);
-  fprintf(f, "mdot:\t\t%32.25lf\n", sat.mdot);
-  fprintf(f, "nodecf:\t\t%32.25lf\n", sat.nodecf);
-  fprintf(f, "nodedot:\t%32.25lf\n", sat.nodedot);
-  fprintf(f, "omegaprime:\t%32.25lf\n", .0);
-  fprintf(f, "omgcof:\t\t%32.25lf\n", sat.omgcof);
-  fprintf(f, "sinMo:\t\t%32.25lf\n", .0);
-  fprintf(f, "t2cof:\t\t%32.25lf\n", sat.t2cof);
-  fprintf(f, "t3cof:\t\t%32.25lf\n", sat.t3cof);
-  fprintf(f, "t4cof:\t\t%32.25lf\n", sat.t4cof);
-  fprintf(f, "t5cof:\t\t%32.25lf\n", sat.t5cof);
-  fprintf(f, "x1mth2:\t\t%32.25lf\n", sat.x1mth2);
-  fprintf(f, "x7thm1:\t\t%32.25lf\n", sat.x7thm1);
-  fprintf(f, "xlcof:\t\t%32.25lf\n", sat.xlcof);
-  fprintf(f, "xmcof:\t\t%32.25lf\n", sat.xmcof);
-  fprintf(f, "----- Deepspace terms -----\n");
-  fprintf(f, "e3:\t\t%32.25lf\n", sat.e3);
-  fprintf(f, "ee2:\t\t%32.25lf\n", sat.ee2);
-  fprintf(f, "peo:\t\t%32.25lf\n", sat.peo);
-  fprintf(f, "pgho:\t\t%32.25lf\n", sat.pgho);
-  fprintf(f, "pho:\t\t%32.25lf\n", sat.pho);
-  fprintf(f, "pinco:\t\t%32.25lf\n", sat.pinco);
-  fprintf(f, "plo:\t\t%32.25lf\n", sat.plo);
-  fprintf(f, "se2:\t\t%32.25lf\n", sat.se2);
-  fprintf(f, "se3:\t\t%32.25lf\n", sat.se3);
-  fprintf(f, "sgh2:\t\t%32.25lf\n", sat.sgh2);
-  fprintf(f, "sgh3:\t\t%32.25lf\n", sat.sgh3);
-  fprintf(f, "sgh4:\t\t%32.25lf\n", sat.sgh4);
-  fprintf(f, "sh2:\t\t%32.25lf\n", sat.sh2);
-  fprintf(f, "sh3:\t\t%32.25lf\n", sat.sh3);
-  fprintf(f, "si2:\t\t%32.25lf\n", sat.si2);
-  fprintf(f, "si3:\t\t%32.25lf\n", sat.si3);
-  fprintf(f, "sl2:\t\t%32.25lf\n", sat.sl2);
-  fprintf(f, "sl3:\t\t%32.25lf\n", sat.sl3);
-  fprintf(f, "sl4:\t\t%32.25lf\n", sat.sl4);
-  fprintf(f, "xgh2:\t\t%32.25lf\n", sat.xgh2);
-  fprintf(f, "xgh3:\t\t%32.25lf\n", sat.xgh3);
-  fprintf(f, "xgh4:\t\t%32.25lf\n", sat.xgh4);
-  fprintf(f, "xh2:\t\t%32.25lf\n", sat.xh2);
-  fprintf(f, "xh3:\t\t%32.25lf\n", sat.xh3);
-  fprintf(f, "xi2:\t\t%32.25lf\n", sat.xi2);
-  fprintf(f, "xi3:\t\t%32.25lf\n", sat.xi3);
-  fprintf(f, "xl2:\t\t%32.25lf\n", sat.xl2);
-  fprintf(f, "xl3:\t\t%32.25lf\n", sat.xl3);
-  fprintf(f, "xl4:\t\t%32.25lf\n", sat.xl4);
-  fprintf(f, "zmol:\t\t%32.25lf\n", sat.zmol);
-  fprintf(f, "zmos:\t\t%32.25lf\n", sat.zmos);
-  fprintf(f, "----- Resonant terms -----\n");
-  fprintf(f, "d2201:\t\t%32.25lf\n", sat.d2201);
-  fprintf(f, "d2211:\t\t%32.25lf\n", sat.d2211);
-  fprintf(f, "d3210:\t\t%32.25lf\n", sat.d3210);
-  fprintf(f, "d3222:\t\t%32.25lf\n", sat.d3222);
-  fprintf(f, "d4410:\t\t%32.25lf\n", sat.d4410);
-  fprintf(f, "d4422:\t\t%32.25lf\n", sat.d4422);
-  fprintf(f, "d5220:\t\t%32.25lf\n", sat.d5220);
-  fprintf(f, "d5232:\t\t%32.25lf\n", sat.d5232);
-  fprintf(f, "d5421:\t\t%32.25lf\n", sat.d5421);
-  fprintf(f, "d5433:\t\t%32.25lf\n", sat.d5433);
-  fprintf(f, "dedt:\t\t%32.25lf\n", sat.dedt);
-  fprintf(f, "didt:\t\t%32.25lf\n", sat.didt);
-  fprintf(f, "dmdt:\t\t%32.25lf\n", sat.dmdt);
-  fprintf(f, "dnodt:\t\t%32.25lf\n", sat.dnodt);
-  fprintf(f, "domdt:\t\t%32.25lf\n", sat.domdt);
-  fprintf(f, "del1:\t\t%32.25lf\n", sat.del1);
-  fprintf(f, "del2:\t\t%32.25lf\n", sat.del2);
-  fprintf(f, "del3:\t\t%32.25lf\n", sat.del3);
-  fprintf(f, "xfact:\t\t%32.25lf\n", sat.xfact);
-  fprintf(f, "xlamo:\t\t%32.25lf\n", sat.xlamo);
-  fprintf(f, "xli:\t\t%32.25lf\n", sat.xli);
-  fprintf(f, "xni:\t\t%32.25lf\n", sat.xni);
-  fprintf(f, "----- Legacy -----\n");
-  fprintf(f, "isimp:\t\t%d\n", sat.isimp);
-  fprintf(f, "error:\t\t%d\n", sat.error);
-  fprintf(f, "method:\t\t%c\n", sat.method);
-  fprintf(f, "operationmode:\t\t%c\n", sat.operationmode);
-  fprintf(f, "cc1:\t\t%32.25lf\n", sat.cc1);
-  fprintf(f, "cc4:\t\t%32.25lf\n", sat.cc4);
-  fprintf(f, "cc5:\t\t%32.25lf\n", sat.cc5);
-  fprintf(f, "delmo:\t\t%32.25lf\n", sat.delmo);
-  fprintf(f, "argpdot:\t\t%32.25lf\n", sat.argpdot);
-  fprintf(f, "sinmao:\t\t%32.25lf\n", sat.sinmao);
-  fprintf(f, "t:\t\t%32.25lf\n", sat.t);
-  fprintf(f, "irez:\t\t%d\n", sat.irez);
-  fprintf(f, "gsto:\t\t%32.25lf\n", sat.gsto);
-  fprintf(f, "atime:\t\t%32.25lf\n", sat.atime);
-  fprintf(f, "bstar:\t\t%32.25lf\n", sat.bstar);
-  fprintf(f, "ecco:\t\t%32.25lf\n", sat.ecco);
-  fprintf(f, "argpo:\t\t%32.25lf\n", sat.argpo);
-  fprintf(f, "inclo:\t\t%32.25lf\n", sat.inclo);
-  fprintf(f, "mo:\t\t%32.25lf\n", sat.mo);
-  fprintf(f, "nodeo:\t\t%32.25lf\n", sat.nodeo);
-  fprintf(f, "alta:\t\t%32.25lf\n", sat.alta);
-  fprintf(f, "altp:\t\t%32.25lf\n", sat.altp);
+  FILE *f = fopen("aiaa_sat_print.txt", "a");
+  fprintf(f, "======================= %s ====================\n", caption);
+  fprintf(f, "------------------------ NORAD TLE --------------------------\n");
+  fprintf(f, "name             \n");
+  fprintf(f, "sec_class        \n");
+  fprintf(f, "int_designator   \n");
+  fprintf(f, "epoch            %lf\n\n", s.epochdays);
+  fprintf(f, "julian_epoch     %22.15lf\n", s.jdsatepoch);
+  fprintf(f, "mean_motion_dt2  %+.15e\n", s.ndot);
+  fprintf(f, "mean_motion_ddt6 %+.15e\n", s.nddot);
+  fprintf(f, "Bstar            %+.15e\n", s.bstar);
+  fprintf(f, "inclination      %+.15e\n", s.inclo);
+  fprintf(f, "right_asc_node   %+.15e\n", s.nodeo);
+  fprintf(f, "eccentricity     %+.15e\n", s.ecco);
+  fprintf(f, "argument_perigee %+.15e\n", s.argpo);
+  fprintf(f, "mean_anomaly     %+.15e\n", s.mo);
+  fprintf(f, "mean_motion      %+.15e\n", s.no);
+  fprintf(f, "norad_number     %d\n", s.satnum);
+  fprintf(f, "orbit_number     %d\n", s.epochtynumrev);
+  fprintf(f, "-------------------------- Flags ----------------------------\n");
+  fprintf(f, "is_deep_space    %c\n", s.method);
+  fprintf(f, "use_simple_model %d\n", s.isimp);
+  fprintf(f, "is_24h_resonant  %d\n", s.irez);
+  fprintf(f, "is_12h_resonant  \n");
+  fprintf(f, "---------------- Standard orbital elements ------------------\n");
+  fprintf(f, "GSTo             %+.15e\n", s.gsto);
+  fprintf(f, "xnodp            %+.15e\n", s.no);
+  fprintf(f, "aodp             \n");
+  fprintf(f, "perigee          \n");
+  fprintf(f, "perigee_alt      %+.15e\n", s.altp);
+  fprintf(f, "period           \n");
+  fprintf(f, "---------------------- Common constants ---------------------\n");
+  fprintf(f, "aycof            %+.15e\n", s.aycof);
+  fprintf(f, "C1               %+.15e\n", s.cc1);
+  fprintf(f, "C4               %+.15e\n", s.cc4);
+  fprintf(f, "eta              %+.15e\n", s.eta);
+  fprintf(f, "omgdot           %+.15e\n", s.argpdot);
+  fprintf(f, "t2cof            %+.15e\n", s.t2cof);
+  fprintf(f, "x1mth2           %+.15e\n", s.x1mth2);
+  fprintf(f, "x1m5th2          \n");
+  fprintf(f, "x1m7th2          %+.15e\n", s.con41);
+  fprintf(f, "x7thm1           %+.15e\n", s.x7thm1);
+  fprintf(f, "xlcof            %+.15e\n", s.xlcof);
+  fprintf(f, "xnodcf           %+.15e\n", s.nodecf);
+  fprintf(f, "xnodot           %+.15e\n", s.nodedot);
+  fprintf(f, "xmdot            %+.15e\n", s.mdot);
   fclose(f);
 }
 
@@ -463,6 +383,13 @@ static void dpper
   }   // if init == 'n'
 
   //#include "debug1.cpp"
+//  printf("dpper>tdelta: %+.15e\n", t);
+//  printf("dpper>inc_lp: %+.15e\n", inclp);
+//  printf("dpper>ecc_lp: %+.15e\n", ep);
+//  printf("dpper>nod_lp: %+.15e\n", nodep);
+//  printf("dpper>arg_lp: %+.15e\n", argpp);
+//  printf("dpper>mo_lp:  %+.15e\n", mp);
+//  printf("----------------------------------------\n");
 }  // end dpper
 
 /*-----------------------------------------------------------------------------
@@ -1542,27 +1469,14 @@ static void initl
   cosio2 = cosio * cosio;
 
   /* ------------------ un-kozai the mean motion ----------------- */
-  // printf("XKE:    %30.15lf\n", xke);
-  // printf("no:     %30.15lf\n", no);
-  // printf("2/3:    %30.15lf\n", x2o3);
   ak    = pow(xke / no, x2o3);
-  // printf("a1:     %30.15lf\n", ak);
   d1    = 0.75 * j2 * (3.0 * cosio2 - 1.0) / (rteosq * omeosq);
-  // printf("theta2: %30.15lf\n", cosio2);
-  // printf("betao:  %30.15lf\n", rteosq);
-  // printf("betao2: %30.15lf\n", omeosq);
-  // printf("delta1: %30.15lf\n", d1);
   del   = d1 / (ak * ak);
   adel  = ak * (1.0 - del * del - del *
       (1.0 / 3.0 + 134.0 * del * del / 81.0));
-  // printf("a0      %30.15lf\n", adel);
-  del   = d1/(adel * adel);
-  // printf("delta0: %30.15lf\n", del);
+  del   = d1 /(adel * adel);
   no    = no / (1.0 + del);
-  // printf("xnodp:  %30.15lf\n", no);
-
   ao    = pow(xke / no, x2o3);
-  // printf("aodp:   %30.15lf\n", ao);
   sinio = sin(inclo);
   po    = ao * omeosq;
   con42 = 1.0 - 5.0 * cosio2;
@@ -1592,6 +1506,19 @@ static void initl
   else
     gsto = gstime(epoch + 2433281.5);
 
+  printf("----------------------------------------\n");
+  printf("aa     %+.15e\n", ak);
+  printf("cosio  %+.15e\n", cosio);
+  printf("sinio  %+.15e\n", sinio);
+  printf("eo2    %+.15e\n", eccsq);
+  printf("theta2 %+.15e\n", cosio2);
+  printf("betao2 %+.15e\n", rteosq);
+  printf("betao  %+.15e\n", omeosq);
+  printf("delta1 %+.15e\n", d1);
+  printf("a0     %+.15e\n", adel);
+  printf("delta0 %+.15e\n", del);
+  printf("xnodp  %+.15e\n", no);
+  printf("aodp   %+.15e\n", ao);
 
   //#include "debug5.cpp"
 }  // end initl
@@ -1756,6 +1683,17 @@ bool sgp4init
   // sgp4fix add opsmode
   satrec.operationmode = opsmode;
 
+  printf("----------------------------------------\n");
+  printf("mean_motion_dt2  %+.15e\n", satrec.ndot);
+  printf("mean_motion_ddt6 %+.15e\n", satrec.nddot);
+  printf("Bstar            %+.15e\n", satrec.bstar);
+  printf("inclination      %+.15e\n", satrec.inclo);
+  printf("right_asc_node   %+.15e\n", satrec.nodeo);
+  printf("eccentricity     %+.15e\n", satrec.ecco);
+  printf("argument_perigee %+.15e\n", satrec.argpo);
+  printf("mean_anomaly     %+.15e\n", satrec.mo);
+  printf("mean_motion      %+.15e\n", satrec.no);
+
   /* ------------------------ earth constants ----------------------- */
   // sgp4fix identify constants and allow alternate values
   getgravconst( whichconst, tumin, mu, radiusearthkm, xke, j2, j3, j4, j3oj2 );
@@ -1807,89 +1745,88 @@ bool sgp4init
       sfour  = sfour / radiusearthkm + 1.0;
     }
 
-    // printf("qoms24: %30.15lf\n", qzms24);
-    // printf("s4:     %30.15lf\n", sfour);
-
     pinvsq = 1.0 / posq;
-    // printf("pinv2:  %30.15lf\n", pinvsq);
-
-
     tsi  = 1.0 / (ao - sfour);
-    // printf("tsi:    %30.15lf\n", tsi);
     satrec.eta  = ao * satrec.ecco * tsi;
-    // printf("eta:    %30.15lf\n", satrec.eta);
     etasq = satrec.eta * satrec.eta;
-    // printf("eta2:   %30.15lf\n", etasq);
     eeta  = satrec.ecco * satrec.eta;
-    // printf("eeta:   %30.15lf\n", eeta);
     psisq = fabs(1.0 - etasq);
-    // printf("psi2:   %30.15lf\n", psisq);
     coef  = qzms24 * pow(tsi, 4.0);
-    // printf("coef:   %30.15lf\n", coef);
     coef1 = coef / pow(psisq, 3.5);
-    // printf("coef1:  %30.15lf\n", coef1);
     cc2   = coef1 * satrec.no * (ao * (1.0 + 1.5 * etasq + eeta *
         (4.0 + etasq)) + 0.375 * j2 * tsi / psisq * satrec.con41 *
         (8.0 + 3.0 * etasq * (8.0 + etasq)));
-    // printf("C2:     %30.15lf\n", cc2);
     satrec.cc1   = satrec.bstar * cc2;
-    // printf("C1:     %30.15lf\n", satrec.cc1);
     cc3   = 0.0;
     if (satrec.ecco > 1.0e-4)
       cc3 = -2.0 * coef * tsi * j3oj2 * satrec.no * sinio / satrec.ecco;
     satrec.x1mth2 = 1.0 - cosio2;
-    // printf("x1mth2: %30.15lf\n", satrec.x1mth2);
     satrec.cc4    = 2.0* satrec.no * coef1 * ao * omeosq *
         (satrec.eta * (2.0 + 0.5 * etasq) + satrec.ecco *
             (0.5 + 2.0 * etasq) - j2 * tsi / (ao * psisq) *
             (-3.0 * satrec.con41 * (1.0 - 2.0 * eeta + etasq *
                 (1.5 - 0.5 * eeta)) + 0.75 * satrec.x1mth2 *
                 (2.0 * etasq - eeta * (1.0 + etasq)) * cos(2.0 * satrec.argpo)));
-    // printf("C4:     %30.15lf\n", satrec.cc4);
     satrec.cc5 = 2.0 * coef1 * ao * omeosq * (1.0 + 2.75 *
         (etasq + eeta) + eeta * etasq);
     cosio4 = cosio2 * cosio2;
-    // printf("theta4: %30.15lf\n", cosio4);
     temp1  = 1.5 * j2 * pinvsq * satrec.no;
     temp2  = 0.5 * temp1 * j2 * pinvsq;
     temp3  = -0.46875 * j4 * pinvsq * pinvsq * satrec.no;
     satrec.mdot     = satrec.no + 0.5 * temp1 * rteosq * satrec.con41 + 0.0625 *
         temp2 * rteosq * (13.0 - 78.0 * cosio2 + 137.0 * cosio4);
-    // printf("mdot:   %30.15lf\n", satrec.mdot);
     satrec.argpdot  = -0.5 * temp1 * con42 + 0.0625 * temp2 *
         (7.0 - 114.0 * cosio2 + 395.0 * cosio4) +
         temp3 * (3.0 - 36.0 * cosio2 + 49.0 * cosio4);
-    // printf("omgdot: %30.15lf\n", satrec.argpdot);
     xhdot1            = -temp1 * cosio;
-    // printf("xhdot1: %30.15lf\n", xhdot1);
     satrec.nodedot = xhdot1 + (0.5 * temp2 * (4.0 - 19.0 * cosio2) +
         2.0 * temp3 * (3.0 - 7.0 * cosio2)) * cosio;
-    // printf("xnodot: %30.15lf\n", satrec.nodedot);
     xpidot            =  satrec.argpdot+ satrec.nodedot;
     satrec.omgcof   = satrec.bstar * cc3 * cos(satrec.argpo);
-    // printf("omgcof:     %20.15lf\n", satrec.omgcof);
     satrec.xmcof    = 0.0;
     if (satrec.ecco > 1.0e-4)
       satrec.xmcof = -x2o3 * coef * satrec.bstar / eeta;
-    // printf("xmcof:     %20.15lf\n", satrec.xmcof);
     satrec.nodecf = 3.5 * omeosq * xhdot1 * satrec.cc1;
-    // printf("xnodcf: %30.15lf\n", satrec.nodecf);
     satrec.t2cof   = 1.5 * satrec.cc1;
     // sgp4fix for divide by zero with xinco = 180 deg
     if (fabs(cosio+1.0) > 1.5e-12)
       satrec.xlcof = -0.25 * j3oj2 * sinio * (3.0 + 5.0 * cosio) / (1.0 + cosio);
     else
       satrec.xlcof = -0.25 * j3oj2 * sinio * (3.0 + 5.0 * cosio) / temp4;
-    // printf("xlcof:  %30.15lf\n", satrec.xlcof);
     satrec.aycof   = -0.5 * j3oj2 * sinio;
-    // printf("aycof:  %30.15lf\n", satrec.aycof);
     // sgp4fix use multiply for speed instead of pow
     delmotemp = 1.0 + satrec.eta * cos(satrec.mo);
     satrec.delmo   = delmotemp * delmotemp * delmotemp;
     satrec.sinmao  = sin(satrec.mo);
     satrec.x7thm1  = 7.0 * cosio2 - 1.0;
-    // printf("x7thm1: %30.15lf\n", satrec.x7thm1);
-    //print_orbit(satrec, "sgp4init pre-deepspace");
+
+    printf("----------------------------------------\n");
+    printf("qoms24 %+.15e\n", qzms24);
+    printf("s4     %+.15e\n", sfour);
+    printf("pinv2  %+.15e\n", pinvsq);
+    printf("tsi    %+.15e\n", tsi);
+    printf("eta    %+.15e\n", satrec.eta);
+    printf("eta2   %+.15e\n", etasq);
+    printf("eeta   %+.15e\n", eeta);
+    printf("psi2   %+.15e\n", psisq);
+    printf("coef   %+.15e\n", coef);
+    printf("coef1  %+.15e\n", coef1);
+    printf("C2     %+.15e\n", cc2);
+    printf("C1     %+.15e\n", satrec.cc1);
+    printf("x1mth2 %+.15e\n", satrec.x1mth2);
+    printf("C4     %+.15e\n", satrec.cc4);
+    printf("theta4 %+.15e\n", cosio4);
+    printf("xmdot  %+.15e\n", satrec.mdot);
+    printf("omgdot %+.15e\n", satrec.argpdot);
+    printf("xhdot1 %+.15e\n", xhdot1);
+    printf("xnodot %+.15e\n", satrec.nodedot);
+    printf("xnodcf %+.15e\n", satrec.nodecf);
+    printf("xlcof  %+.15e\n", satrec.xlcof);
+    printf("aycof  %+.15e\n", satrec.aycof);
+    printf("x7thm1 %+.15e\n", satrec.x7thm1);
+    printf("dspace %d\n", (satrec.method == 'd'));
+    printf("simple %d\n", satrec.isimp);
+
     /* --------------- deep space initialization ------------- */
     if ((2*pi / satrec.no) >= 225.0)
     {
@@ -1976,15 +1913,31 @@ bool sgp4init
   /* finally propogate to zero epoch to initialize all others. */
   // sgp4fix take out check to let satellites process until they are actually below earth surface
   //       if(satrec.error == 0)
-  sgp4(whichconst, satrec, 0.0, r, v);
 
+  //sat_print(satrec, "INIT");
 
+  //sgp4(whichconst, satrec, 0.0, r, v);
+
+  printf("----------------------------------------\n");
+  printf("C3     %+.15e\n", cc3);
+  printf("xmcof  %+.15e\n", satrec.xmcof);
+  printf("C5     %+.15e\n", satrec.cc5);
+  printf("omgcof %+.15e\n", satrec.omgcof);
+  printf("delmo  %+.15e\n", satrec.delmo);
+  printf("sinmo  %+.15e\n", satrec.sinmao);
+  printf("D2     %+.15e\n", satrec.d2);
+  printf("D3     %+.15e\n", satrec.d3);
+  printf("D4     %+.15e\n", satrec.d4);
+  printf("t3cof  %+.15e\n", satrec.t3cof);
+  printf("t4cof  %+.15e\n", satrec.t4cof);
+  printf("t5cof  %+.15e\n", satrec.t5cof);
 
   satrec.init = 'n';
   //print_orbit(satrec, "sgp4init post-sgp4 call");
 
   //#include "debug6.cpp"
   //sgp4fix return boolean. satrec.error contains any error codes
+
   return true;
 }  // end sgp4init
 
@@ -2238,7 +2191,8 @@ bool sgp4
   sinip  = sinim;
   cosip  = cosim;
 
-  if (satrec.method == 'd')
+  //if (satrec.method == 'd') // TODO: Debug dpper
+  if (false)
   {
     dpper
     (
@@ -2256,17 +2210,17 @@ bool sgp4
         'n', ep, xincp, nodep, argpp, mp, satrec.operationmode
     );
 
-    printf("-------------------------------\n");
-    printf("xmp:    %+.15e\n", mm);
-    printf("xlm:    %+.15e\n", xlm);
-    printf("em2:    %+.15e\n", emsq);
-    printf("xnode:  %+.15e\n", nodem);
-    printf("omega:  %+.15e\n", argpm);
-    printf("incl_lp:%+.15e\n", xincp);
-    printf("node_lp:%+.15e\n", nodep);
-    printf("argplp: %+.15e\n", argpp);
-    printf("ecc_lp: %+.15e\n", ep);
-    printf("mo_lp:  %+.15e\n", mp);
+//    printf("-------------------------------\n");
+//    printf("xmp:    %+.15e\n", mm);
+//    printf("xlm:    %+.15e\n", xlm);
+//    printf("em2:    %+.15e\n", emsq);
+//    printf("xnode:  %+.15e\n", nodem);
+//    printf("omega:  %+.15e\n", argpm);
+//    printf("incl_lp:%+.15e\n", xincp);
+//    printf("node_lp:%+.15e\n", nodep);
+//    printf("argplp: %+.15e\n", argpp);
+//    printf("ecc_lp: %+.15e\n", ep);
+//    printf("mo_lp:  %+.15e\n", mp);
 
     if (xincp < 0.0)
     {

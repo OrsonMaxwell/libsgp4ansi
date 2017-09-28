@@ -129,7 +129,7 @@ strcpy(monstr[12], "Dec");
         getgravconst( whichconst, tumin, mu, radiusearthkm, xke, j2, j3, j4, j3oj2 );
 
 
-		if (typerun == 't') 
+		if (typerun == 't')
 		{
 			// Timing run
 			strcpy(longstr0, "SL - 6 R / B(2)");
@@ -142,7 +142,7 @@ strcpy(monstr[12], "Dec");
 			
 			for (int t = 0; t < 5000000; t++) {
 				tsince = t % 2880 - 1440;
-				sgp4(whichconst, satrec, tsince, ro, vo);
+				//sgp4(whichconst, satrec, tsince, ro, vo);
 			}
 			return 0;
 		}
@@ -250,7 +250,7 @@ fprintf(outfilee, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f\n",
                    if(tsince > stopmfe)
                        tsince = stopmfe;
 
-                   sgp4 (whichconst, satrec,  tsince, ro,  vo);
+                   //sgp4 (whichconst, satrec,  tsince, ro,  vo);
 				   if (satrec.error > 0) {
 					   printf("[ERROR] Sat %5d (%12.9lf),\tcode %2d at %8.f mfe\n",
 						   satrec.satnum, pi * 2 / satrec.no, satrec.error, satrec.t);

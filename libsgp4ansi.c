@@ -105,141 +105,54 @@ size_t str_trim(const char* str, size_t len, char* out)
   return out_size;
 }
 
-void sat_print(sat* sat, char* caption)
+void sat_print(sat* s, char* caption)
 {
-  FILE *f = fopen("sat.txt", "a");
-  fprintf(f, "===== %s =====\n", caption);
-  fprintf(f, "----- TLE portion -----\n");
-  fprintf(f, "norad_number    : %d\n", sat->norad_number);
-  fprintf(f, "mean_motion_dt2 : %32.25lf\n", sat->mean_motion_dt2);
-  fprintf(f, "mean_motion_ddt6: %32.25lf\n", sat->mean_motion_ddt6);
-  fprintf(f, "Bstar           : %32.25lf\n", sat->Bstar);
-  fprintf(f, "inclination     : %32.25lf\n", sat->inclination);
-  fprintf(f, "right_asc_node  : %32.25lf\n", sat->right_asc_node);
-  fprintf(f, "eccentricity    : %32.25lf\n", sat->eccentricity);
-  fprintf(f, "argument_perigee: %32.25lf\n", sat->argument_perigee);
-  fprintf(f, "mean_anomaly    : %32.25lf\n", sat->mean_anomaly);
-  fprintf(f, "mean_motion     : %32.25lf\n", sat->mean_motion);
-  fprintf(f, "----- Time -----\n");
-  fprintf(f, "epoch:\t\t%s%lfms\n", ctime(&sat->epoch), sat->epoch_ms);
-  fprintf(f, "----- Standard orbital elements -----\n");
-  fprintf(f, "xnodp           : %32.25lf\n", sat->xnodp);
-  fprintf(f, "aodp            : %32.25lf\n", sat->aodp);
-  fprintf(f, "perigee         : %32.25lf\n", sat->perigee);
-  fprintf(f, "perigee_alt     : %32.25lf\n", sat->perigee_alt);
-  fprintf(f, "period          : %32.25lf\n", sat->period);
-  /*
-  fprintf(f, "julepoch:\t%32.25lf\n", sat->julepoch);
-  fprintf(f, "GSTo:\t\t%32.25lf\n", sat->GSTo);
-  fprintf(f, "----- Flags -----\n");
-  fprintf(f, "Deepsp:\t\t%d\n", sat->is_deep_space);
-  fprintf(f, "Loworb:\t\t%d\n", sat->use_simple_model);
-  fprintf(f, "----- Standard terms -----\n");
-  fprintf(f, "a:\t\t%32.25lf\n", sat->a);
-  fprintf(f, "altapoR:\t\t%32.25lf\n", sat->altapoR);
-  fprintf(f, "altperR:\t\t%32.25lf\n", sat->altperR);
-  fprintf(f, "aycof:\t\t%32.25lf\n", sat->aycof);
-  fprintf(f, "C1:\t\t%32.25lf\n", sat->C1);
-  fprintf(f, "C4:\t\t%32.25lf\n", sat->C4);
-  fprintf(f, "C5:\t\t%32.25lf\n", sat->C5);
-  fprintf(f, "con41:\t\t%32.25lf\n", sat->x3thm1);
-  fprintf(f, "d2:\t\t%32.25lf\n", sat->d2);
-  fprintf(f, "d3:\t\t%32.25lf\n", sat->d3);
-  fprintf(f, "d4:\t\t%32.25lf\n", sat->d4);
-  fprintf(f, "delMo:\t\t%32.25lf\n", sat->delMo);
-  fprintf(f, "eta:\t\t%32.25lf\n", sat->eta);
-  fprintf(f, "mdot:\t\t%32.25lf\n", sat->mdot);
-  fprintf(f, "nodecf:\t\t%32.25lf\n", sat->nodecf);
-  fprintf(f, "nodedot:\t%32.25lf\n", sat->nodedot);
-  fprintf(f, "omegaprime:\t%32.25lf\n", sat->omegaprime);
-  fprintf(f, "omgcof:\t\t%32.25lf\n", sat->omgcof);
-  fprintf(f, "sinMo:\t\t%32.25lf\n", sat->sinMo);
-  fprintf(f, "t2cof:\t\t%32.25lf\n", sat->t2cof);
-  fprintf(f, "t3cof:\t\t%32.25lf\n", sat->t3cof);
-  fprintf(f, "t4cof:\t\t%32.25lf\n", sat->t4cof);
-  fprintf(f, "t5cof:\t\t%32.25lf\n", sat->t5cof);
-  fprintf(f, "x1mth2:\t\t%32.25lf\n", sat->x1mth2);
-  fprintf(f, "x7thm1:\t\t%32.25lf\n", sat->x7thm1);
-  fprintf(f, "xlcof:\t\t%32.25lf\n", sat->xlcof);
-  fprintf(f, "xmcof:\t\t%32.25lf\n", sat->xmcof);
-  fprintf(f, "----- Deepspace terms -----\n");
-  fprintf(f, "e3:\t\t%32.25lf\n", sat->e3);
-  fprintf(f, "ee2:\t\t%32.25lf\n", sat->ee2);
-  fprintf(f, "peo:\t\t%32.25lf\n", sat->peo);
-  fprintf(f, "pgho:\t\t%32.25lf\n", sat->pgho);
-  fprintf(f, "pho:\t\t%32.25lf\n", sat->pho);
-  fprintf(f, "pinco:\t\t%32.25lf\n", sat->pinco);
-  fprintf(f, "plo:\t\t%32.25lf\n", sat->plo);
-  fprintf(f, "se2:\t\t%32.25lf\n", sat->se2);
-  fprintf(f, "se3:\t\t%32.25lf\n", sat->se3);
-  fprintf(f, "sgh2:\t\t%32.25lf\n", sat->sgh2);
-  fprintf(f, "sgh3:\t\t%32.25lf\n", sat->sgh3);
-  fprintf(f, "sgh4:\t\t%32.25lf\n", sat->sgh4);
-  fprintf(f, "sh2:\t\t%32.25lf\n", sat->sh2);
-  fprintf(f, "sh3:\t\t%32.25lf\n", sat->sh3);
-  fprintf(f, "si2:\t\t%32.25lf\n", sat->si2);
-  fprintf(f, "si3:\t\t%32.25lf\n", sat->si3);
-  fprintf(f, "sl2:\t\t%32.25lf\n", sat->sl2);
-  fprintf(f, "sl3:\t\t%32.25lf\n", sat->sl3);
-  fprintf(f, "sl4:\t\t%32.25lf\n", sat->sl4);
-  fprintf(f, "xgh2:\t\t%32.25lf\n", sat->xgh2);
-  fprintf(f, "xgh3:\t\t%32.25lf\n", sat->xgh3);
-  fprintf(f, "xgh4:\t\t%32.25lf\n", sat->xgh4);
-  fprintf(f, "xh2:\t\t%32.25lf\n", sat->xh2);
-  fprintf(f, "xh3:\t\t%32.25lf\n", sat->xh3);
-  fprintf(f, "xi2:\t\t%32.25lf\n", sat->xi2);
-  fprintf(f, "xi3:\t\t%32.25lf\n", sat->xi3);
-  fprintf(f, "xl2:\t\t%32.25lf\n", sat->xl2);
-  fprintf(f, "xl3:\t\t%32.25lf\n", sat->xl3);
-  fprintf(f, "xl4:\t\t%32.25lf\n", sat->xl4);
-  fprintf(f, "zmol:\t\t%32.25lf\n", sat->zmol);
-  fprintf(f, "zmos:\t\t%32.25lf\n", sat->zmos);
-  fprintf(f, "----- Resonant terms -----\n");
-  fprintf(f, "d2201:\t\t%32.25lf\n", sat->d2201);
-  fprintf(f, "d2211:\t\t%32.25lf\n", sat->d2211);
-  fprintf(f, "d3210:\t\t%32.25lf\n", sat->d3210);
-  fprintf(f, "d3222:\t\t%32.25lf\n", sat->d3222);
-  fprintf(f, "d4410:\t\t%32.25lf\n", sat->d4410);
-  fprintf(f, "d4422:\t\t%32.25lf\n", sat->d4422);
-  fprintf(f, "d5220:\t\t%32.25lf\n", sat->d5220);
-  fprintf(f, "d5232:\t\t%32.25lf\n", sat->d5232);
-  fprintf(f, "d5421:\t\t%32.25lf\n", sat->d5421);
-  fprintf(f, "d5433:\t\t%32.25lf\n", sat->d5433);
-  fprintf(f, "dedt:\t\t%32.25lf\n", sat->dedt);
-  fprintf(f, "didt:\t\t%32.25lf\n", sat->didt);
-  fprintf(f, "dmdt:\t\t%32.25lf\n", sat->dmdt);
-  fprintf(f, "dnodt:\t\t%32.25lf\n", sat->dnodt);
-  fprintf(f, "domdt:\t\t%32.25lf\n", sat->domdt);
-  fprintf(f, "del1:\t\t%32.25lf\n", sat->del1);
-  fprintf(f, "del2:\t\t%32.25lf\n", sat->del2);
-  fprintf(f, "del3:\t\t%32.25lf\n", sat->del3);
-  fprintf(f, "xfact:\t\t%32.25lf\n", sat->xfact);
-  fprintf(f, "xlamo:\t\t%32.25lf\n", sat->xlamo);
-  fprintf(f, "xli:\t\t%32.25lf\n", sat->xli);
-  fprintf(f, "xni:\t\t%32.25lf\n", sat->xni);
-  fprintf(f, "----- Legacy -----\n");
-  fprintf(f, "isimp:\t\t%d\n", sat->isimp);
-  fprintf(f, "error:\t\t%d\n", sat->error);
-  fprintf(f, "method:\t\t%c\n", sat->method);
-  fprintf(f, "operationmode:\t\t%c\n", sat->operationmode);
-  fprintf(f, "cc1:\t\t%32.25lf\n", sat->cc1);
-  fprintf(f, "cc4:\t\t%32.25lf\n", sat->cc4);
-  fprintf(f, "cc5:\t\t%32.25lf\n", sat->cc5);
-  fprintf(f, "delmo:\t\t%32.25lf\n", sat->delmo);
-  fprintf(f, "argpdot:\t\t%32.25lf\n", sat->argpdot);
-  fprintf(f, "sinmao:\t\t%32.25lf\n", sat->sinmao);
-  fprintf(f, "t:\t\t%32.25lf\n", sat->t);
-  fprintf(f, "irez:\t\t%d\n", sat->irez);
-  fprintf(f, "gsto:\t\t%32.25lf\n", sat->gsto);
-  fprintf(f, "atime:\t\t%32.25lf\n", sat->atime);
-  fprintf(f, "bstar:\t\t%32.25lf\n", sat->bstar);
-  fprintf(f, "ecco:\t\t%32.25lf\n", sat->ecco);
-  fprintf(f, "argpo:\t\t%32.25lf\n", sat->argpo);
-  fprintf(f, "inclo:\t\t%32.25lf\n", sat->inclo);
-  fprintf(f, "mo:\t\t%32.25lf\n", sat->mo);
-  fprintf(f, "nodeo:\t\t%32.25lf\n", sat->nodeo);
-  fprintf(f, "alta:\t\t%32.25lf\n", sat->alta);
-  fprintf(f, "altp:\t\t%32.25lf\n", sat->altp);*/
+  FILE *f = fopen("ansi_sat_print.txt", "a");
+  fprintf(f, "======================= %s ====================\n", caption);
+  fprintf(f, "------------------------ NORAD TLE --------------------------\n");
+  fprintf(f, "name             %s\n", s->name);
+  fprintf(f, "sec_class        %c\n", s->sec_class);
+  fprintf(f, "int_designator   %s\n", s->int_designator);
+  fprintf(f, "epoch            %s%lfms\n", ctime(&s->epoch), s->epoch_ms);
+  fprintf(f, "julian_epoch     %22.15lf\n", s->julian_epoch);
+  fprintf(f, "mean_motion_dt2  %+.15e\n", s->mean_motion_dt2);
+  fprintf(f, "mean_motion_ddt6 %+.15e\n", s->mean_motion_ddt6);
+  fprintf(f, "Bstar            %+.15e\n", s->Bstar);
+  fprintf(f, "inclination      %+.15e\n", s->inclination);
+  fprintf(f, "right_asc_node   %+.15e\n", s->right_asc_node);
+  fprintf(f, "eccentricity     %+.15e\n", s->eccentricity);
+  fprintf(f, "argument_perigee %+.15e\n", s->argument_perigee);
+  fprintf(f, "mean_anomaly     %+.15e\n", s->mean_anomaly);
+  fprintf(f, "mean_motion      %+.15e\n", s->mean_motion);
+  fprintf(f, "norad_number     %d\n", s->norad_number);
+  fprintf(f, "orbit_number     %d\n", s->orbit_number);
+  fprintf(f, "-------------------------- Flags ----------------------------\n");
+  fprintf(f, "is_deep_space    %d\n", s->is_deep_space);
+  fprintf(f, "use_simple_model %d\n", s->use_simple_model);
+  fprintf(f, "is_24h_resonant  %d\n", s->is_24h_resonant);
+  fprintf(f, "is_12h_resonant  %d\n", s->is_12h_resonant);
+  fprintf(f, "---------------- Standard orbital elements ------------------\n");
+  fprintf(f, "GSTo             %+.15e\n", s->GSTo);
+  fprintf(f, "xnodp            %+.15e\n", s->xnodp);
+  fprintf(f, "aodp             %+.15e\n", s->aodp);
+  fprintf(f, "perigee          %+.15e\n", s->perigee);
+  fprintf(f, "perigee_alt      %+.15e\n", s->perigee_alt);
+  fprintf(f, "period           %+.15e\n", s->period);
+  fprintf(f, "---------------------- Common constants ---------------------\n");
+  fprintf(f, "aycof            %+.15e\n", s->aycof);
+  fprintf(f, "C1               %+.15e\n", s->C1);
+  fprintf(f, "C4               %+.15e\n", s->C4);
+  fprintf(f, "eta              %+.15e\n", s->eta);
+  fprintf(f, "omgdot           %+.15e\n", s->omgdot);
+  fprintf(f, "t2cof            %+.15e\n", s->t2cof);
+  fprintf(f, "x1mth2           %+.15e\n", s->x1mth2);
+  fprintf(f, "x1m5th2          %+.15e\n", s->x1m5th2);
+  fprintf(f, "x1m7th2          %+.15e\n", s->x1m7th2);
+  fprintf(f, "x7thm1           %+.15e\n", s->x7thm1);
+  fprintf(f, "xlcof            %+.15e\n", s->xlcof);
+  fprintf(f, "xnodcf           %+.15e\n", s->xnodcf);
+  fprintf(f, "xnodot           %+.15e\n", s->xnodot);
+  fprintf(f, "xmdot            %+.15e\n", s->xmdot);
   fclose(f);
 }
 
@@ -367,6 +280,18 @@ sat_load_tle(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
 int
 sat_init(sat* s)
 {
+
+  printf("----------------------------------------\n");
+  printf("mean_motion_dt2  %+.15e\n", s->mean_motion_dt2);
+  printf("mean_motion_ddt6 %+.15e\n", s->mean_motion_ddt6);
+  printf("Bstar            %+.15e\n", s->Bstar);
+  printf("inclination      %+.15e\n", s->inclination);
+  printf("right_asc_node   %+.15e\n", s->right_asc_node);
+  printf("eccentricity     %+.15e\n", s->eccentricity);
+  printf("argument_perigee %+.15e\n", s->argument_perigee);
+  printf("mean_anomaly     %+.15e\n", s->mean_anomaly);
+  printf("mean_motion      %+.15e\n", s->mean_motion);
+
   if ((s->eccentricity < 0) || (s->eccentricity > 0.999999))
   {
     return -1;
@@ -380,10 +305,10 @@ sat_init(sat* s)
   double aa      = pow(XKE / s->mean_motion, TWOTHIRD);
   double cosio   = cos(s->inclination);
   double sinio   = sin(s->inclination);
-  double eosq    = pow(s->eccentricity, 2);
+  double eo2     = pow(s->eccentricity, 2);
   double theta2  = pow(cosio, 2);
-  double x3thm1  = 3 * theta2 - 1;
-  double betao2  = 1 - eosq;
+  double x3th2m1 = 3 * theta2 - 1;
+  double betao2  = 1 - eo2;
   double betao   = sqrt(betao2);
 
   // Un-Kozai mean motion
@@ -393,12 +318,25 @@ sat_init(sat* s)
                  * pow(delta1 / pow(aa, 2), 2) / 81.0));
   double delta0  = delta1 / pow(a0, 2);
   s->xnodp       = s->mean_motion / (1 + delta0);
-  s->aodp        = a0 / (1 - delta0);
+  //s->aodp        = a0 / (1 - delta0);
+  s->aodp        = pow(XKE / s->xnodp, TWOTHIRD);
   s->perigee     = (s->aodp * (1 - s->eccentricity)) * RE; // TODO: Remove?
   s->perigee_alt = s->perigee - RE;
   s->period      = TWOPI / s->xnodp;
 
-  //sat_print(s, "INIT");
+  printf("----------------------------------------\n");
+  printf("aa     %+.15e\n", aa);
+  printf("cosio  %+.15e\n", cosio);
+  printf("sinio  %+.15e\n", sinio);
+  printf("eo2    %+.15e\n", eo2);
+  printf("theta2 %+.15e\n", theta2);
+  printf("betao2 %+.15e\n", betao2);
+  printf("betao  %+.15e\n", betao);
+  printf("delta1 %+.15e\n", delta1);
+  printf("a0     %+.15e\n", a0);
+  printf("delta0 %+.15e\n", delta0);
+  printf("xnodp  %+.15e\n", s->xnodp);
+  printf("aodp   %+.15e\n", s->aodp);
 
   if (s->period >= 225)
   {
@@ -443,25 +381,27 @@ sat_init(sat* s)
   double coef1   = coef / pow(psi2, 3.5);
   double C2      = coef1 * s->xnodp
                  * (s->aodp * (1 + 1.5 * eta2 + eeta * (4 + eta2))
-                 + 0.375 * J2 * tsi / psi2 * x3thm1
+                 + 0.375 * J2 * tsi / psi2 * x3th2m1
                  * (8 + 3 * eta2 * (8 + eta2)));
       s->C1      = s->Bstar * C2;
-  double x1mth2  = 1 - theta2;
+      s->x1mth2  = 1 - theta2;
+      s->x1m5th2 = 1 - 5 * theta2;
+      s->x1m7th2 = 1 - 7 * theta2;
+      s->x7thm1  = 7 * theta2 - 1;
       s->C4      = 2 * s->xnodp * coef1 * s->aodp * betao2
                  * (s->eta * (2 + 0.5 * eta2) + s->eccentricity
                  * (0.5 + 2 * eta2) - J2 * tsi / (s->aodp * psi2)
-                 * (-3 * x3thm1 * (1 - 2 * eeta + eta2
-                 * (1.5 - 0.5 * eeta)) + 0.75 * x1mth2
+                 * (-3 * x3th2m1 * (1 - 2 * eeta + eta2
+                 * (1.5 - 0.5 * eeta)) + 0.75 * s->x1mth2
                  * (2 * eta2 - eeta * (1 + eta2))
                  * cos(2 * s->argument_perigee)));
   double theta4  = pow(cosio, 4);
   double temp1   = 1.5 * J2 * pinv2 * s->xnodp;
   double temp2   = 0.5 * temp1 * J2 * pinv2;
   double temp3   = -0.46875 * J4 * pow(pinv2, 2) * s->xnodp;
-      s->xmdot   = s->xnodp + 0.5 * temp1 * betao * x3thm1 + 0.0625
+      s->xmdot   = s->xnodp + 0.5 * temp1 * betao * x3th2m1 + 0.0625
                  * temp2 * betao * (13 - 78 * theta2 + 137 * theta4);
-  double x1m5th  = 1 - 5 * theta2;
-      s->omgdot  = -0.5 * temp1 * x1m5th
+      s->omgdot  = -0.5 * temp1 * s->x1m5th2
                  + 0.0625 * temp2 * (7 - 114 * theta2 + 395 * theta4)
                  + temp3 * (3 - 36 * theta2 + 49 * theta4);
   double xhdot1  = -temp1 * cosio;
@@ -470,10 +410,36 @@ sat_init(sat* s)
       s->xnodcf  = 3.5 * betao * xhdot1 * s->C1;
       s->t2cof   = 1.5 * s->C1; // TODO: Remove?
   // Division by zero check then inclination = 180 deg
-  double xlcof = 0.125 * A3OVK2 * sinio * (3.0 + 5.0 * cosio)
-            / ((fabs(cosio+1.0) > 1.5e-12)?((1.0 + cosio)):(1.5e-12));
-  double aycof   = 0.25 * A3OVK2 * sinio;
-  double x7thm1  = 7 * theta2 - 1;
+      s->xlcof   = 0.125 * A3OVK2 * sinio * (3.0 + 5.0 * cosio)
+                 / ((fabs(cosio+1.0) > 1.5e-12) ? ((1.0 + cosio)) : (1.5e-12));
+      s->aycof   = 0.25 * A3OVK2 * sinio;
+
+  printf("----------------------------------------\n");
+  printf("qoms24 %+.15e\n", qoms24);
+  printf("s4     %+.15e\n", sfour);
+  printf("pinv2  %+.15e\n", pinv2);
+  printf("tsi    %+.15e\n", tsi);
+  printf("eta    %+.15e\n", s->eta);
+  printf("eta2   %+.15e\n", eta2);
+  printf("eeta   %+.15e\n", eeta);
+  printf("psi2   %+.15e\n", psi2);
+  printf("coef   %+.15e\n", coef);
+  printf("coef1  %+.15e\n", coef1);
+  printf("C2     %+.15e\n", C2);
+  printf("C1     %+.15e\n", s->C1);
+  printf("x1mth2 %+.15e\n", s->x1mth2);
+  printf("C4     %+.15e\n", s->C4);
+  printf("theta4 %+.15e\n", theta4);
+  printf("xmdot  %+.15e\n", s->xmdot);
+  printf("omgdot %+.15e\n", s->omgdot);
+  printf("xhdot1 %+.15e\n", xhdot1);
+  printf("xnodot %+.15e\n", s->xnodot);
+  printf("xnodcf %+.15e\n", s->xnodcf);
+  printf("xlcof  %+.15e\n", s->xlcof);
+  printf("aycof  %+.15e\n", s->aycof);
+  printf("x7thm1 %+.15e\n", s->x7thm1);
+  printf("dspace %d\n", s->is_deep_space);
+  printf("simple %d\n", s->use_simple_model);
 
   if (s->is_deep_space == true) // Deep space init here
   {
@@ -483,14 +449,14 @@ sat_init(sat* s)
     s->GSTo  = jul2gst(s->julian_epoch);
 
     // Constants
-    const double zes     =  0.01675; // TODO: Move to macros?
-    const double zel     =  0.05490;
-    const double c1ss    =  2.9864797e-6;
-    const double c1l     =  4.7968065e-7;
-    const double zsinis  =  0.39785416;
-    const double zcosis  =  0.91744867;
-    const double zcosgs  =  0.1945905;
-    const double zsings  = -0.98088458;
+    const double zes    =  0.01675; // TODO: Move to macros?
+    const double zel    =  0.05490;
+    const double c1ss   =  2.9864797e-6;
+    const double c1l    =  4.7968065e-7;
+    const double zsinis =  0.39785416;
+    const double zcosis =  0.91744867;
+    const double zcosgs =  0.1945905;
+    const double zsings = -0.98088458;
 
     double snodm  = sin(s->right_asc_node); // TODO: duplicates?
     double cnodm  = cos(s->right_asc_node);
@@ -602,17 +568,17 @@ sat_init(sat* s)
       z31 = 12.0 * x1 * x1 - 3.0 * x3 * x3;
       z32 = 24.0 * x1 * x2 - 6.0 * x3 * x4;
       z33 = 12.0 * x2 * x2 - 3.0 * x4 * x4;
-      z1  =  3.0 *  (a1 * a1 + a2 * a2) + z31 * eosq;
-      z2  =  6.0 *  (a1 * a3 + a2 * a4) + z32 * eosq;
-      z3  =  3.0 *  (a3 * a3 + a4 * a4) + z33 * eosq;
-      z11 = -6.0 * a1 * a5 + eosq *  (-24.0 * x1 * x7-6.0 * x3 * x5);
-      z12 = -6.0 *  (a1 * a6 + a3 * a5) + eosq *
+      z1  =  3.0 *  (a1 * a1 + a2 * a2) + z31 * eo2;
+      z2  =  6.0 *  (a1 * a3 + a2 * a4) + z32 * eo2;
+      z3  =  3.0 *  (a3 * a3 + a4 * a4) + z33 * eo2;
+      z11 = -6.0 * a1 * a5 + eo2 *  (-24.0 * x1 * x7-6.0 * x3 * x5);
+      z12 = -6.0 *  (a1 * a6 + a3 * a5) + eo2 *
           (-24.0 * (x2 * x7 + x1 * x8) - 6.0 * (x3 * x6 + x4 * x5));
-      z13 = -6.0 * a3 * a6 + eosq * (-24.0 * x2 * x8 - 6.0 * x4 * x6);
-      z21 =  6.0 * a2 * a5 + eosq * (24.0 * x1 * x5 - 6.0 * x3 * x7);
-      z22 =  6.0 *  (a4 * a5 + a2 * a6) + eosq *
+      z13 = -6.0 * a3 * a6 + eo2 * (-24.0 * x2 * x8 - 6.0 * x4 * x6);
+      z21 =  6.0 * a2 * a5 + eo2 * (24.0 * x1 * x5 - 6.0 * x3 * x7);
+      z22 =  6.0 *  (a4 * a5 + a2 * a6) + eo2 *
           (24.0 * (x2 * x5 + x1 * x6) - 6.0 * (x4 * x7 + x3 * x8));
-      z23 =  6.0 * a4 * a6 + eosq * (24.0 * x2 * x6 - 6.0 * x4 * x8);
+      z23 =  6.0 * a4 * a6 + eo2 * (24.0 * x2 * x6 - 6.0 * x4 * x8);
       z1  = z1 + z1 + betao2 * z31;
       z2  = z2 + z2 + betao2 * z32;
       z3  = z3 + z3 + betao2 * z33;
@@ -685,7 +651,7 @@ sat_init(sat* s)
     s->si3  =   2 * ss2 * (sz13 - sz11);
     s->sl2  =  -2 * ss3 * sz2;
     s->sl3  =  -2 * ss3 * (sz3 - sz1);
-    s->sl4  =  -2 * ss3 * (-21 - 9 * eosq) * zes;
+    s->sl4  =  -2 * ss3 * (-21 - 9 * eo2) * zes;
     s->sgh2 =   2 * ss4 * sz32;
     s->sgh3 =   2 * ss4 * (sz33 - sz31);
     s->sgh4 = -18 * ss4 * zes;
@@ -711,7 +677,7 @@ sat_init(sat* s)
     s->xi3  =   2 * s2 * (z13 - z11);
     s->xl2  =  -2 * s3 * z2;
     s->xl3  =  -2 * s3 * (z3 - z1);
-    s->xl4  =  -2 * s3 * (-21 - 9 * eosq) * zel;
+    s->xl4  =  -2 * s3 * (-21 - 9 * eo2) * zel;
     s->xgh2 =   2 * s4 * z32;
     s->xgh3 =   2 * s4 * (z33 - z31);
     s->xgh4 = -18 * s4 * zel;
@@ -731,7 +697,7 @@ sat_init(sat* s)
 //    printf("xh3:    %+.15e\n", s->xh3);
 //
 //    printf("------------------------------\n");
-    // dpper(s, 0, true); TODO: Investigate further
+    dpper(s, 0); // TODO: Investigate further
 
     const double q22    = 1.7891679e-6;  // TODO: Move to macros?
     const double q31    = 2.1460748e-6;
@@ -763,7 +729,7 @@ sat_init(sat* s)
     // Do solar terms
     double ses  =  ss1 * zns * ss5;
     double sis  =  ss2 * zns * (sz11 + sz13);
-    double sls  = -zns * ss3 * (sz1 + sz3 - 14 - 6 * eosq);
+    double sls  = -zns * ss3 * (sz1 + sz3 - 14 - 6 * eo2);
     double sghs =  ss4 * zns * (sz31 + sz33 - 6);
     double shs  = -zns * ss2 * (sz21 + sz23);
 
@@ -791,7 +757,7 @@ sat_init(sat* s)
     // Do lunar terms
     s->dedt = ses + s1 * znl * s5;
     s->didt = sis + s2 * znl * (z11 + z13);
-    s->dmdt = sls - znl * s3 * (z1 + z3 - 14.0 - 6.0 * eosq);
+    s->dmdt = sls - znl * s3 * (z1 + z3 - 14.0 - 6.0 * eo2);
 
     double sghl = s4 * znl * (z31 + z33 - 6.0);
     double shll = -znl * s2 * (z21 + z23);
@@ -865,58 +831,58 @@ sat_init(sat* s)
         if (s->eccentricity <= 0.65)
         {
           g211 =    3.616  -  13.2470 * s->eccentricity
-               +   16.2900 * eosq;
+               +   16.2900 * eo2;
           g310 =  -19.302  + 117.3900 * s->eccentricity
-               -  228.4190 * eosq +  156.5910 * eocu;
+               -  228.4190 * eo2 +  156.5910 * eocu;
           g322 =  -18.9068 + 109.7927 * s->eccentricity
-               -  214.6334 * eosq +  146.5816 * eocu;
+               -  214.6334 * eo2 +  146.5816 * eocu;
           g410 =  -41.122  + 242.6940 * s->eccentricity
-               -  471.0940 * eosq +  313.9530 * eocu;
+               -  471.0940 * eo2 +  313.9530 * eocu;
           g422 = -146.407  + 841.8800 * s->eccentricity
-               - 1629.014  * eosq + 1083.4350 * eocu;
+               - 1629.014  * eo2 + 1083.4350 * eocu;
           g520 = -532.114  + 3017.977 * s->eccentricity
-               - 5740.032  * eosq + 3708.2760 * eocu;
+               - 5740.032  * eo2 + 3708.2760 * eocu;
         }
         else
         {
           g211 =   -72.099 +   331.819 * s->eccentricity
-               -   508.738 * eosq +   266.724 * eocu;
+               -   508.738 * eo2 +   266.724 * eocu;
           g310 =  -346.844 +  1582.851 * s->eccentricity
-               -  2415.925 * eosq +  1246.113 * eocu;
+               -  2415.925 * eo2 +  1246.113 * eocu;
           g322 =  -342.585 +  1554.908 * s->eccentricity
-               -  2366.899 * eosq +  1215.972 * eocu;
+               -  2366.899 * eo2 +  1215.972 * eocu;
           g410 = -1052.797 +  4758.686 * s->eccentricity
-               -  7193.992 * eosq +  3651.957 * eocu;
+               -  7193.992 * eo2 +  3651.957 * eocu;
           g422 = -3581.690 + 16178.110 * s->eccentricity
-               - 24462.770 * eosq + 12422.520 * eocu;
+               - 24462.770 * eo2 + 12422.520 * eocu;
 
           if (s->eccentricity > 0.715)
           {
             g520      = -5149.66 + 29936.92 * s->eccentricity
-                      - 54087.36 * eosq + 31324.56 * eocu;
+                      - 54087.36 * eo2 + 31324.56 * eocu;
           }
           else
           {
-            g520      = 1464.74 - 4664.75 * s->eccentricity + 3763.64 * eosq;
+            g520      = 1464.74 - 4664.75 * s->eccentricity + 3763.64 * eo2;
           }
         }
         if (s->eccentricity < 0.7)
         {
           g533 = -919.22770 + 4988.6100 * s->eccentricity
-               - 9064.7700  * eosq + 5542.21  * eocu;
+               - 9064.7700  * eo2 + 5542.21  * eocu;
           g521 = -822.71072 + 4568.6173 * s->eccentricity
-               - 8491.4146  * eosq + 5337.524 * eocu;
+               - 8491.4146  * eo2 + 5337.524 * eocu;
           g532 = -853.66600 + 4690.2500 * s->eccentricity
-               - 8624.7700  * eosq + 5341.4  * eocu;
+               - 8624.7700  * eo2 + 5341.4  * eocu;
         }
         else
         {
           g533 = -37995.780 + 161616.52 * s->eccentricity
-               - 229838.20  * eosq + 109377.94 * eocu;
+               - 229838.20  * eo2 + 109377.94 * eocu;
           g521 = -51752.104 + 218913.95 * s->eccentricity
-               - 309468.16  * eosq + 146349.42 * eocu;
+               - 309468.16  * eo2 + 146349.42 * eocu;
           g532 = -40023.880 + 170470.89 * s->eccentricity
-               - 242699.48  * eosq + 115605.82 * eocu;
+               - 242699.48  * eo2 + 115605.82 * eocu;
         }
 
 //        printf("----------------------------\n");
@@ -1009,9 +975,9 @@ sat_init(sat* s)
 
       if (s->is_24h_resonant == true)
       {
-            g200 = 1 + eosq * (-2.5 + 0.8125 * eosq);
-            g310 = 1 + 2 * eosq;
-            g300 = 1 + eosq * (-6 + 6.60937 * eosq);
+            g200 = 1 + eo2 * (-2.5 + 0.8125 * eo2);
+            g310 = 1 + 2 * eo2;
+            g300 = 1 + eo2 * (-6 + 6.60937 * eo2);
             f220 = 0.75 * (1 + cosim) * (1 + cosim);
             f311 = 0.9375 * sinim * sinim * (1 + 3 * cosim) - 0.75 * (1 + cosim);
             f330 = 1 + cosim;
@@ -1081,8 +1047,23 @@ sat_init(sat* s)
                  + 15 * C12 * (2 * s->D2 + C12));
   }
 
+  printf("----------------------------------------\n");
+  printf("C3     %+.15e\n", C3);
+  printf("xmcof  %+.15e\n", s->xmcof);
+  printf("C5     %+.15e\n", s->C5);
+  printf("omgcof %+.15e\n", s->omgcof);
+  printf("delmo  %+.15e\n", s->delmo);
+  printf("sinmo  %+.15e\n", s->sinmo);
+  printf("D2     %+.15e\n", s->D2);
+  printf("D3     %+.15e\n", s->D3);
+  printf("D4     %+.15e\n", s->D4);
+  printf("t3cof  %+.15e\n", s->t3cof);
+  printf("t4cof  %+.15e\n", s->t4cof);
+  printf("t5cof  %+.15e\n", s->t5cof);
+
   // Propagate at zero time since epoch here
-  return sat_propagate(s, 0.0, 4, 1.0e-12, NULL, NULL);
+  //return sat_propagate(s, 0.0, 4, 1.0e-12, NULL, NULL);
+  return 0;
 }
 
 /*
@@ -1355,22 +1336,30 @@ sat_propagate
   xlm    = fmod(xlm, TWOPI);
   xmp     = fmod(xlm - omega - xnode, TWOPI);
 
+  s->inclination_lp      = s->inclination;
+  s->eccentricity_lp     = s->eccentricity;
+  s->right_asc_node_lp   = s->xnodp;
+  s->argument_perigee_lp = s->argument_perigee;
+  s->mean_anomaly_lp     = s->mean_anomaly;
+  double sinip = sin(s->inclination_lp);
+  double cosip = cos(s->inclination_lp);
+
   // Add lunar-solar periodics
   if (s->is_deep_space == true)
   {
-    dpper(s, tdelta);
+    //dpper(s, tdelta); TODO: Not working!
 
-    printf("-------------------------------\n");
-    printf("xmp:    %+.15e\n", xmp);
-    printf("xlm:    %+.15e\n", xlm);
-    printf("em2:    %+.15e\n", em2);
-    printf("xnode:  %+.15e\n", xnode);
-    printf("omega:  %+.15e\n", omega);
-    printf("incl_lp:%+.15e\n", s->inclination_lp);
-    printf("node_lp:%+.15e\n", s->right_asc_node_lp);
-    printf("argplp: %+.15e\n", s->argument_perigee_lp);
-    printf("ecc_lp: %+.15e\n", s->eccentricity_lp);
-    printf("mo_lp:  %+.15e\n", s->mean_anomaly_lp);
+//    printf("-------------------------------\n");
+//    printf("xmp:    %+.15e\n", xmp);
+//    printf("xlm:    %+.15e\n", xlm);
+//    printf("em2:    %+.15e\n", em2);
+//    printf("xnode:  %+.15e\n", xnode);
+//    printf("omega:  %+.15e\n", omega);
+//    printf("incl_lp:%+.15e\n", s->inclination_lp);
+//    printf("node_lp:%+.15e\n", s->right_asc_node_lp);
+//    printf("argplp: %+.15e\n", s->argument_perigee_lp);
+//    printf("ecc_lp: %+.15e\n", s->eccentricity_lp);
+//    printf("mo_lp:  %+.15e\n", s->mean_anomaly_lp);
 
     if (s->inclination_lp < 0)
     {
@@ -1387,7 +1376,7 @@ sat_propagate
   }
 
 /*
-  // -------------------- long period periodics ------------------
+  // Long period periodics
   if (s->method == 'd')
   {
     sinip =  sin(xincp);
@@ -1399,59 +1388,64 @@ sat_propagate
     else
       s->xlcof = -0.25 * j3oj2 * sinip * (3.0 + 5.0 * cosip) / temp4;
   }
-  axnl = ep * cos(argpp);
-  temp = 1.0 / (am * (1.0 - ep * ep));
-  aynl = ep* sin(argpp) + temp * s->aycof;
-  xl   = mp + argpp + nodep + temp * s->xlcof * axnl;
+*/
 
-  // --------------------- solve kepler's equation ---------------
-  u    = fmod(xl - nodep, twopi);
-  eo1  = u;
-  tem5 = 9999.9;
-  ktr = 1;
-  //   sgp4fix for kepler iteration
-  //   the following iteration needs better limits on corrections
-  while (( fabs(tem5) >= 1.0e-12) && (ktr <= 10) )
+  double axnl    = s->eccentricity_lp * cos(s->argument_perigee_lp);
+  double a1e2inv = 1 / (am * (1 - pow(s->eccentricity_lp, 2)));
+  double aynl    = s->eccentricity_lp * sin(s->argument_perigee_lp)
+                 + a1e2inv * s->aycof;
+  double xl      = s->mean_anomaly_lp + s->argument_perigee_lp
+                 + s->right_asc_node_lp + a1e2inv * s->xlcof * axnl;
+
+  // Kepler's equation
+  double u       = fmod(xl - s->right_asc_node_lp, TWOPI);
+  double eo1     = u;
+  double kdelta  = 9999.9;
+  double ktr     = 0;
+  double sineo1, coseo1;
+
+  while ((fabs(kdelta) >= tolerance) && (ktr < maxiter) )
   {
     sineo1 = sin(eo1);
     coseo1 = cos(eo1);
-    tem5   = 1.0 - coseo1 * axnl - sineo1 * aynl;
-    tem5   = (u - aynl * coseo1 + axnl * sineo1 - eo1) / tem5;
-    if(fabs(tem5) >= 0.95)
-      tem5 = tem5 > 0.0 ? 0.95 : -0.95;
-    eo1    = eo1 + tem5;
-    ktr = ktr + 1;
+    kdelta = 1 - coseo1 * axnl - sineo1 * aynl;
+    kdelta = (u - aynl * coseo1 + axnl * sineo1 - eo1) / kdelta;
+
+    if(fabs(kdelta) >= 0.95)
+    {
+      kdelta = kdelta > 0 ? 0.95 : -0.95;
+    }
+
+    eo1 += kdelta;
+    ktr++;
   }
 
-  // ------------- short period preliminary quantities -----------
-  ecose = axnl*coseo1 + aynl*sineo1;
-  esine = axnl*sineo1 - aynl*coseo1;
-  el2   = axnl*axnl + aynl*aynl;
-  pl    = am*(1.0-el2);
-  if (pl < 0.0)
+  // Short period preliminary quantities
+  double ecose = axnl * coseo1 + aynl * sineo1;
+  double esine = axnl * sineo1 - aynl * coseo1;
+  double el2   = axnl * axnl   + aynl * aynl;
+  double pl    = am * (1 - el2);
+  double mrt;
+
+  if (pl < 0)
   {
-    //        // printf("# error pl %f\n", pl);
-    s->error = 4;
-    // sgp4fix add return
-    return false;
+    return 4;
   }
   else
   {
-    rl     = am * (1.0 - ecose);
-    rdotl  = sqrt(am) * esine/rl;
-    rvdotl = sqrt(pl) / rl;
-    betal  = sqrt(1.0 - el2);
-    temp   = esine / (1.0 + betal);
-    sinu   = am / rl * (sineo1 - aynl - axnl * temp);
-    cosu   = am / rl * (coseo1 - axnl + aynl * temp);
-    su     = atan2(sinu, cosu);
-    sin2u  = (cosu + cosu) * sinu;
-    cos2u  = 1.0 - 2.0 * sinu * sinu;
-    temp   = 1.0 / pl;
-    temp1  = 0.5 * j2 * temp;
-    temp2  = temp1 * temp;
-
-    // -------------- update for short period periodics ------------
+    double rl     = am * (1 - ecose);
+    double rdotl  = sqrt(am) * esine/rl;
+    double rvdotl = sqrt(pl) / rl;
+    double betal  = sqrt(1 - el2);
+    double sinu   = am / rl * (sineo1 - aynl - axnl * esine / (1 + betal));
+    double cosu   = am / rl * (coseo1 - axnl + aynl * esine / (1 + betal));
+    double su     = atan2(sinu, cosu);
+    double sin2u  = (cosu + cosu) * sinu;
+    double cos2u  = 1 - 2 * sinu * sinu;
+    double temp1  = 0.5 * J2 * (1 / pl);
+    double temp2  = temp1 * (1 / pl);
+/*
+    // Update for short period periodics
     if (s->method == 'd')
     {
       cosisq                 = cosip * cosip;
@@ -1459,48 +1453,50 @@ sat_propagate
       s->x1mth2 = 1.0 - cosisq;
       s->x7thm1 = 7.0*cosisq - 1.0;
     }
-    mrt   = rl * (1.0 - 1.5 * temp2 * betal * s->con41) +
-        0.5 * temp1 * s->x1mth2 * cos2u;
-    su    = su - 0.25 * temp2 * s->x7thm1 * sin2u;
-    xnode = nodep + 1.5 * temp2 * cosip * sin2u;
-    xinc  = xincp + 1.5 * temp2 * cosip * sinip * cos2u;
-    mvt   = rdotl - nm * temp1 * s->x1mth2 * sin2u / xke;
-    rvdot = rvdotl + nm * temp1 * (s->x1mth2 * cos2u +
-        1.5 * s->con41) / xke;
+*/
+           mrt   = rl * (1.0 - 1.5 * temp2 * betal * s->x1m7th2)
+                 + 0.5 * temp1 * s->x1mth2 * cos2u;
+           su    = su - 0.25 * temp2 * s->x7thm1 * sin2u;
+           xnode = s->right_asc_node_lp + 1.5 * temp2 * cosip * sin2u;
+    double xinc  = s->inclination_lp    + 1.5 * temp2 * cosip * sinip * cos2u;
+    double mvt   = rdotl  - nm * temp1 * s->x1mth2  * sin2u / XKE;
+    double rvdot = rvdotl + nm * temp1 * (s->x1mth2 * cos2u
+                 + 1.5 * s->x1m7th2) / XKE;
 
-    // --------------------- orientation vectors -------------------
-    sinsu =  sin(su);
-    cossu =  cos(su);
-    snod  =  sin(xnode);
-    cnod  =  cos(xnode);
-    sini  =  sin(xinc);
-    cosi  =  cos(xinc);
-    xmx   = -snod * cosi;
-    xmy   =  cnod * cosi;
-    ux    =  xmx * sinsu + cnod * cossu;
-    uy    =  xmy * sinsu + snod * cossu;
-    uz    =  sini * sinsu;
-    vx    =  xmx * cossu - cnod * sinsu;
-    vy    =  xmy * cossu - snod * sinsu;
-    vz    =  sini * cossu;
+    if ((p != NULL) && (v != NULL))
+    {
+      // Orientation vectors
+      double sinsu =  sin(su);
+      double cossu =  cos(su);
+      double snod  =  sin(xnode);
+      double cnod  =  cos(xnode);
+      double sini  =  sin(xinc);
+      double cosi  =  cos(xinc);
+      double xmx   = -snod * cosi;
+      double xmy   =  cnod * cosi;
+      double ux    =  xmx * sinsu + cnod * cossu;
+      double uy    =  xmy * sinsu + snod * cossu;
+      double uz    =  sini * sinsu;
+      double vx    =  xmx * cossu - cnod * sinsu;
+      double vy    =  xmy * cossu - snod * sinsu;
+      double vz    =  sini * cossu;
 
-    // --------- position and velocity (in km and km/sec) ----------
-    r[0] = (mrt * ux)* radiusearthkm;
-    r[1] = (mrt * uy)* radiusearthkm;
-    r[2] = (mrt * uz)* radiusearthkm;
-    v[0] = (mvt * ux + rvdot * vx) * vkmpersec;
-    v[1] = (mvt * uy + rvdot * vy) * vkmpersec;
-    v[2] = (mvt * uz + rvdot * vz) * vkmpersec;
-  }  // if pl > 0
+      // Position and velocity vectors
+      p->x = (mrt * ux) * RE;
+      p->y = (mrt * uy) * RE;
+      p->z = (mrt * uz) * RE;
+      v->x = (mvt * ux + rvdot * vx) * vkmpersec;
+      v->y = (mvt * uy + rvdot * vy) * vkmpersec;
+      v->z = (mvt * uz + rvdot * vz) * vkmpersec;
+    }
+  }
 
-  // sgp4fix for decaying satellites
+  // Satellite decayed?
   if (mrt < 1.0)
   {
-    //        // printf("# decay condition %11.6f \n",mrt);
-    s->error = 6;
-    return false;
+    return 6;
   }
-*/
+
   return 0;
 }
 
@@ -1552,73 +1548,7 @@ sat_get_teme_at
 }
 
 
-/* -----------------------------------------------------------------------------
-*
-*                           procedure dpper
-*
-*  this procedure provides deep space long period periodic contributions
-*    to the mean elements.  by design, these periodics are zero at epoch.
-*    this used to be dscom which included initialization, but it's really a
-*    recurring function.
-*
-*  author        : david vallado                  719-573-2600   28 jun 2005
-*
-*  inputs        :
-*    e3          -
-*    ee2         -
-*    peo         -
-*    pgho        -
-*    pho         -
-*    pinco       -
-*    plo         -
-*    se2 , se3 , sgh2, sgh3, sgh4, sh2, sh3, si2, si3, sl2, sl3, sl4 -
-*    t           -
-*    xh2, xh3, xi2, xi3, xl2, xl3, xl4 -
-*    zmol        -
-*    zmos        -
-*    ep          - eccentricity                           0.0 - 1.0
-*    inclo       - inclination - needed for lyddane modification
-*    nodep       - right ascension of ascending node
-*    argpp       - argument of perigee
-*    mp          - mean anomaly
-*
-*  outputs       :
-*    ep          - eccentricity                           0.0 - 1.0
-*    inclp       - inclination
-*    nodep        - right ascension of ascending node
-*    argpp       - argument of perigee
-*    mp          - mean anomaly
-*
-*  locals        :
-*    alfdp       -
-*    betdp       -
-*    cosip  , sinip  , cosop  , sinop  ,
-*    dalf        -
-*    dbet        -
-*    dls         -
-*    f2, f3      -
-*    pe          -
-*    pgh         -
-*    ph          -
-*    pinc        -
-*    pl          -
-*    sel   , ses   , sghl  , sghs  , shl   , shs   , sil   , sinzf , sis   ,
-*    sll   , sls
-*    xls         -
-*    xnoh        -
-*    zf          -
-*    zm          -
-*
-*  coupling      :
-*    none.
-*
-*  references    :
-*    hoots, roehrich, norad spacetrack report #3 1980
-*    hoots, norad spacetrack report #6 1986
-*    hoots, schumacher and glover 2004
-*    vallado, crawford, hujsak, kelso  2006
-  ----------------------------------------------------------------------------*/
-
+//ong period periodic contributions to the mean elements
 void
 dpper(sat* s, double tdelta) // TODO: Rename
 {
@@ -1629,15 +1559,14 @@ dpper(sat* s, double tdelta) // TODO: Rename
   xnoh,  zf,    zm,    zel,   zes,  znl,  zns;
 
   // Constants
-  zns   = 1.19459e-5;
+  zns   = 1.19459e-5; // TODO: const keyword?
   zes   = 0.01675;
   znl   = 1.5835218e-4;
   zel   = 0.05490;
 
   // Calculate time varying periodics
   zm    = s->zmos + zns * tdelta;
-
-  zf    = zm + 2.0 * zes * sin(zm);
+  zf    = zm + 2 * zes * sin(zm);
   sinzf = sin(zf);
   f2    =  0.5 * sinzf * sinzf - 0.25;
   f3    = -0.5 * sinzf * cos(zf);
@@ -1648,7 +1577,7 @@ dpper(sat* s, double tdelta) // TODO: Rename
   shs   = s->sh2 * f2 + s->sh3 * f3;
   zm    = s->zmol + znl * tdelta;
 
-  zf    = zm + 2.0 * zel * sin(zm);
+  zf    = zm + 2 * zel * sin(zm);
   sinzf = sin(zf);
   f2    =  0.5 * sinzf * sinzf - 0.25;
   f3    = -0.5 * sinzf * cos(zf);
@@ -1674,8 +1603,8 @@ dpper(sat* s, double tdelta) // TODO: Rename
   sinip = sin(s->inclination_lp);
   cosip = cos(s->inclination_lp);
 
-  // Apply periodics directly using Lyddane choice
-  if (s->inclination_lp >= 0.2)
+  // Apply periodics directly
+  if (s->inclination_lp >= 0.2) // Lyddane choice
   {
     ph  = ph / sinip;
     pgh = pgh - cosip * ph;
@@ -1686,7 +1615,7 @@ dpper(sat* s, double tdelta) // TODO: Rename
   }
   else
   {
-    /* ---- apply periodics with lyddane modification ---- */
+    // Apply periodics with Lyddane modifications
     sinop  = sin(s->right_asc_node_lp);
     cosop  = cos(s->right_asc_node_lp);
     alfdp  = sinip * sinop;
@@ -1701,16 +1630,29 @@ dpper(sat* s, double tdelta) // TODO: Rename
     xls    = xls + dls;
     xnoh   = s->right_asc_node_lp;
     s->right_asc_node_lp  = atan2(alfdp, betdp);
-    //  sgp4fix for afspc written intrinsic functions
-    // nodep used without a trigonometric function ahead
+
     if (fabs(xnoh - s->right_asc_node_lp) > PI)
+    {
       if (s->right_asc_node_lp < xnoh)
+      {
         s->right_asc_node_lp = s->right_asc_node_lp + TWOPI;
+      }
       else
+      {
         s->right_asc_node_lp = s->right_asc_node_lp - TWOPI;
+      }
+    }
+
     s->mean_anomaly_lp    = s->mean_anomaly_lp + pl;
     s->argument_perigee_lp = xls - s->mean_anomaly_lp - cosip * s->right_asc_node_lp;
   }
+//  printf("dpper>tdelta: %+.15e\n", tdelta);
+//  printf("dpper>inc_lp: %+.15e\n", s->inclination_lp);
+//  printf("dpper>ecc_lp: %+.15e\n", s->eccentricity_lp);
+//  printf("dpper>nod_lp: %+.15e\n", s->right_asc_node_lp);
+//  printf("dpper>arg_lp: %+.15e\n", s->argument_perigee_lp);
+//  printf("dpper>mo_lp:  %+.15e\n", s->mean_anomaly_lp);
+//  printf("----------------------------------------\n");
 }
 
 double  sgn
