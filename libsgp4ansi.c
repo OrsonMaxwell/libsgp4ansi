@@ -1061,9 +1061,9 @@ sat_init(sat* s)
   printf("t4cof  %+.15e\n", s->t4cof);
   printf("t5cof  %+.15e\n", s->t5cof);
 
-  // Propagate at zero time since epoch here
-  //return sat_propagate(s, 0.0, 4, 1.0e-12, NULL, NULL);
-  return 0;
+  // Propagate at zero time since epoch
+  return sat_propagate(s, 0.0, 4, 1.0e-12, NULL, NULL);
+  //return 0;
 }
 
 /*
@@ -1110,15 +1110,6 @@ sat_propagate
   double tempa    = 1 - s->C1 * tdelta;
   double tempe    = s->Bstar * s->C4 * tdelta;
   double templ    = s->t2cof * t2;
-
-//  printf("C1:     %+.15e\n", s->C1);
-//  printf("tdelta: %+.15e\n", tdelta);
-//  printf("tempa:  %+.15e\n", tempa);
-//  printf("Bstar:  %+.15e\n", s->Bstar);
-//  printf("C4:     %+.15e\n", s->C4);
-//  printf("tempe:  %+.15e\n", tempe);
-//  printf("templ:  %+.15e\n", templ);
-
   double omega    = omgadf;
   double xmp      = xmdf;
 
@@ -1126,9 +1117,8 @@ sat_propagate
   {
     double delomg = s->omgcof * tdelta;
     double delm   = s->xmcof * (pow(1.0 + s->eta * cos(xmdf), 3) - s->delmo);
-    double temp   = delomg + delm;
-    xmp           = xmdf + temp;
-    omega         = omgadf - temp;
+    xmp           = xmdf + delomg + delm;
+    omega         = omgadf - delomg - delm;
     double t3     = t2 * tdelta;
     double t4     = t3 * tdelta;
     tempa         = tempa - s->D2 * t2 - s->D3 * t3 - s->D4 * t4;
@@ -1139,6 +1129,20 @@ sat_propagate
   double nm    = s->xnodp; // TODO: Rename? Optimize?
   double em    = s->eccentricity; // TODO: Optimize?
   double inclm = s->inclination; // TODO: Optimize?
+
+  printf("----------------------------------------\n");
+  printf("xmdf   %+.15e\n", xmdf);
+  printf("omgadf %+.15e\n", omgadf);
+  printf("xnoddf %+.15e\n", xnoddf);
+  printf("t2     %+.15e\n", t2);
+  printf("xnode  %+.15e\n", xnode);
+  printf("tempa  %+.15e\n", tempa);
+  printf("tempe  %+.15e\n", tempe);
+  printf("templ  %+.15e\n", templ);
+  printf("omega  %+.15e\n", omega);
+  printf("nm     %+.15e\n", nm);
+  printf("em     %+.15e\n", em);
+  printf("inclm  %+.15e\n", inclm);
 
   if (s->is_deep_space == true)
   {
@@ -1309,11 +1313,6 @@ sat_propagate
   double am = pow((XKE / nm), TWOTHIRD) * pow(tempa, 2); // TODO: Unroll
   nm = XKE / pow(am, 1.5);
   em = em - tempe;
-
-//  printf("-------------------------------\n");
-//  printf("am:     %+.15e\n", am);
-//  printf("nm:     %+.15e\n", nm);
-//  printf("em:     %+.15e\n", em);
 
   if ((em >= 1) || (em < -1.0e-12))
   {

@@ -1914,10 +1914,6 @@ bool sgp4init
   // sgp4fix take out check to let satellites process until they are actually below earth surface
   //       if(satrec.error == 0)
 
-  //sat_print(satrec, "INIT");
-
-  //sgp4(whichconst, satrec, 0.0, r, v);
-
   printf("----------------------------------------\n");
   printf("C3     %+.15e\n", cc3);
   printf("xmcof  %+.15e\n", satrec.xmcof);
@@ -1932,6 +1928,7 @@ bool sgp4init
   printf("t4cof  %+.15e\n", satrec.t4cof);
   printf("t5cof  %+.15e\n", satrec.t5cof);
 
+  sgp4(whichconst, satrec, 0.0, r, v);
   satrec.init = 'n';
   //print_orbit(satrec, "sgp4init post-sgp4 call");
 
@@ -2066,28 +2063,15 @@ bool sgp4
 
   /* ------- update for secular gravity and atmospheric drag ----- */
   xmdf    = satrec.mo + satrec.mdot * satrec.t;
-  // printf("xmdf:     %20.15lf\n", xmdf);
   argpdf  = satrec.argpo + satrec.argpdot * satrec.t;
-  // printf("omgadf:   %20.15lf\n", argpdf);
   nodedf  = satrec.nodeo + satrec.nodedot * satrec.t;
-  // printf("xnoddf:   %20.15lf\n", nodedf);
   argpm   = argpdf;
   mm      = xmdf;
   t2      = satrec.t * satrec.t;
-  // printf("t2:       %20.15lf\n", t2);
   nodem   = nodedf + satrec.nodecf * t2;
-  // printf("xnode:    %20.15lf\n", nodem);
   tempa   = 1.0 - satrec.cc1 * satrec.t;
   tempe   = satrec.bstar * satrec.cc4 * satrec.t;
   templ   = satrec.t2cof * t2;
-
-//  printf("C1:     %+.15e\n", satrec.cc1);
-//  printf("tdelta: %+.15e\n", satrec.t);
-//  printf("tempa:  %+.15e\n", tempa);
-//  printf("Bstar:  %+.15e\n", satrec.bstar);
-//  printf("C4:     %+.15e\n", satrec.cc4);
-//  printf("tempe:  %+.15e\n", tempe);
-//  printf("templ:  %+.15e\n", templ);
 
   if (satrec.isimp != 1)
   {
@@ -2110,15 +2094,24 @@ bool sgp4
         satrec.t * satrec.t5cof);
   }
 
-  // printf("omega:    %20.15lf\n", argpm);
-  // printf("xmp:      %20.15lf\n", mm);
-  // printf("tempa:    %20.15lf\n", tempa);
-  // printf("tempe:    %20.15lf\n", tempe);
-  // printf("templ:    %20.15lf\n", templ);
-
   nm    = satrec.no;
   em    = satrec.ecco;
   inclm = satrec.inclo;
+
+  printf("----------------------------------------\n");
+  printf("xmdf   %+.15e\n", xmdf);
+  printf("omgadf %+.15e\n", argpdf);
+  printf("xnoddf %+.15e\n", nodedf);
+  printf("t2     %+.15e\n", t2);
+  printf("xnode  %+.15e\n", xnode);
+  printf("tempa  %+.15e\n", tempa);
+  printf("tempe  %+.15e\n", tempe);
+  printf("templ  %+.15e\n", templ);
+  printf("omega  %+.15e\n", argpm);
+  printf("nm     %+.15e\n", nm);
+  printf("em     %+.15e\n", em);
+  printf("inclm  %+.15e\n", inclm);
+
   if (satrec.method == 'd')
   {
     tc = satrec.t;
