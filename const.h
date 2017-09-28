@@ -39,6 +39,10 @@
 //                               GEODETIC DATUM                              //
 // ************************************************************************* //
 
+#if !defined(USE_WGS72_LEGACY) && !defined(USE_WGS72) && !defined(USE_WGS84)
+#define USE_WGS72 // Default to WGS72 datum if not explicitly defined
+#endif
+
 #ifdef USE_WGS72_LEGACY  // Old WGS 72
 #define GM        398600.79964           // mu, km3 / s2
 #define RE        6378.135               // Equatorial Earth radius, km
