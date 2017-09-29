@@ -1507,18 +1507,20 @@ static void initl
     gsto = gstime(epoch + 2433281.5);
 
   printf("----------------------------------------\n");
-  printf("aa     %+.15e\n", ak);
-  printf("cosio  %+.15e\n", cosio);
-  printf("sinio  %+.15e\n", sinio);
-  printf("eo2    %+.15e\n", eccsq);
-  printf("theta2 %+.15e\n", cosio2);
-  printf("betao2 %+.15e\n", omeosq);
-  printf("betao  %+.15e\n", rteosq);
-  printf("delta1 %+.15e\n", d1);
-  printf("a0     %+.15e\n", adel);
-  printf("delta0 %+.15e\n", del);
-  printf("xnodp  %+.15e\n", no);
-  printf("aodp   %+.15e\n", ao);
+  printf("aa      %+.15e\n", ak);
+  printf("cosio   %+.15e\n", cosio);
+  printf("sinio   %+.15e\n", sinio);
+  printf("eo2     %+.15e\n", eccsq);
+  printf("theta2  %+.15e\n", cosio2);
+  printf("betao2  %+.15e\n", omeosq);
+  printf("betao   %+.15e\n", rteosq);
+  printf("delta1  %+.15e\n", d1);
+  printf("a0      %+.15e\n", adel);
+  printf("delta0  %+.15e\n", del);
+  printf("xnodp   %+.15e\n", no);
+  printf("aodp    %+.15e\n", ao);
+  printf("x1m5th2 %+.15e\n", con42);
+  printf("con41   %+.15e\n", con41);
 
   //#include "debug5.cpp"
 }  // end initl
@@ -1813,7 +1815,6 @@ bool sgp4init
     printf("coef1  %+.15e\n", coef1);
     printf("C2     %+.15e\n", cc2);
     printf("C1     %+.15e\n", satrec.cc1);
-    printf("x1mth2 %+.15e\n", satrec.x1mth2);
     printf("C4     %+.15e\n", satrec.cc4);
     printf("theta4 %+.15e\n", cosio4);
     printf("xmdot  %+.15e\n", satrec.mdot);
@@ -1824,6 +1825,7 @@ bool sgp4init
     printf("xlcof  %+.15e\n", satrec.xlcof);
     printf("aycof  %+.15e\n", satrec.aycof);
     printf("x7thm1 %+.15e\n", satrec.x7thm1);
+    printf("x1mth2 %+.15e\n", satrec.x1mth2);
     printf("dspace %d\n", (satrec.method == 'd'));
     printf("simple %d\n", satrec.isimp);
 
@@ -2266,6 +2268,7 @@ bool sgp4
 
   /* --------------------- solve kepler's equation --------------- */
   u    = fmod(xl - nodep, twopi); // TODO: This is evaluating incorrectly? Failed to reproduce
+  u    = 7.699938584533328e-004; // CRUTCH!
   eo1  = u;
   tem5 = 9999.9;
   ktr  = 1;
@@ -2305,6 +2308,13 @@ bool sgp4
   esine = axnl*sineo1 - aynl*coseo1;
   el2   = axnl*axnl + aynl*aynl;
   pl    = am*(1.0-el2);
+
+  printf("----------------------------------------\n");
+  printf("ecose %+.15e\n", ecose);
+  printf("esine %+.15e\n", esine);
+  printf("el2   %+.15e\n", el2);
+  printf("pl    %+.15e\n", pl);
+
   if (pl < 0.0)
   {
     //        // printf("# error pl %f\n", pl);
@@ -2345,6 +2355,26 @@ bool sgp4
     rvdot = rvdotl + nm * temp1 * (satrec.x1mth2 * cos2u +
         1.5 * satrec.con41) / xke;
 
+    printf("----------------------------------------\n");
+    printf("rl     %+.15e\n", rl);
+    printf("rdotl  %+.15e\n", rdotl);
+    printf("rvdotl %+.15e\n", rvdotl);
+    printf("betal  %+.15e\n", betal);
+    printf("sinu   %+.15e\n", sinu);
+    printf("cosu   %+.15e\n", cosu);
+    printf("su     %+.15e\n", su);
+    printf("sin2u  %+.15e\n", sin2u);
+    printf("cos2u  %+.15e\n", cos2u);
+    printf("temp1  %+.15e\n", temp1);
+    printf("con41  %+.15e\n", satrec.con41);
+    printf("x1mth2 %+.15e\n", satrec.x1mth2);
+    printf("temp2  %+.15e\n", temp2);
+    printf("mrt    %+.15e\n", mrt);
+    printf("xnode  %+.15e\n", xnode);
+    printf("xinc   %+.15e\n", xinc);
+    printf("mvt    %+.15e\n", mvt);
+    printf("rvdot  %+.15e\n", rvdot);
+
     /* --------------------- orientation vectors ------------------- */
     sinsu =  sin(su);
     cossu =  cos(su);
@@ -2368,6 +2398,15 @@ bool sgp4
     v[0] = (mvt * ux + rvdot * vx) * vkmpersec;
     v[1] = (mvt * uy + rvdot * vy) * vkmpersec;
     v[2] = (mvt * uz + rvdot * vz) * vkmpersec;
+
+    printf("----------------------------------------\n");
+    printf("px %+.15e\n", r[0]);
+    printf("py %+.15e\n", r[1]);
+    printf("pz %+.15e\n", r[2]);
+    printf("vx %+.15e\n", v[0]);
+    printf("vy %+.15e\n", v[1]);
+    printf("vz %+.15e\n", v[2]);
+
   }  // if pl > 0
 
   // sgp4fix for decaying satellites

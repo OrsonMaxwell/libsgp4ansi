@@ -83,11 +83,12 @@
 //                                 SECTION 12                                //
 // ************************************************************************* //
 
-#define K2        (J2 / 2.0)
-#define S         (78.0 / RE) + 1
+#define K2        (J2 / 2)
+#define S         (78 / RE) + 1
 #define A3OVK2    (-J3 / K2)
 
-#define RPTIM     (OMEGAE * 60.0)        // Angular velocity, rad/min
+#define RPTIM     (OMEGAE * 60)          // Earth angular velocity, rad/min
+#define VKMPS     (RE * XKE / 60)        // Earth angular velocity, rad/min
 #define TUMIN     (1 / XKE)              // Time units in minute TODO: Remove?
 #define J3DIVJ2   (J3 / J2)              // TODO: Remove?
 #define THDT      4.37526908801129966e-3 // TODO: Remove?

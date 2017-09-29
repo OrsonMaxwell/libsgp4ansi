@@ -147,7 +147,7 @@ void sat_print(sat* s, char* caption)
   fprintf(f, "t2cof            %+.15e\n", s->t2cof);
   fprintf(f, "x1mth2           %+.15e\n", s->x1mth2);
   fprintf(f, "x1m5th2          %+.15e\n", s->x1m5th2);
-  fprintf(f, "x1m7th2          %+.15e\n", s->x1m7th2);
+  fprintf(f, "x1m7th2          %+.15e\n", s->con41);
   fprintf(f, "x7thm1           %+.15e\n", s->x7thm1);
   fprintf(f, "xlcof            %+.15e\n", s->xlcof);
   fprintf(f, "xnodcf           %+.15e\n", s->xnodcf);
@@ -308,6 +308,10 @@ sat_init(sat* s)
   double eo2     = pow(s->eccentricity, 2);
   double theta2  = pow(cosio, 2);
   double x3th2m1 = 3 * theta2 - 1;
+      s->x1mth2  = 1 - theta2;
+      s->x1m5th2 = 1 - 5 * theta2;
+      s->con41   = -s->x1m5th2 - 2 * theta2;
+      s->x7thm1  = 7 * theta2 - 1;
   double betao2  = 1 - eo2;
   double betao   = sqrt(betao2);
 
@@ -325,18 +329,20 @@ sat_init(sat* s)
   s->period      = TWOPI / s->xnodp;
 
   printf("----------------------------------------\n");
-  printf("aa     %+.15e\n", aa);
-  printf("cosio  %+.15e\n", cosio);
-  printf("sinio  %+.15e\n", sinio);
-  printf("eo2    %+.15e\n", eo2);
-  printf("theta2 %+.15e\n", theta2);
-  printf("betao2 %+.15e\n", betao2);
-  printf("betao  %+.15e\n", betao);
-  printf("delta1 %+.15e\n", delta1);
-  printf("a0     %+.15e\n", a0);
-  printf("delta0 %+.15e\n", delta0);
-  printf("xnodp  %+.15e\n", s->xnodp);
-  printf("aodp   %+.15e\n", s->aodp);
+  printf("aa      %+.15e\n", aa);
+  printf("cosio   %+.15e\n", cosio);
+  printf("sinio   %+.15e\n", sinio);
+  printf("eo2     %+.15e\n", eo2);
+  printf("theta2  %+.15e\n", theta2);
+  printf("betao2  %+.15e\n", betao2);
+  printf("betao   %+.15e\n", betao);
+  printf("delta1  %+.15e\n", delta1);
+  printf("a0      %+.15e\n", a0);
+  printf("delta0  %+.15e\n", delta0);
+  printf("xnodp   %+.15e\n", s->xnodp);
+  printf("aodp    %+.15e\n", s->aodp);
+  printf("x1m5th2 %+.15e\n", s->x1m5th2);
+  printf("con41   %+.15e\n", s->con41);
 
   if (s->period >= 225)
   {
@@ -384,10 +390,6 @@ sat_init(sat* s)
                  + 0.375 * J2 * tsi / psi2 * x3th2m1
                  * (8 + 3 * eta2 * (8 + eta2)));
       s->C1      = s->Bstar * C2;
-      s->x1mth2  = 1 - theta2;
-      s->x1m5th2 = 1 - 5 * theta2;
-      s->x1m7th2 = 1 - 7 * theta2;
-      s->x7thm1  = 7 * theta2 - 1;
       s->C4      = 2 * s->xnodp * coef1 * s->aodp * betao2
                  * (s->eta * (2 + 0.5 * eta2) + s->eccentricity
                  * (0.5 + 2 * eta2) - J2 * tsi / (s->aodp * psi2)
@@ -427,7 +429,6 @@ sat_init(sat* s)
   printf("coef1  %+.15e\n", coef1);
   printf("C2     %+.15e\n", C2);
   printf("C1     %+.15e\n", s->C1);
-  printf("x1mth2 %+.15e\n", s->x1mth2);
   printf("C4     %+.15e\n", s->C4);
   printf("theta4 %+.15e\n", theta4);
   printf("xmdot  %+.15e\n", s->xmdot);
@@ -438,6 +439,7 @@ sat_init(sat* s)
   printf("xlcof  %+.15e\n", s->xlcof);
   printf("aycof  %+.15e\n", s->aycof);
   printf("x7thm1 %+.15e\n", s->x7thm1);
+  printf("x1mth2 %+.15e\n", s->x1mth2);
   printf("dspace %d\n", s->is_deep_space);
   printf("simple %d\n", s->use_simple_model);
 
@@ -1061,9 +1063,11 @@ sat_init(sat* s)
   printf("t4cof  %+.15e\n", s->t4cof);
   printf("t5cof  %+.15e\n", s->t5cof);
 
+  vec3 p, v; // TODO: Test only
+  return sat_propagate(s, 0.0, 4, 1.0e-12, &p, &v);
+
   // Propagate at zero time since epoch
-  return sat_propagate(s, 0.0, 4, 1.0e-12, NULL, NULL);
-  //return 0;
+  //return sat_propagate(s, 0.0, 4, 1.0e-12, NULL, NULL);
 }
 
 /*
@@ -1098,8 +1102,6 @@ sat_propagate
   {
     return -1;
   }
-
-  double vkmpersec     = RE * XKE / 60; // TODO: Remove?
 
   // Update for secular gravity and atmospheric drag
   double xmdf     = s->mean_anomaly + s->xmdot * tdelta;
@@ -1459,6 +1461,12 @@ sat_propagate
   double pl    = am * (1 - el2);
   double mrt;
 
+  printf("----------------------------------------\n");
+  printf("ecose %+.15e\n", ecose);
+  printf("esine %+.15e\n", esine);
+  printf("el2   %+.15e\n", el2);
+  printf("pl    %+.15e\n", pl);
+
   if (pl < 0)
   {
     return 4;
@@ -1486,14 +1494,34 @@ sat_propagate
       s->x7thm1 = 7.0*cosisq - 1.0;
     }
 */
-           mrt   = rl * (1.0 - 1.5 * temp2 * betal * s->x1m7th2)
+           mrt   = rl * (1 - 1.5 * temp2 * betal * s->con41)
                  + 0.5 * temp1 * s->x1mth2 * cos2u;
            su    = su - 0.25 * temp2 * s->x7thm1 * sin2u;
            xnode = s->right_asc_node_lp + 1.5 * temp2 * cosip * sin2u;
     double xinc  = s->inclination_lp    + 1.5 * temp2 * cosip * sinip * cos2u;
     double mvt   = rdotl  - nm * temp1 * s->x1mth2  * sin2u / XKE;
     double rvdot = rvdotl + nm * temp1 * (s->x1mth2 * cos2u
-                 + 1.5 * s->x1m7th2) / XKE;
+                 + 1.5 * s->con41) / XKE;
+
+    printf("----------------------------------------\n");
+    printf("rl      %+.15e\n", rl);
+    printf("rdotl   %+.15e\n", rdotl);
+    printf("rvdotl  %+.15e\n", rvdotl);
+    printf("betal   %+.15e\n", betal);
+    printf("sinu    %+.15e\n", sinu);
+    printf("cosu    %+.15e\n", cosu);
+    printf("su      %+.15e\n", su);
+    printf("sin2u   %+.15e\n", sin2u);
+    printf("cos2u   %+.15e\n", cos2u);
+    printf("temp1   %+.15e\n", temp1);
+    printf("con41   %+.15e\n", s->con41);
+    printf("x1mth2  %+.15e\n", s->x1mth2);
+    printf("temp2   %+.15e\n", temp2);
+    printf("mrt     %+.15e\n", mrt);
+    printf("xnode   %+.15e\n", xnode);
+    printf("xinc    %+.15e\n", xinc);
+    printf("mvt     %+.15e\n", mvt);
+    printf("rvdot   %+.15e\n", rvdot);
 
     if ((p != NULL) && (v != NULL))
     {
@@ -1517,9 +1545,17 @@ sat_propagate
       p->x = (mrt * ux) * RE;
       p->y = (mrt * uy) * RE;
       p->z = (mrt * uz) * RE;
-      v->x = (mvt * ux + rvdot * vx) * vkmpersec;
-      v->y = (mvt * uy + rvdot * vy) * vkmpersec;
-      v->z = (mvt * uz + rvdot * vz) * vkmpersec;
+      v->x = (mvt * ux + rvdot * vx) * VKMPS;
+      v->y = (mvt * uy + rvdot * vy) * VKMPS;
+      v->z = (mvt * uz + rvdot * vz) * VKMPS;
+
+      printf("----------------------------------------\n");
+      printf("px %+.15e\n", p->x);
+      printf("py %+.15e\n", p->y);
+      printf("pz %+.15e\n", p->z);
+      printf("vx %+.15e\n", v->x);
+      printf("vy %+.15e\n", v->y);
+      printf("vz %+.15e\n", v->z);
     }
   }
 
