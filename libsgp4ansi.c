@@ -281,7 +281,7 @@ int
 sat_init(sat* s)
 {
 
-  printf("----------------------------------------\n");
+  printf("---------------------------------------- i1\n");
   printf("mean_motion_dt2  %+.15e\n", s->mean_motion_dt2);
   printf("mean_motion_ddt6 %+.15e\n", s->mean_motion_ddt6);
   printf("Bstar            %+.15e\n", s->Bstar);
@@ -308,7 +308,10 @@ sat_init(sat* s)
   double eo2     = pow(s->eccentricity, 2);
   double theta2  = pow(cosio, 2);
   double x3th2m1 = 3 * theta2 - 1;
-      s->x1mth2  = 1 - theta2;
+      printf("----> %+.25e\n", theta2);
+      printf("----> %+.25e\n", 1.0 - theta2); // TODO: Failed to evaluate correctly when using -O1 and up!
+      s->x1mth2  = 1.0 - theta2;
+      //s->x1mth2  = 4.5168226551204337937406308e-003; // C-R-U-T-C-H-!-!-!
       s->x1m5th2 = 1 - 5 * theta2;
       s->con41   = -s->x1m5th2 - 2 * theta2;
       s->x7thm1  = 7 * theta2 - 1;
@@ -328,7 +331,7 @@ sat_init(sat* s)
   s->perigee_alt = s->perigee - RE;
   s->period      = TWOPI / s->xnodp;
 
-  printf("----------------------------------------\n");
+  printf("---------------------------------------- i2\n");
   printf("aa      %+.15e\n", aa);
   printf("cosio   %+.15e\n", cosio);
   printf("sinio   %+.15e\n", sinio);
@@ -416,7 +419,7 @@ sat_init(sat* s)
                  / ((fabs(cosio+1.0) > 1.5e-12) ? ((1.0 + cosio)) : (1.5e-12));
       s->aycof   = 0.25 * A3OVK2 * sinio;
 
-  printf("----------------------------------------\n");
+  printf("---------------------------------------- i3\n");
   printf("qoms24 %+.15e\n", qoms24);
   printf("s4     %+.15e\n", sfour);
   printf("pinv2  %+.15e\n", pinv2);
@@ -487,19 +490,21 @@ sat_init(sat* s)
     double zx     = gam + atan2(0.39785416 * stem / zsinil, zy) - xnodce;
     double zcosgl = cos(zx);
     double zsingl = sin(zx);
-    // printf("day:    %+.15e\n", day);
-    // printf("xnodce: %+.15e\n", xnodce);
-    // printf("stem:   %+.15e\n", stem);
-    // printf("ctem:   %+.15e\n", ctem);
-    // printf("zcosil: %+.15e\n", zcosil);
-    // printf("zsinil: %+.15e\n", zsinil);
-    // printf("zsinhl: %+.15e\n", zsinhl);
-    // printf("zcoshl: %+.15e\n", zcoshl);
-    // printf("gam:    %+.15e\n", gam);
-    // printf("zy:     %+.15e\n", zy);
-    // printf("zx:     %+.15e\n", zx);
-    // printf("zcosgl: %+.15e\n", zcosgl);
-    // printf("zsingl: %+.15e\n", zsingl);
+
+    printf("======================================== id1\n");
+    printf("[DS] day:    %+.15e\n", day);
+    printf("[DS] xnodce: %+.15e\n", xnodce);
+    printf("[DS] stem:   %+.15e\n", stem);
+    printf("[DS] ctem:   %+.15e\n", ctem);
+    printf("[DS] zcosil: %+.15e\n", zcosil);
+    printf("[DS] zsinil: %+.15e\n", zsinil);
+    printf("[DS] zsinhl: %+.15e\n", zsinhl);
+    printf("[DS] zcoshl: %+.15e\n", zcoshl);
+    printf("[DS] gam:    %+.15e\n", gam);
+    printf("[DS] zy:     %+.15e\n", zy);
+    printf("[DS] zx:     %+.15e\n", zx);
+    printf("[DS] zcosgl: %+.15e\n", zcosgl);
+    printf("[DS] zsingl: %+.15e\n", zsingl);
 
     s->zmos = fmod(6.2565837 + 0.017201977 * day, TWOPI);
 //    printf("zmos:   %+.15e\n", zmos);
@@ -860,12 +865,12 @@ sat_init(sat* s)
 
           if (s->eccentricity > 0.715)
           {
-            g520      = -5149.66 + 29936.92 * s->eccentricity
-                      - 54087.36 * eo2 + 31324.56 * eocu;
+            g520 = -5149.66 + 29936.92 * s->eccentricity
+                 - 54087.36 * eo2 + 31324.56 * eocu;
           }
           else
           {
-            g520      = 1464.74 - 4664.75 * s->eccentricity + 3763.64 * eo2;
+            g520 = 1464.74 - 4664.75 * s->eccentricity + 3763.64 * eo2;
           }
         }
         if (s->eccentricity < 0.7)
@@ -1049,7 +1054,7 @@ sat_init(sat* s)
                  + 15 * C12 * (2 * s->D2 + C12));
   }
 
-  printf("----------------------------------------\n");
+  printf("---------------------------------------- i4\n");
   printf("C3     %+.15e\n", C3);
   printf("xmcof  %+.15e\n", s->xmcof);
   printf("C5     %+.15e\n", s->C5);
@@ -1132,7 +1137,7 @@ sat_propagate
   double em    = s->eccentricity; // TODO: Optimize?
   double inclm = s->inclination; // TODO: Optimize?
 
-  printf("----------------------------------------\n");
+  printf("---------------------------------------- i5\n");
   printf("xmdf   %+.15e\n", xmdf);
   printf("xmp    %+.15e\n", xmp);
   printf("omgadf %+.15e\n", omgadf);
@@ -1345,7 +1350,7 @@ sat_propagate
   double sinip = sin(s->inclination_lp);
   double cosip = cos(s->inclination_lp);
 
-  printf("----------------------------------------\n");
+  printf("---------------------------------------- i6\n");
   printf("am     %+.15e\n", am);
   printf("nm     %+.15e\n", nm);
   printf("em     %+.15e\n", em);
@@ -1422,7 +1427,7 @@ sat_propagate
   uint8_t ktr     = 0;
   double  sineo1, coseo1;
 
-  printf("----------------------------------------\n");
+  printf("---------------------------------------- i7\n");
   printf("xlcof   %+.15e\n", s->xlcof);
   printf("axnl    %+.15e\n", axnl);
   printf("a1e2inv %+.15e\n", a1e2inv);
@@ -1447,7 +1452,7 @@ sat_propagate
     eo1 += kdelta;
     ktr++;
 
-    printf("> >>>>>>\n");
+    printf("> >>>>>> Kepler\n");
     printf("> sineo1 %+.15e\n", sineo1);
     printf("> coseo1 %+.15e\n", coseo1);
     printf("> eo1    %+.15e\n", eo1);
@@ -1461,7 +1466,7 @@ sat_propagate
   double pl    = am * (1 - el2);
   double mrt;
 
-  printf("----------------------------------------\n");
+  printf("---------------------------------------- i8\n");
   printf("ecose %+.15e\n", ecose);
   printf("esine %+.15e\n", esine);
   printf("el2   %+.15e\n", el2);
@@ -1503,7 +1508,7 @@ sat_propagate
     double rvdot = rvdotl + nm * temp1 * (s->x1mth2 * cos2u
                  + 1.5 * s->con41) / XKE;
 
-    printf("----------------------------------------\n");
+    printf("---------------------------------------- i9\n");
     printf("rl      %+.15e\n", rl);
     printf("rdotl   %+.15e\n", rdotl);
     printf("rvdotl  %+.15e\n", rvdotl);
@@ -1549,7 +1554,7 @@ sat_propagate
       v->y = (mvt * uy + rvdot * vy) * VKMPS;
       v->z = (mvt * uz + rvdot * vz) * VKMPS;
 
-      printf("----------------------------------------\n");
+      printf("---------------------------------------- i10\n");
       printf("px %+.15e\n", p->x);
       printf("py %+.15e\n", p->y);
       printf("pz %+.15e\n", p->z);

@@ -2,7 +2,7 @@ GPP = g++
 OUTPUTDIR=Plot
 CXXFLAGS = -lm
 RELEASEFLAGS = -O3 -flto -std=c++11
-DEBUGFLAGS = -g3
+DEBUGFLAGS = -g3 -std=c++11
 DEBUG = 0
 
 ifeq ($(OS),Windows_NT)
