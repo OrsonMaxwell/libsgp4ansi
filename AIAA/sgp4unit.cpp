@@ -1512,8 +1512,8 @@ static void initl
   printf("sinio  %+.15e\n", sinio);
   printf("eo2    %+.15e\n", eccsq);
   printf("theta2 %+.15e\n", cosio2);
-  printf("betao2 %+.15e\n", rteosq);
-  printf("betao  %+.15e\n", omeosq);
+  printf("betao2 %+.15e\n", omeosq);
+  printf("betao  %+.15e\n", rteosq);
   printf("delta1 %+.15e\n", d1);
   printf("a0     %+.15e\n", adel);
   printf("delta0 %+.15e\n", del);
@@ -2265,10 +2265,21 @@ bool sgp4
   xl   = mp + argpp + nodep + temp * satrec.xlcof * axnl;
 
   /* --------------------- solve kepler's equation --------------- */
-  u    = fmod(xl - nodep, twopi);
+  u    = fmod(xl - nodep, twopi); // TODO: This is evaluating incorrectly? Failed to reproduce
   eo1  = u;
   tem5 = 9999.9;
-  ktr = 1;
+  ktr  = 1;
+
+  printf("----------------------------------------\n");
+  printf("xlcof   %+.15e\n", satrec.xlcof);
+  printf("axnl    %+.15e\n", axnl);
+  printf("a1e2inv %+.15e\n", temp);
+  printf("aynl    %+.15e\n", aynl);
+  printf("xl      %+.25e\n", xl);
+  printf("nodep   %+.25e\n", nodep);
+  printf("twopi   %+.25e\n", twopi);
+  printf("u       %+.15e\n", u);
+
   //   sgp4fix for kepler iteration
   //   the following iteration needs better limits on corrections
   while (( fabs(tem5) >= 1.0e-12) && (ktr <= 10) )
@@ -2281,6 +2292,12 @@ bool sgp4
       tem5 = tem5 > 0.0 ? 0.95 : -0.95;
     eo1    = eo1 + tem5;
     ktr = ktr + 1;
+
+    printf("> >>>>>>\n");
+    printf("> sineo1 %+.15e\n", sineo1);
+    printf("> coseo1 %+.15e\n", coseo1);
+    printf("> eo1    %+.15e\n", eo1);
+    printf("> ktr    %d\n", ktr);
   }
 
   /* ------------- short period preliminary quantities ----------- */

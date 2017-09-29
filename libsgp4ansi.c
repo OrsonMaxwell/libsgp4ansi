@@ -407,7 +407,7 @@ sat_init(sat* s)
   double xhdot1  = -temp1 * cosio;
       s->xnodot  = xhdot1 + (0.5 * temp2 * (4 - 19 * theta2)
                  + 2 * temp3 * (3 - 7 * theta2)) * cosio;
-      s->xnodcf  = 3.5 * betao * xhdot1 * s->C1;
+      s->xnodcf  = 3.5 * betao2 * xhdot1 * s->C1;
       s->t2cof   = 1.5 * s->C1; // TODO: Remove?
   // Division by zero check then inclination = 180 deg
       s->xlcof   = 0.125 * A3OVK2 * sinio * (3.0 + 5.0 * cosio)
@@ -1136,7 +1136,6 @@ sat_propagate
   printf("omgadf %+.15e\n", omgadf);
   printf("xnoddf %+.15e\n", xnoddf);
   printf("t2     %+.15e\n", t2);
-  printf("xnode  %+.15e\n", xnode);
   printf("tempa  %+.15e\n", tempa);
   printf("tempe  %+.15e\n", tempe);
   printf("templ  %+.15e\n", templ);
@@ -1338,7 +1337,7 @@ sat_propagate
 
   s->inclination_lp      = s->inclination;
   s->eccentricity_lp     = s->eccentricity;
-  s->right_asc_node_lp   = s->xnodp;
+  s->right_asc_node_lp   = xnode;
   s->argument_perigee_lp = s->argument_perigee;
   s->mean_anomaly_lp     = xmp;
   double sinip = sin(s->inclination_lp);
@@ -1415,11 +1414,21 @@ sat_propagate
                  + s->right_asc_node_lp + a1e2inv * s->xlcof * axnl;
 
   // Kepler's equation
-  double u       = fmod(xl - s->right_asc_node_lp, TWOPI);
-  double eo1     = u;
-  double kdelta  = 9999.9;
-  double ktr     = 0;
-  double sineo1, coseo1;
+  double  u       = fmod(xl - s->right_asc_node_lp, TWOPI);
+  double  eo1     = u;
+  double  kdelta  = 9999.9;
+  uint8_t ktr     = 0;
+  double  sineo1, coseo1;
+
+  printf("----------------------------------------\n");
+  printf("xlcof   %+.15e\n", s->xlcof);
+  printf("axnl    %+.15e\n", axnl);
+  printf("a1e2inv %+.15e\n", a1e2inv);
+  printf("aynl    %+.15e\n", aynl);
+  printf("xl      %+.25e\n", xl);
+  printf("nodep   %+.25e\n", s->right_asc_node_lp);
+  printf("twopi   %+.25e\n", TWOPI);
+  printf("u       %+.15e\n", u);
 
   while ((fabs(kdelta) >= tolerance) && (ktr < maxiter) )
   {
@@ -1435,6 +1444,12 @@ sat_propagate
 
     eo1 += kdelta;
     ktr++;
+
+    printf("> >>>>>>\n");
+    printf("> sineo1 %+.15e\n", sineo1);
+    printf("> coseo1 %+.15e\n", coseo1);
+    printf("> eo1    %+.15e\n", eo1);
+    printf("> ktr    %d\n", ktr);
   }
 
   // Short period preliminary quantities
