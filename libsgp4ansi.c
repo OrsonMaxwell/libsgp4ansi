@@ -1552,12 +1552,12 @@ sat_propagate
       v->z = (mvt * uz + rvdot * vz) * VKMPS;
 
       printf("---------------------------------------- i10\n");
-      printf("px %+.15e\n", p->x);
-      printf("py %+.15e\n", p->y);
-      printf("pz %+.15e\n", p->z);
-      printf("vx %+.15e\n", v->x);
-      printf("vy %+.15e\n", v->y);
-      printf("vz %+.15e\n", v->z);
+      printf("px %10.4lf\n", p->x);
+      printf("py %10.4lf\n", p->y);
+      printf("pz %10.4lf\n", p->z);
+      printf("vx %10.4lf\n", v->x);
+      printf("vy %10.4lf\n", v->y);
+      printf("vz %10.4lf\n", v->z);
     }
   }
 

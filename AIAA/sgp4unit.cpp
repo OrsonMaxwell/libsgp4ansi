@@ -2406,12 +2406,12 @@ bool sgp4
     v[2] = (mvt * uz + rvdot * vz) * vkmpersec;
 
     printf("---------------------------------------- i10\n");
-    printf("px %+.15e\n", r[0]);
-    printf("py %+.15e\n", r[1]);
-    printf("pz %+.15e\n", r[2]);
-    printf("vx %+.15e\n", v[0]);
-    printf("vy %+.15e\n", v[1]);
-    printf("vz %+.15e\n", v[2]);
+    printf("px %10.4lf\n", r[0]);
+    printf("py %10.4lf\n", r[1]);
+    printf("pz %10.4lf\n", r[2]);
+    printf("vx %10.4lf\n", v[0]);
+    printf("vy %10.4lf\n", v[1]);
+    printf("vz %10.4lf\n", v[2]);
 
   }  // if pl > 0
 
