@@ -1,8 +1,8 @@
 GPP = g++
 OUTPUTDIR=Plot
-CXXFLAGS = -lm
-RELEASEFLAGS = -O3 -flto -std=c++11
-DEBUGFLAGS = -g3 -std=c++11
+CXXFLAGS = -lm -std=c++11
+RELEASEFLAGS = -O3 -flto -ffloat-store
+DEBUGFLAGS = -g3
 DEBUG = 0
 
 ifeq ($(OS),Windows_NT)

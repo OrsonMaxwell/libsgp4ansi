@@ -308,10 +308,7 @@ sat_init(sat* s)
   double eo2     = pow(s->eccentricity, 2);
   double theta2  = pow(cosio, 2);
   double x3th2m1 = 3 * theta2 - 1;
-      printf("----> %+.25e\n", theta2);
-      printf("----> %+.25e\n", 1.0 - theta2); // TODO: Failed to evaluate correctly when using -O1 and up!
       s->x1mth2  = 1.0 - theta2;
-      //s->x1mth2  = 4.5168226551204337937406308e-003; // C-R-U-T-C-H-!-!-!
       s->x1m5th2 = 1 - 5 * theta2;
       s->con41   = -s->x1m5th2 - 2 * theta2;
       s->x7thm1  = 7 * theta2 - 1;

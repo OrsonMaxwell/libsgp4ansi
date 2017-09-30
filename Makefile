@@ -3,8 +3,8 @@ OUTPUTDIR=Plot
 LIBFLAGS = -fPIC
 CCFLAGS = -std=c11
 LIBS = -lm
-RELEASEFLAGS = -O0 -flto
-DEBUGFLAGS = -g3 -std=c11
+RELEASEFLAGS = -O3 -flto -ffloat-store
+DEBUGFLAGS = -g3
 DEBUG = 0
 
 ifeq ($(OS),Windows_NT)

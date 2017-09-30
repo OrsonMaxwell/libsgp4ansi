@@ -1762,8 +1762,6 @@ bool sgp4init
     cc3   = 0.0;
     if (satrec.ecco > 1.0e-4)
       cc3 = -2.0 * coef * tsi * j3oj2 * satrec.no * sinio / satrec.ecco;
-    printf("----> %+.25e\n", cosio2);
-    printf("----> %+.25e\n", 1.0 - cosio2);
     satrec.x1mth2 = 1.0 - cosio2;
     satrec.cc4    = 2.0* satrec.no * coef1 * ao * omeosq *
         (satrec.eta * (2.0 + 0.5 * etasq) + satrec.ecco *
