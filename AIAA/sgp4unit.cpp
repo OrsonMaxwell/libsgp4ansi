@@ -311,7 +311,9 @@ static void dpper
       //  sgp4fix for afspc written intrinsic functions
       // nodep used without a trigonometric function ahead
       if ((nodep < 0.0) && (opsmode != 'a'))
+      {
         nodep = nodep + twopi;
+      }
       xls    = mp + argpp + cosip * nodep;
       dls    = pl + pgh - pinc * nodep * sinip;
       xls    = xls + dls;
@@ -320,14 +322,23 @@ static void dpper
       //  sgp4fix for afspc written intrinsic functions
       // nodep used without a trigonometric function ahead
       if ((nodep < 0.0) && (opsmode != 'a'))
+      {
         nodep = nodep + twopi;
-      if (fabs(xnoh - nodep) > pi){
+      }
+      if (fabs(xnoh - nodep) > pi)
+      {
         if (nodep < xnoh)
+        {
           nodep = nodep + twopi;
+        }
         else
-          nodep = nodep - twopi;}
+        {
+          nodep = nodep - twopi;
+        }
+      }
       mp    = mp + pl;
       argpp = xls - mp - cosip * nodep;
+
     }
   }   // if init == 'n'
 
@@ -2139,7 +2150,7 @@ bool sgp4
     printf("omega   %+.15e\n", argpm);
     printf("incl_lp %+.15e\n", xincp);
     printf("node_lp %+.15e\n", nodep);
-    printf("argplp  %+.15e\n", argpp);
+    printf("argp_lp %+.15e\n", argpp);
     printf("ecc_lp  %+.15e\n", ep);
     printf("mo_lp   %+.15e\n", mp);
 #endif

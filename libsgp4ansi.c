@@ -1002,10 +1002,10 @@ sat_init(sat* s)
   printf("t5cof  %+.15e\n", s->t5cof);
 
   vec3 p, v;
-  return sat_propagate(s, 0.0, 4, 1.0e-12, &p, &v);
+  return sat_propagate(s, 0.0, 10, 1.0e-12, &p, &v);
 #else
   // Propagate at zero time since epoch
-  return sat_propagate(s, 0.0, 4, 1.0e-12, NULL, NULL);
+  return sat_propagate(s, 0.0, 10, 1.0e-12, NULL, NULL);
 #endif
 }
 
@@ -1290,7 +1290,7 @@ sat_propagate
     printf("omega   %+.15e\n", omega);
     printf("incl_lp %+.15e\n", s->inclination_lp);
     printf("node_lp %+.15e\n", s->right_asc_node_lp);
-    printf("argplp  %+.15e\n", s->argument_perigee_lp);
+    printf("argp_lp %+.15e\n", s->argument_perigee_lp);
     printf("ecc_lp  %+.15e\n", s->eccentricity_lp);
     printf("mo_lp   %+.15e\n", s->mean_anomaly_lp);
 #endif
@@ -1619,11 +1619,24 @@ dpper(sat* s, double tdelta) // TODO: Rename
     alfdp  = alfdp + dalf;
     betdp  = betdp + dbet;
     s->right_asc_node_lp  = fmod(s->right_asc_node_lp, TWOPI);
+
+    // Wrap negative node for atan below
+    if (s->right_asc_node_lp < 0)
+    {
+      s->right_asc_node_lp += TWOPI;
+    }
+
     xls    = s->mean_anomaly_lp + s->argument_perigee_lp + cosip * s->right_asc_node_lp;
-    dls    = pl + pgh - pinc * s->right_asc_node_lp * sinip;
-    xls    = xls + dls;
+    dls    = pl + pgh - pinc * s->right_asc_node_lp * sinip; // TODO: Remove?
+    xls   += dls;
     xnoh   = s->right_asc_node_lp;
     s->right_asc_node_lp  = atan2(alfdp, betdp);
+
+    // Wrap negative node for fabs below
+    if (s->right_asc_node_lp < 0)
+    {
+      s->right_asc_node_lp += TWOPI;
+    }
 
     if (fabs(xnoh - s->right_asc_node_lp) > PI)
     {
@@ -1637,7 +1650,7 @@ dpper(sat* s, double tdelta) // TODO: Rename
       }
     }
 
-    s->mean_anomaly_lp    = s->mean_anomaly_lp + pl;
+    s->mean_anomaly_lp    += pl;
     s->argument_perigee_lp = xls - s->mean_anomaly_lp - cosip * s->right_asc_node_lp;
   }
 }
