@@ -250,7 +250,7 @@ fprintf(outfilee, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f\n",
                    if(tsince > stopmfe)
                        tsince = stopmfe;
 
-                   sgp4 (whichconst, satrec,  tsince, ro,  vo);
+                   //sgp4 (whichconst, satrec,  tsince, ro,  vo);
 				   if (satrec.error > 0) {
 					   printf("[ERROR] Sat %5d (%12.9lf),\tcode %2d at %8.f mfe\n",
 						   satrec.satnum, pi * 2 / satrec.no, satrec.error, satrec.t);

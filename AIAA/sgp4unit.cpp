@@ -1936,7 +1936,7 @@ bool sgp4init
   printf("t4cof  %+.15e\n", satrec.t4cof);
   printf("t5cof  %+.15e\n", satrec.t5cof);
 
-  sgp4(whichconst, satrec, 0.0, r, v);
+  sgp4(whichconst, satrec, 1440.0, r, v);
   satrec.init = 'n';
   //print_orbit(satrec, "sgp4init post-sgp4 call");
 
@@ -2106,7 +2106,7 @@ bool sgp4
   em    = satrec.ecco;
   inclm = satrec.inclo;
 
-  printf("---------------------------------------- i5\n");
+  printf("---------------------------------------- p1\n");
   printf("xmdf   %+.15e\n", xmdf);
   printf("xmp    %+.15e\n", mm);
   printf("omgadf %+.15e\n", argpdf);
@@ -2192,7 +2192,7 @@ bool sgp4
   sinip  = sinim;
   cosip  = cosim;
 
-  printf("---------------------------------------- i6\n");
+  printf("---------------------------------------- p2\n");
   printf("am     %+.15e\n", am);
   printf("nm     %+.15e\n", nm);
   printf("em     %+.15e\n", em);
@@ -2279,7 +2279,7 @@ bool sgp4
   tem5 = 9999.9;
   ktr  = 1;
 
-  printf("---------------------------------------- i7\n");
+  printf("---------------------------------------- p3\n");
   printf("xlcof   %+.15e\n", satrec.xlcof);
   printf("axnl    %+.15e\n", axnl);
   printf("a1e2inv %+.15e\n", temp);
@@ -2315,7 +2315,7 @@ bool sgp4
   el2   = axnl*axnl + aynl*aynl;
   pl    = am*(1.0-el2);
 
-  printf("---------------------------------------- i8\n");
+  printf("---------------------------------------- p4\n");
   printf("ecose %+.15e\n", ecose);
   printf("esine %+.15e\n", esine);
   printf("el2   %+.15e\n", el2);
@@ -2361,7 +2361,7 @@ bool sgp4
     rvdot = rvdotl + nm * temp1 * (satrec.x1mth2 * cos2u +
         1.5 * satrec.con41) / xke;
 
-    printf("---------------------------------------- i9\n");
+    printf("---------------------------------------- p5\n");
     printf("rl     %+.15e\n", rl);
     printf("rdotl  %+.15e\n", rdotl);
     printf("rvdotl %+.15e\n", rvdotl);
@@ -2405,13 +2405,13 @@ bool sgp4
     v[1] = (mvt * uy + rvdot * vy) * vkmpersec;
     v[2] = (mvt * uz + rvdot * vz) * vkmpersec;
 
-    printf("---------------------------------------- i10\n");
-    printf("px %10.4lf\n", r[0]);
-    printf("py %10.4lf\n", r[1]);
-    printf("pz %10.4lf\n", r[2]);
-    printf("vx %10.4lf\n", v[0]);
-    printf("vy %10.4lf\n", v[1]);
-    printf("vz %10.4lf\n", v[2]);
+    printf("---------------------------------------- p6\n");
+    printf("px %12.6lf\n", r[0]);
+    printf("py %12.6lf\n", r[1]);
+    printf("pz %12.6lf\n", r[2]);
+    printf("vx %12.6lf\n", v[0]);
+    printf("vy %12.6lf\n", v[1]);
+    printf("vz %12.6lf\n", v[2]);
 
   }  // if pl > 0
 
