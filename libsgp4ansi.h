@@ -105,7 +105,7 @@ typedef struct _sat
 //                                    API                                    //
 // ************************************************************************* //
 
-// Initialize SGP4/SDP4 orbit model from a raw NORAD TLE lines
+// Initialize SGP4/SDP4 orbit model from raw NORAD TLE lines
 extern int
 sat_load_tle(char*, char*, char*, sat*);
 
@@ -117,31 +117,12 @@ sat_init(sat*);
 extern int
 sat_propagate(sat*, double, unsigned int, double, vec3*, vec3*);
 
-// Get position and velocity vectors in the TEME frame at given unix time
+// Get classical orbital elements from TEME vectors
 extern int
-sat_get_teme_at(sat*, time_t*, unsigned int, unsigned int, double, vec3*, vec3*);
-
-/* ----------- local functions - only ever used internally by sgp4 ---------- */
-void dpper(sat*, double);
-
-void dspace
-     (
-       int irez,
-       double d2201,  double d2211,  double d3210,   double d3222,  double d4410,
-       double d4422,  double d5220,  double d5232,   double d5421,  double d5433,
-       double dedt,   double del1,   double del2,    double del3,   double didt,
-       double dmdt,   double dnodt,  double domdt,   double argpo,  double argpdot,
-       double t,      double tc,     double gsto,    double xfact,  double xlamo,
-       double no,
-       double* atime, double* em,    double* argpm,  double* inclm, double* xli,
-       double* mm,    double* xni,   double* nodem,  double* dndt,  double* nm
-     );
-
-void rv2coe
-     (
-       double r[3], double v[3],
-       double* p, double* a, double* ecc, double* incl, double* omega, double* argp,
-       double* nu, double* m, double* arglat, double* truelon, double* lonper
-     );
+teme2coe
+(
+  vec3*, vec3*, double*, double*, double*, double*, double*, double*, double*,
+  double*, double*, double*, double*
+);
 
 #endif /* LIBSGP4ANSI_H_ */

@@ -12,6 +12,18 @@
 #ifndef COORD_H_
 #define COORD_H_
 
+// Solve Kepler's equation for known true anomaly
+double
+kepler_newton(double, double);
+
+// Get classical orbital elements from TEME vectors
+int
+teme2coe
+(
+  vec3*, vec3*, double*, double*, double*, double*, double*, double*, double*,
+  double*, double*, double*, double*
+);
+
 // Transform position and velocity vectors from TEME to ECEF frame of reference
 void
 teme2ecef(vec3*, vec3*, double, vec3*, vec3*);

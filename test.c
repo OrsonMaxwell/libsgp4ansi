@@ -144,10 +144,7 @@ main (int argc, char** argv)
 
         if (argv[1][0] == 'v')
         {
-          double ro[3] = {posteme.x, posteme.y, posteme.z};
-          double vo[3] = {velteme.x, velteme.y, velteme.z};
-
-          rv2coe(ro, vo, &p, &a, &ecc, &incl, &node, &argp, &nu, &m,
+          teme2coe(&posteme, &velteme, &p, &a, &ecc, &incl, &node, &argp, &nu, &m,
                  &arglat, &truelon, &lonper);
           fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f\n",
                   a, ecc, incl*RAD2DEG, node*RAD2DEG, argp*RAD2DEG, nu*RAD2DEG, m*RAD2DEG);

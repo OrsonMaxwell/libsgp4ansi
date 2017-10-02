@@ -1,7 +1,7 @@
 GPP = g++
 OUTPUTDIR=Plot
 CXXFLAGS = -lm -std=c++11
-RELEASEFLAGS = -O3 -flto -ffloat-store
+RELEASEFLAGS = -O3 -flto
 DEBUGFLAGS = -g3
 DEBUG = 0
 MATHTRACE = 0

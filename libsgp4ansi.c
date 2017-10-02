@@ -1022,9 +1022,8 @@ sat_init(sat* s)
  *         -1         - Invalid inputs or parametres
  *         -2         - Negative mean motion
  *         -3         - Eccentricity out of range (e >= 1; e < -1.0e-12)
- *          3         - Long periodics result error
- *          4         - Short period preliminary quantities error
- *          5         - Decaying satellite
+ *         -4         - Short period preliminary quantities error
+ *         -5         - Decayed satellite
  */
 int
 sat_propagate
@@ -1280,7 +1279,107 @@ sat_propagate
   // Add lunar-solar periodics
   if (s->is_deep_space == true)
   {
-    dpper(s, tdelta);
+    //sat_ds_longper(s, tdelta); //**********************************************
+    // Constants
+    double zns   = 1.19459e-5; // TODO: const keyword?
+    double zes   = 0.01675;
+    double znl   = 1.5835218e-4;
+    double zel   = 0.05490;
+
+    // Calculate time varying periodics
+    double zm    = s->zmos + zns * tdelta;
+    double zf    = zm + 2 * zes * sin(zm);
+    double sinzf = sin(zf);
+    double f2    =  0.5 * sinzf * sinzf - 0.25;
+    double f3    = -0.5 * sinzf * cos(zf);
+    double ses   = s->se2* f2 + s->se3 * f3;
+    double sis   = s->si2 * f2 + s->si3 * f3;
+    double sls   = s->sl2 * f2 + s->sl3 * f3 + s->sl4 * sinzf;
+    double sghs  = s->sgh2 * f2 + s->sgh3 * f3 + s->sgh4 * sinzf;
+    double shs   = s->sh2 * f2 + s->sh3 * f3;
+    zm    = s->zmol + znl * tdelta;
+
+    zf    = zm + 2 * zel * sin(zm);
+    sinzf = sin(zf);
+    f2    =  0.5 * sinzf * sinzf - 0.25;
+    f3    = -0.5 * sinzf * cos(zf);
+    double sel   = s->ee2 * f2 + s->e3 * f3;
+    double sil   = s->xi2 * f2 + s->xi3 * f3;
+    double sll   = s->xl2 * f2 + s->xl3 * f3 + s->xl4 * sinzf;
+    double sghl  = s->xgh2 * f2 + s->xgh3 * f3 + s->xgh4 * sinzf;
+    double shll  = s->xh2 * f2 + s->xh3 * f3;
+    double pe    = ses + sel;
+    double pinc  = sis + sil;
+    double pl    = sls + sll;
+    double pgh   = sghs + sghl;
+    double ph    = shs + shll;
+
+    pe    = pe - s->peo;
+    pinc  = pinc - s->pinco;
+    pl    = pl - s->plo;
+    pgh   = pgh - s->pgho;
+    ph    = ph - s->pho;
+    s->inclination_lp  += pinc;
+    s->eccentricity_lp += pe;
+    sinip = sin(s->inclination_lp);
+    cosip = cos(s->inclination_lp);
+
+    // Apply periodics directly
+    if (s->inclination_lp >= 0.2) // Lyddane choice
+    {
+      ph  = ph / sinip;
+      pgh = pgh - cosip * ph;
+
+      s->argument_perigee_lp += pgh;
+      s->right_asc_node_lp   += ph;
+      s->mean_anomaly_lp     += pl;
+    }
+    else
+    {
+      // Apply periodics with Lyddane modifications
+      double sinop  = sin(s->right_asc_node_lp);
+      double cosop  = cos(s->right_asc_node_lp);
+      double alfdp  = sinip * sinop;
+      double betdp  = sinip * cosop;
+      double dalf   =  ph * cosop + pinc * cosip * sinop;
+      double dbet   = -ph * sinop + pinc * cosip * cosop;
+      alfdp  = alfdp + dalf;
+      betdp  = betdp + dbet;
+      s->right_asc_node_lp  = fmod(s->right_asc_node_lp, TWOPI);
+
+      // Wrap negative node for atan below
+      if (s->right_asc_node_lp < 0)
+      {
+        s->right_asc_node_lp += TWOPI;
+      }
+
+      double xls    = s->mean_anomaly_lp + s->argument_perigee_lp + cosip * s->right_asc_node_lp;
+      double dls    = pl + pgh - pinc * s->right_asc_node_lp * sinip; // TODO: Remove?
+      xls   += dls;
+      double xnoh   = s->right_asc_node_lp;
+      s->right_asc_node_lp  = atan2(alfdp, betdp);
+
+      // Wrap negative node for fabs below
+      if (s->right_asc_node_lp < 0)
+      {
+        s->right_asc_node_lp += TWOPI;
+      }
+
+      if (fabs(xnoh - s->right_asc_node_lp) > PI)
+      {
+        if (s->right_asc_node_lp < xnoh)
+        {
+          s->right_asc_node_lp = s->right_asc_node_lp + TWOPI;
+        }
+        else
+        {
+          s->right_asc_node_lp = s->right_asc_node_lp - TWOPI;
+        }
+      }
+
+      s->mean_anomaly_lp    += pl;
+      s->argument_perigee_lp = xls - s->mean_anomaly_lp - cosip * s->right_asc_node_lp;
+    }
 
 #ifdef MATH_TRACE
     printf("======================================== dp2\n");
@@ -1348,7 +1447,7 @@ sat_propagate
   printf("u       %+.15e\n", u);
 #endif
 
-  while ((fabs(kdelta) >= tolerance) && (ktr < maxiter) )
+  while ((fabs(kdelta) >= tolerance) && (ktr < maxiter)) // TODO: Unroll?
   {
     sineo1 = sin(eo1);
     coseo1 = cos(eo1);
@@ -1390,7 +1489,7 @@ sat_propagate
 
   if (pl < 0)
   {
-    return 4;
+    return -4;
   }
   else
   {
@@ -1488,555 +1587,8 @@ sat_propagate
   // Satellite decayed?
   if (mrt < 1.0)
   {
-    return 6;
+    return -5;
   }
 
   return 0;
 }
-
-/*
- * Get position and velocity vectors in the TEME frame at given unix time
- *
- * Inputs:  sat       - orbit struct pointer with initialized orbital data
- *          time      - UTC time to find satellite data at
- *          msec      - Millisecond portion of time
- *          maxiter   - Kepler's equation maximum iteration count
- *          tolerance - Kepler's equation desired precision tolerance
- * Outputs: pos       - 3D position vector in TEME frame in km
- *          vel       - 3D velocity vector in TEME frame in km/sec
- * Returns: 0         - Success
- *         -1         - Invalid inputs or parametres
- *          1         - Mean motion zero or less
- *          2         - Nonsensical orbital eccentricity (e >= 1; e < -0.00001)
- *          3         - Long periodics result error
- *          4         - Short period preliminary quantities error
- *          5         - Decaying satellite
- */
-int
-sat_get_teme_at
-(
-    sat* sat,
-    time_t* time,
-    unsigned int msec,
-    unsigned int maxiter,
-    double tolerance,
-    vec3* pos,
-    vec3* vel
-)
-{
-  if ((sat == NULL) ||
-      (time == NULL) ||
-      (msec >= 1000) ||
-      (maxiter < 1) ||
-      (tolerance <= 0.0) ||
-      (pos == NULL) ||
-      (vel == NULL))
-  {
-    return -1;
-  }
-
-  double tdelta = difftime(*time + msec / 1000,
-                           sat->epoch + sat->epoch_ms / 1000) / 60.0L;
-
-  return sat_propagate(sat, tdelta, maxiter, tolerance, pos, vel);
-}
-
-
-//ong period periodic contributions to the mean elements
-void
-dpper(sat* s, double tdelta) // TODO: Rename
-{
-  double alfdp, betdp, cosip, cosop, dalf, dbet, dls,
-  f2,    f3,    pe,    pgh,   ph,   pinc, pl ,
-  sel,   ses,   sghl,  sghs,  shll, shs,  sil,
-  sinip, sinop, sinzf, sis,   sll,  sls,  xls,
-  xnoh,  zf,    zm,    zel,   zes,  znl,  zns;
-
-  // Constants
-  zns   = 1.19459e-5; // TODO: const keyword?
-  zes   = 0.01675;
-  znl   = 1.5835218e-4;
-  zel   = 0.05490;
-
-  // Calculate time varying periodics
-  zm    = s->zmos + zns * tdelta;
-  zf    = zm + 2 * zes * sin(zm);
-  sinzf = sin(zf);
-  f2    =  0.5 * sinzf * sinzf - 0.25;
-  f3    = -0.5 * sinzf * cos(zf);
-  ses   = s->se2* f2 + s->se3 * f3;
-  sis   = s->si2 * f2 + s->si3 * f3;
-  sls   = s->sl2 * f2 + s->sl3 * f3 + s->sl4 * sinzf;
-  sghs  = s->sgh2 * f2 + s->sgh3 * f3 + s->sgh4 * sinzf;
-  shs   = s->sh2 * f2 + s->sh3 * f3;
-  zm    = s->zmol + znl * tdelta;
-
-  zf    = zm + 2 * zel * sin(zm);
-  sinzf = sin(zf);
-  f2    =  0.5 * sinzf * sinzf - 0.25;
-  f3    = -0.5 * sinzf * cos(zf);
-  sel   = s->ee2 * f2 + s->e3 * f3;
-  sil   = s->xi2 * f2 + s->xi3 * f3;
-  sll   = s->xl2 * f2 + s->xl3 * f3 + s->xl4 * sinzf;
-  sghl  = s->xgh2 * f2 + s->xgh3 * f3 + s->xgh4 * sinzf;
-  shll  = s->xh2 * f2 + s->xh3 * f3;
-  pe    = ses + sel;
-  pinc  = sis + sil;
-  pl    = sls + sll;
-  pgh   = sghs + sghl;
-  ph    = shs + shll;
-
-
-  pe    = pe - s->peo;
-  pinc  = pinc - s->pinco;
-  pl    = pl - s->plo;
-  pgh   = pgh - s->pgho;
-  ph    = ph - s->pho;
-  s->inclination_lp  += pinc;
-  s->eccentricity_lp += pe;
-  sinip = sin(s->inclination_lp);
-  cosip = cos(s->inclination_lp);
-
-  // Apply periodics directly
-  if (s->inclination_lp >= 0.2) // Lyddane choice
-  {
-    ph  = ph / sinip;
-    pgh = pgh - cosip * ph;
-
-    s->argument_perigee_lp += pgh;
-    s->right_asc_node_lp   += ph;
-    s->mean_anomaly_lp     += pl;
-  }
-  else
-  {
-    // Apply periodics with Lyddane modifications
-    sinop  = sin(s->right_asc_node_lp);
-    cosop  = cos(s->right_asc_node_lp);
-    alfdp  = sinip * sinop;
-    betdp  = sinip * cosop;
-    dalf   =  ph * cosop + pinc * cosip * sinop;
-    dbet   = -ph * sinop + pinc * cosip * cosop;
-    alfdp  = alfdp + dalf;
-    betdp  = betdp + dbet;
-    s->right_asc_node_lp  = fmod(s->right_asc_node_lp, TWOPI);
-
-    // Wrap negative node for atan below
-    if (s->right_asc_node_lp < 0)
-    {
-      s->right_asc_node_lp += TWOPI;
-    }
-
-    xls    = s->mean_anomaly_lp + s->argument_perigee_lp + cosip * s->right_asc_node_lp;
-    dls    = pl + pgh - pinc * s->right_asc_node_lp * sinip; // TODO: Remove?
-    xls   += dls;
-    xnoh   = s->right_asc_node_lp;
-    s->right_asc_node_lp  = atan2(alfdp, betdp);
-
-    // Wrap negative node for fabs below
-    if (s->right_asc_node_lp < 0)
-    {
-      s->right_asc_node_lp += TWOPI;
-    }
-
-    if (fabs(xnoh - s->right_asc_node_lp) > PI)
-    {
-      if (s->right_asc_node_lp < xnoh)
-      {
-        s->right_asc_node_lp = s->right_asc_node_lp + TWOPI;
-      }
-      else
-      {
-        s->right_asc_node_lp = s->right_asc_node_lp - TWOPI;
-      }
-    }
-
-    s->mean_anomaly_lp    += pl;
-    s->argument_perigee_lp = xls - s->mean_anomaly_lp - cosip * s->right_asc_node_lp;
-  }
-}
-
-double  sgn
-(
-    double x
-)
-{
-  if (x < 0.0)
-  {
-    return -1.0;
-  }
-  else
-  {
-    return 1.0;
-  }
-
-}
-
-double  mag2
-(
-    double x[3]
-)
-{
-  return sqrt(x[0]*x[0] + x[1]*x[1] + x[2]*x[2]);
-}
-
-void    cross2
-(
-    double vec1[3], double vec2[3], double outvec[3]
-)
-{
-  outvec[0]= vec1[1]*vec2[2] - vec1[2]*vec2[1];
-  outvec[1]= vec1[2]*vec2[0] - vec1[0]*vec2[2];
-  outvec[2]= vec1[0]*vec2[1] - vec1[1]*vec2[0];
-}
-
-double  dot2
-(
-    double x[3], double y[3]
-)
-{
-  return (x[0]*y[0] + x[1]*y[1] + x[2]*y[2]);
-}  // end dot
-
-double  angle
-(
-    double vec1[3],
-    double vec2[3]
-)
-{
-  double small, undefined, magv1, magv2, temp;
-  small     = 0.00000001;
-  undefined = 999999.1;
-
-  magv1 = mag2(vec1);
-  magv2 = mag2(vec2);
-
-  if (magv1*magv2 > small*small)
-  {
-    temp= dot2(vec1,vec2) / (magv1*magv2);
-    if (fabs( temp ) > 1.0)
-      temp= sgn(temp) * 1.0;
-    return acos( temp );
-  }
-  else
-    return undefined;
-}  // end angle
-
-double  asinh
-(
-    double xval
-)
-{
-  return log( xval + sqrt( xval*xval + 1.0 ) );
-}  // end asinh
-
-/* -----------------------------------------------------------------------------
-*
-*                           function newtonnu
-*
-*  this function solves keplers equation when the true anomaly is known.
-*    the mean and eccentric, parabolic, or hyperbolic anomaly is also found.
-*    the parabolic limit at 168ø is arbitrary. the hyperbolic anomaly is also
-*    limited. the hyperbolic sine is used because it's not double valued.
-*
-*  author        : david vallado                  719-573-2600   27 may 2002
-*
-*  revisions
-*    vallado     - fix small                                     24 sep 2002
-*
-*  inputs          description                    range / units
-*    ecc         - eccentricity                   0.0  to
-*    nu          - true anomaly                   -2pi to 2pi rad
-*
-*  outputs       :
-*    e0          - eccentric anomaly              0.0  to 2pi rad       153.02 ø
-*    m           - mean anomaly                   0.0  to 2pi rad       151.7425 ø
-*
-*  locals        :
-*    e1          - eccentric anomaly, next value  rad
-*    sine        - sine of e
-*    cose        - cosine of e
-*    ktr         - index
-*
-*  coupling      :
-*    asinh       - arc hyperbolic sine
-*
-*  references    :
-*    vallado       2007, 85, alg 5
-* --------------------------------------------------------------------------- */
-
-void newtonnu
-(
-    double ecc, double nu,
-    double* e0, double* m
-)
-{
-  double small, sine, cose;
-
-  // ---------------------  implementation   ---------------------
-  *e0= 999999.9;
-  *m = 999999.9;
-  small = 0.00000001;
-
-  // --------------------------- circular ------------------------
-  if ( fabs( ecc ) < small  )
-  {
-    *m = nu;
-    *e0= nu;
-  }
-  else
-    // ---------------------- elliptical -----------------------
-    if ( ecc < 1.0-small  )
-    {
-      sine= ( sqrt( 1.0 -ecc*ecc ) * sin(nu) ) / ( 1.0 +ecc*cos(nu) );
-      cose= ( ecc + cos(nu) ) / ( 1.0  + ecc*cos(nu) );
-      *e0  = atan2( sine,cose );
-      *m   = *e0 - ecc*sin(*e0);
-    }
-    else
-      // -------------------- hyperbolic  --------------------
-      if ( ecc > 1.0 + small  )
-      {
-        if ((ecc > 1.0 ) && (fabs(nu)+0.00001 < PI-acos(1.0 /ecc)))
-        {
-          sine= ( sqrt( ecc*ecc-1.0  ) * sin(nu) ) / ( 1.0  + ecc*cos(nu) );
-          *e0  = asinh( sine );
-          *m   = ecc*sinh(*e0) - *e0;
-        }
-      }
-      else
-        // ----------------- parabolic ---------------------
-        if ( fabs(nu) < 168.0*PI/180.0  )
-        {
-          *e0= tan( nu*0.5  );
-          *m = *e0 + (*e0**e0**e0)/3.0;
-        }
-
-  if ( ecc < 1.0  )
-  {
-    *m = fmod( *m,2.0 *PI );
-    if ( *m < 0.0  )
-      *m = *m + 2.0 *PI;
-    *e0 = fmod( *e0,2.0 *PI );
-  }
-}  // end newtonnu
-
-/* -----------------------------------------------------------------------------
-*
-*                           function rv2coe
-*
-*  this function finds the classical orbital elements given the geocentric
-*    equatorial position and velocity vectors.
-*
-*  author        : david vallado                  719-573-2600   21 jun 2002
-*
-*  revisions
-*    vallado     - fix special cases                              5 sep 2002
-*    vallado     - delete extra check in inclination code        16 oct 2002
-*    vallado     - add constant file use                         29 jun 2003
-*    vallado     - add mu                                         2 apr 2007
-*
-*  inputs          description                    range / units
-*    r           - ijk position vector            km
-*    v           - ijk velocity vector            km / s
-*    mu          - gravitational parameter        km3 / s2
-*
-*  outputs       :
-*    p           - semilatus rectum               km
-*    a           - semimajor axis                 km
-*    ecc         - eccentricity
-*    incl        - inclination                    0.0  to pi rad
-*    omega       - longitude of ascending node    0.0  to 2pi rad
-*    argp        - argument of perigee            0.0  to 2pi rad
-*    nu          - true anomaly                   0.0  to 2pi rad
-*    m           - mean anomaly                   0.0  to 2pi rad
-*    arglat      - argument of latitude      (ci) 0.0  to 2pi rad
-*    truelon     - true longitude            (ce) 0.0  to 2pi rad
-*    lonper      - longitude of periapsis    (ee) 0.0  to 2pi rad
-*
-*  locals        :
-*    hbar        - angular momentum h vector      km2 / s
-*    ebar        - eccentricity     e vector
-*    nbar        - line of nodes    n vector
-*    c1          - v**2 - u/r
-*    rdotv       - r dot v
-*    hk          - hk unit vector
-*    sme         - specfic mechanical energy      km2 / s2
-*    i           - index
-*    e           - eccentric, parabolic,
-*                  hyperbolic anomaly             rad
-*    temp        - temporary variable
-*    typeorbit   - type of orbit                  ee, ei, ce, ci
-*
-*  coupling      :
-*    mag         - magnitude of a vector
-*    cross       - cross product of two vectors
-*    angle       - find the angle between two vectors
-*    newtonnu    - find the mean anomaly
-*
-*  references    :
-*    vallado       2007, 126, alg 9, ex 2-5
-* --------------------------------------------------------------------------- */
-
-void rv2coe
-     (
-       double r[3], double v[3],
-       double* p, double* a, double* ecc, double* incl, double* omega, double* argp,
-       double* nu, double* m, double* arglat, double* truelon, double* lonper
-     )
-     {
-       double undefined, small, hbar[3], nbar[3], magr, magv, magn, ebar[3], sme,
-              rdotv, infinite, temp, c1, hk, twopi, magh, halfpi, e;
-
-       int i;
-       char typeorbit[3];
-
-     twopi  = 2.0 * PI;
-     halfpi = 0.5 * PI;
-     small  = 0.00000001;
-     undefined = 999999.1;
-     infinite  = 999999.9;
-
-     // -------------------------  implementation   -----------------
-     magr = mag2( r );
-     magv = mag2( v );
-
-     // ------------------  find h n and e vectors   ----------------
-     cross2( r,v, hbar );
-     magh = mag2( hbar );
-     if ( magh > small )
-       {
-         nbar[0]= -hbar[1];
-         nbar[1]=  hbar[0];
-         nbar[2]=   0.0;
-         magn = mag2( nbar );
-         c1 = magv*magv - GM  / magr;
-         rdotv = dot2( r,v );
-         for (i= 0; i <= 2; i++)
-             ebar[i]= (c1*r[i] - rdotv*v[i]) / GM;
-         *ecc = mag2( ebar );
-
-         // ------------  find *a e and semi-latus rectum   ----------
-         sme= ( magv*magv*0.5  ) - ( GM  / magr );
-         if ( fabs( sme ) > small )
-             *a= -GM  / (2.0 *sme);
-           else
-             *a= infinite;
-         *p = magh*magh / GM;
-
-         // -----------------  find inclination   -------------------
-         hk= hbar[2] / magh;
-         *incl= acos( hk );
-
-         // --------  determine type of orbit for later use  --------
-         // ------ elliptical, parabolic, hyperbolic inclined -------
-         strcpy(typeorbit,"ei");
-         if ( *ecc < small )
-           {
-             // ----------------  circular equatorial ---------------
-             if  ((*incl<small) | (fabs(*incl-PI)<small))
-                 strcpy(typeorbit,"ce");
-               else
-                 // --------------  circular inclined ---------------
-                 strcpy(typeorbit,"ci");
-           }
-           else
-           {
-             // - elliptical, parabolic, hyperbolic equatorial --
-             if  ((*incl<small) | (fabs(*incl-PI)<small))
-                 strcpy(typeorbit,"ee");
-           }
-
-         // ----------  find longitude of ascending node ------------
-         if ( magn > small )
-           {
-             temp= nbar[0] / magn;
-             if ( fabs(temp) > 1.0  )
-                 temp= sgn(temp);
-             *omega= acos( temp );
-             if ( nbar[1] < 0.0  )
-                 *omega= twopi - *omega;
-           }
-           else
-             *omega= undefined;
-
-         // ---------------- find argument of perigee ---------------
-         if ( strcmp(typeorbit,"ei") == 0 )
-           {
-             *argp = angle( nbar,ebar);
-             if ( ebar[2] < 0.0  )
-                 *argp= twopi - *argp;
-           }
-           else
-             *argp= undefined;
-
-         // ------------  find true anomaly at epoch    -------------
-         if ( typeorbit[0] == 'e' )
-           {
-             *nu =  angle( ebar,r);
-             if ( rdotv < 0.0  )
-                 *nu= twopi - *nu;
-           }
-           else
-             *nu= undefined;
-
-         // ----  find argument of latitude - circular inclined -----
-         if ( strcmp(typeorbit,"ci") == 0 )
-           {
-             *arglat = angle( nbar,r );
-             if ( r[2] < 0.0  )
-                 *arglat= twopi - *arglat;
-             *m = *arglat;
-           }
-           else
-             *arglat= undefined;
-
-         // -- find longitude of perigee - elliptical equatorial ----
-         if  (( *ecc>small ) && (strcmp(typeorbit,"ee") == 0))
-           {
-             temp= ebar[0] / *ecc;
-             if ( fabs(temp) > 1.0  )
-                 temp= sgn(temp);
-             *lonper= acos( temp );
-             if ( ebar[1] < 0.0  )
-                 *lonper= twopi - *lonper;
-             if ( *incl > halfpi )
-                 *lonper= twopi - *lonper;
-           }
-           else
-             *lonper= undefined;
-
-         // -------- find true longitude - circular equatorial ------
-         if  (( magr>small ) && ( strcmp(typeorbit,"ce") == 0 ))
-           {
-             temp= r[0] / magr;
-             if ( fabs(temp) > 1.0  )
-                 temp= sgn(temp);
-             *truelon= acos( temp );
-             if ( r[1] < 0.0  )
-                 *truelon= twopi - *truelon;
-             if ( *incl > halfpi )
-                 *truelon= twopi - *truelon;
-             *m = *truelon;
-           }
-           else
-             *truelon= undefined;
-
-         // ------------ find mean anomaly for all orbits -----------
-         if ( typeorbit[0] == 'e' )
-             newtonnu(*ecc,*nu,  &e, m);
-     }
-      else
-     {
-        *p    = undefined;
-        *a    = undefined;
-        *ecc  = undefined;
-        *incl = undefined;
-        *omega= undefined;
-        *argp = undefined;
-        *nu   = undefined;
-        *m    = undefined;
-        *arglat = undefined;
-        *truelon= undefined;
-        *lonper = undefined;
-     }
-   }  // end rv2coe

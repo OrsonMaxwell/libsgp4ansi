@@ -36,4 +36,8 @@ vec3_dot(vec3*, vec3*);
 void
 vec3_cross(vec3*, vec3*, vec3*);
 
+// Planar angle between two 3D vectors
+double
+vec3_angle(vec3*, vec3*);
+
 #endif /* VECTOR_H_ */

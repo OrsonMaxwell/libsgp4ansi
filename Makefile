@@ -3,7 +3,7 @@ OUTPUTDIR=Plot
 LIBFLAGS = -fPIC
 CCFLAGS = -std=c11
 LIBS = -lm
-RELEASEFLAGS = -O3 -flto -ffloat-store
+RELEASEFLAGS = -O3 -flto
 DEBUGFLAGS = -g3
 DEBUG = 0
 MATHTRACE = 0

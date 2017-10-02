@@ -92,3 +92,34 @@ vec3_cross
   result->y= vect1->z * vect2->x - vect1->x * vect2->z;
   result->z= vect1->x * vect2->y - vect1->y * vect2->x;
 }
+
+/*
+ * Planar angle between two 3D vectors
+ *
+ * Inputs:  vect1  - 1st vector
+ *          vect2  - 2nd vector
+ * Returns: angle, rad
+ */
+double
+vec3_angle
+(
+    vec3* vect1, vec3* vect2
+)
+{
+  double magv1 = vec3_mag(vect1);
+  double magv2 = vec3_mag(vect2);
+
+  if (magv1 * magv2 <= 1.0e-16)
+  {
+    return NAN;
+  }
+
+  double temp = vec3_dot(vect1, vect2) / (magv1 * magv2);
+
+  if (fabs(temp) > 1) // TODO: WTF?
+  {
+    temp = (temp >= 0)?(1.0):(-1.0) * 1;
+  }
+
+  return acos(temp);
+}

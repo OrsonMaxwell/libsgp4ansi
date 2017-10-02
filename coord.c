@@ -10,12 +10,297 @@
  */
 
 #include <math.h>
+#include <string.h> // TODO: get rid of this
 
 #include "libsgp4ansi.h"
 #include "const.h"
 #include "coord.h"
 #include "epoch.h"
 #include "vector.h"
+
+/*
+ * Solve Kepler's equation for known true anomaly
+ *
+ * Inputs:  ecc - Eccentricity
+ *          nu  - True anomaly, (-2pi; 2pi) rad
+ * Returns: mean anomaly
+ */
+double
+kepler_newton(double ecc, double nu)
+{
+  double m = INFINITY;
+  double small = 1.0e-8;
+
+  double sine, cose, e0;
+
+  // Circular
+  if (fabs(ecc) < small)
+  {
+    m = nu;
+  }
+  else
+  {
+    // Elliptical
+    if (ecc < 1 - small)
+    {
+      sine = (sqrt(1 - pow(ecc, 2)) * sin(nu)) / (1 + ecc * cos(nu));
+      cose = (ecc + cos(nu)) / (1 + ecc * cos(nu));
+      e0   = atan2(sine, cose);
+      m   = e0 - ecc * sin(e0);
+    }
+    else
+    {
+      // Hyperbolic
+      if (ecc > 1 + small)
+      {
+        if ((ecc > 1) && (fabs(nu) + 0.00001 < PI - acos(1 / ecc)))
+        {
+          sine = (sqrt(pow(ecc, 2) - 1) * sin(nu)) / (1 + ecc * cos(nu) );
+          e0   = log(sine + sqrt(pow(sine, 2) + 1));
+          m   = ecc * sinh(e0) - e0;
+        }
+      }
+      else
+      {
+        // Parabolic
+        if (fabs(nu) < 168 * PI / 180) // Arbitrary
+        {
+          e0 = tan(nu * 0.5);
+          m = e0 + pow(e0, 3) / 3;
+        }
+      }
+    }
+  }
+
+  if (ecc < 1)
+  {
+    m = fmod(m, TWOPI);
+
+    if (m < 0)
+    {
+      m += TWOPI;
+    }
+  }
+
+  return m;
+}
+
+/*
+ * Get classical orbital elements from TEME vectors
+ *
+ * Inputs:  posteme - Position vector in TEME frame, km
+ *          velteme - Velocity vector in TEME frame, km/s
+ * Outputs: p       - semilatus rectum               km
+ *          a       - semimajor axis                 km
+ *          ecc     - eccentricity
+ *          incl    - inclination                    [0; pi)  rad
+ *          omega   - longitude of ascending node    [0; 2pi) rad
+ *          argp    - argument of perigee            [0; 2pi) rad
+ *          nu      - true anomaly                   [0; 2pi) rad
+ *          m       - mean anomaly                   [0; 2pi) rad
+ *          arglat  - argument of latitude      (ci) [0; 2pi) rad
+ *          truelon - true longitude            (ce) [0; 2pi) rad
+ *          lonper  - longitude of periapsis    (ee) [0; 2pi) rad
+ * Returns: 0       - Success
+ *         -1       - Decayed satellite
+ */
+int
+teme2coe
+(
+    vec3* posteme, vec3 *velteme,
+    double* p,    double* a,  double* ecc, double* incl,   double* omega,
+    double* argp, double* nu, double* m,   double* arglat, double* truelon,
+    double* lonper
+)
+{
+  int i;
+  char typeorbit[3]; // TODOL Change to numeric to get rid of strings
+
+  double tolerance = 1.0e-8; // TODO: Const?
+
+  double magr = vec3_mag(posteme);
+  double magv = vec3_mag(velteme);
+
+  // Find h n and e vectors
+  vec3 hbar, nbar, ebar;
+
+  vec3_cross(posteme, velteme, &hbar);
+  double magh = vec3_mag(&hbar);
+
+  if (magh < tolerance)
+  {
+    return -1;
+  }
+
+  nbar.x = -hbar.y;
+  nbar.y =  hbar.x;
+  nbar.z =  0;
+
+  double magn  = vec3_mag(&nbar);
+  double c1    = pow(magv, 2) - GM  / magr;
+  double rdotv = vec3_dot(posteme, velteme);
+
+  ebar.x = (c1 * posteme->x - rdotv * velteme->x) / GM;
+  ebar.y = (c1 * posteme->y - rdotv * velteme->y) / GM;
+  ebar.z = (c1 * posteme->z - rdotv * velteme->z) / GM;
+
+  *ecc = vec3_mag(&ebar);
+
+  // Find *a e and semi-latus rectum
+  double sme = (pow(magv, 2) * 0.5) - (GM  / magr);
+
+  if (fabs(sme) > tolerance)
+  {
+    *a = -GM / (2 * sme);
+  }
+  else
+  {
+    *a = INFINITY;
+  }
+  *p = pow(magh, 2) / GM;
+
+  // Find inclination
+  double hk = hbar.z / magh;
+  *incl= acos( hk );
+
+  // Determine type of orbit
+  // Elliptical, parabolic, hyperbolic inclined
+  strcpy(typeorbit, "ei");
+  if (*ecc < tolerance)
+  {
+    // Circular equatorial
+    if ((*incl < tolerance) || (fabs(*incl - PI) < tolerance))
+    {
+      strcpy(typeorbit,"ce");
+    }
+    else
+    {
+      // Circular inclined
+      strcpy(typeorbit,"ci");
+    }
+  }
+  else
+  {
+    // Elliptical, parabolic, hyperbolic equatorial
+    if ((*incl < tolerance) || (fabs(*incl - PI) < tolerance))
+    {
+      strcpy(typeorbit,"ee");
+    }
+  }
+
+  // Find longitude of ascending node
+  if (magn > tolerance)
+  {
+    double temp = nbar.x / magn;
+
+    if (fabs(temp) > 1) // TODO: WTF?
+    {
+      temp = (temp >= 0)?(1.0):(-1.0);
+    }
+
+    *omega = acos(temp);
+    if (nbar.y < 0)
+    {
+      *omega = TWOPI - *omega;
+    }
+  }
+  else
+    *omega = NAN;
+
+  // Find argument of perigee
+  if (strcmp(typeorbit, "ei") == 0)
+  {
+    *argp = vec3_angle(&nbar, &ebar);
+    if (ebar.z < 0)
+    {
+      *argp= TWOPI - *argp;
+    }
+  }
+  else
+    *argp= NAN;
+
+  // Find true anomaly at epoch
+  if (typeorbit[0] == 'e')
+  {
+    *nu = vec3_angle(&ebar, posteme);
+    if ( rdotv < 0)
+    {
+      *nu= TWOPI - *nu;
+    }
+  }
+  else
+    *nu= NAN;
+
+  // Find argument of latitude - circular inclined
+  if (strcmp(typeorbit,"ci") == 0)
+  {
+    *arglat = vec3_angle(&nbar, posteme);
+    if (posteme->z < 0)
+    {
+      *arglat = TWOPI - *arglat;
+    }
+    *m = *arglat;
+  }
+  else
+    *arglat = NAN;
+
+  // Find longitude of perigee - elliptical equatorial
+  if ((*ecc > tolerance) && (strcmp(typeorbit,"ee") == 0))
+  {
+    double temp = ebar.x / *ecc;
+
+    if (fabs(temp) > 1)
+    {
+      temp = (temp >= 0)?(1.0):(-1.0); // TODO: Bleh
+    }
+
+    *lonper = acos( temp );
+
+    if (ebar.y < 0)
+    {
+      *lonper = TWOPI - *lonper;
+    }
+    if (*incl > PIDIV2)
+    {
+      *lonper = TWOPI - *lonper;
+    }
+  }
+  else
+    *lonper = NAN;
+
+  // Find true longitude - circular equatorial
+  if  ((magr > tolerance) && (strcmp(typeorbit,"ce") == 0))
+  {
+    double temp = posteme->x / magr;
+
+    if ( fabs(temp) > 1)
+    {
+      temp = (temp >= 0)?(1.0):(-1.0); // TODO: Bleh
+    }
+
+    *truelon = acos(temp);
+
+    if (posteme->y < 0)
+    {
+      *truelon = TWOPI - *truelon;
+    }
+    if (*incl > PIDIV2)
+    {
+      *truelon = TWOPI - *truelon;
+    }
+    *m = *truelon;
+  }
+  else
+    *truelon = NAN;
+
+  // Find mean anomaly for all orbits
+  if (typeorbit[0] == 'e')
+  {
+    *m = kepler_newton(*ecc, *nu);
+  }
+
+  return 0;
+}
 
 /*
  * Transform position and velocity vectors from TEME to ECEF frame of reference
