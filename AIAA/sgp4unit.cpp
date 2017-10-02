@@ -1262,18 +1262,6 @@ static void dspace
   nodem  = nodem + dnodt * t;
   mm     = mm + dmdt * t;
 
-  //     if (tc != 0)
-  //     {
-  //       printf("tdelta: %+.15e\n", tc);
-  //       printf("theta:  %+.15e\n", theta);
-  //       printf("em:     %+.15e\n", em);
-  //       printf("inclm:  %+.15e\n", inclm);
-  //       printf("argpm:  %+.15e\n", argpm);
-  //       printf("nodem:  %+.15e\n", nodem);
-  //       printf("dmdt:   %+.15e\n", dmdt);
-  //       printf("mm:     %+.15e\n", mm);
-  //     }
-
   //   sgp4fix for negative inclinations
   //   the following if statement should be commented out
   if ((inclm < 0.0) && (opsmode == 'a'))
@@ -1305,14 +1293,6 @@ static void dspace
       delt = stepp;
     else
       delt = stepn;
-
-    //           if (tc != 0)
-    //           {
-    //             printf("atime:  %+.15e\n", atime);
-    //             printf("xni:    %+.15e\n", xni);
-    //             printf("xli:    %+.15e\n", xli);
-    //             printf("delt:   %+.15e\n", delt);
-    //           }
 
     iretn = 381; // added for do loop
     iret  =   0; // added for loop
@@ -1370,17 +1350,6 @@ static void dspace
         xni   = xni + xndt * delt + xnddt * step2;
         atime = atime + delt;
       }
-//      printf("tdelta: %+.15e\n", tc);
-//      printf("atime:  %+.15e\n", atime);
-//      printf("xndt:   %+.15e\n", xndt);
-//      printf("xldot:  %+.15e\n", xldot);
-//      printf("xnddt:  %+.15e\n", xnddt);
-//      printf("xomi:   %+.15e\n", xomi);
-//      printf("x2omi:  %+.15e\n", x2omi);
-//      printf("x2li:   %+.15e\n", x2li);
-//      printf("xli:    %+.15e\n", xli);
-//      printf("xni:    %+.15e\n", xni );
-//      printf("---------------------------------\n");
     }  // while iretn = 381
 
 
@@ -1397,10 +1366,20 @@ static void dspace
       dndt = nm - no;
     }
     nm = no + dndt;
+
+    printf("======================================== dp1\n");
+    printf("tdelta %+.15e\n", t);
+    printf("atime  %+.15e\n", atime);
+    printf("xndt   %+.15e\n", xndt);
+    printf("xldot  %+.15e\n", xldot);
+    printf("xnddt  %+.15e\n", xnddt);
+    printf("xomi   %+.15e\n", xomi);
+    printf("x2omi  %+.15e\n", x2omi);
+    printf("x2li   %+.15e\n", x2li);
+    printf("xli    %+.15e\n", xli);
+    printf("xni    %+.15e\n", xni );
   }
-//  printf("nm:     %+.15e\n", nm);
-//  printf("xmp:    %+.15e\n", mm);
-//  printf("dndt:   %+.15e\n", dndt);
+
   //#include "debug4.cpp"
 }  // end dsspace
 

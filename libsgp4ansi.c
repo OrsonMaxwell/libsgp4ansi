@@ -1175,7 +1175,6 @@ sat_propagate
 
   if (s->is_deep_space == true)
   {
-    //tc = tdelta;
     // Deep space contributions to mean elements for perturbing third body
     const double fasx2 = 0.13130908;
     const double fasx4 = 2.8843198;
@@ -1238,9 +1237,9 @@ sat_propagate
               3 * s->del3 * cos(3 * (s->xli - fasx6));
           xnddt = xnddt * xldot;
         }
+        // Geopotential resonance terms
         else
         {
-          // Geopotential resonance terms
           xomi  = s->argument_perigee + s->omgdot * s->atime;
           x2omi = xomi + xomi;
           x2li  = s->xli + s->xli;
@@ -1277,17 +1276,6 @@ sat_propagate
           s->xni   = s->xni + xndt * delt + xnddt * step2;
           s->atime = s->atime + delt;
         }
-//        printf("tdelta: %+.15e\n", tdelta);
-//        printf("atime:  %+.15e\n", s->atime);
-//        printf("xndt:   %+.15e\n", xndt);
-//        printf("xldot:  %+.15e\n", xldot);
-//        printf("xnddt:  %+.15e\n", xnddt);
-//        printf("xomi:   %+.15e\n", xomi);
-//        printf("x2omi:  %+.15e\n", x2omi);
-//        printf("x2li:   %+.15e\n", x2li);
-//        printf("xli:    %+.15e\n", s->xli);
-//        printf("xni:    %+.15e\n", s->xni );
-//        printf("---------------------------------\n");
       }
 
       nm = s->xni + xndt * ft + xnddt * ft * ft * 0.5;
@@ -1304,8 +1292,18 @@ sat_propagate
         s->dndt = nm - s->xnodp;
       }
       nm = s->xnodp + s->dndt;
+      printf("======================================== dp1\n");
+      printf("tdelta %+.15e\n", tdelta);
+      printf("atime  %+.15e\n", s->atime);
+      printf("xndt   %+.15e\n", xndt);
+      printf("xldot  %+.15e\n", xldot);
+      printf("xnddt  %+.15e\n", xnddt);
+      printf("xomi   %+.15e\n", xomi);
+      printf("x2omi  %+.15e\n", x2omi);
+      printf("x2li   %+.15e\n", x2li);
+      printf("xli    %+.15e\n", s->xli);
+      printf("xni    %+.15e\n", s->xni );
     }
-
   }
 
   if (nm <= 0)
@@ -1331,7 +1329,6 @@ sat_propagate
          xmp += s->xnodp * templ;
   double xlm  = xmp + omega + xnode;
   double em2  = pow(em, 2); // TODO: Unroll?
-  //double temp = 1 - em2; // TODO: Remove?
 
   xnode  = fmod(xnode, TWOPI);
   omega  = fmod(omega, TWOPI);
@@ -1486,10 +1483,10 @@ sat_propagate
     // Update for short period periodics
     if (s->is_deep_space == true)
     {
-      double cosip2   = pow(cosip, 2); // TODO: Unroll?
-      s->con41        = 3 * cosip2 - 1;
-      s->x1mth2       = 1 - cosip2;
-      s->x7thm1       = 7 * cosip2 - 1;
+      double cosip2 = pow(cosip, 2); // TODO: Unroll?
+      s->con41      = 3 * cosip2 - 1;
+      s->x1mth2     = 1 - cosip2;
+      s->x7thm1     = 7 * cosip2 - 1;
     }
 
            mrt   = rl * (1 - 1.5 * temp2 * betal * s->con41)
