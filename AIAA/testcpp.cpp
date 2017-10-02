@@ -132,6 +132,7 @@ strcpy(monstr[12], "Dec");
 		if (typerun == 't')
 		{
 			// Timing run
+		  // TODO: improve by varying TLEs
 			strcpy(longstr0, "SL - 6 R / B(2)");
 			strcpy(longstr1, "1 16925U 86065D   06151.67415771  .02550794 -30915-6  18784-3 0  4486");
 			strcpy(longstr2, "2 16925  62.0906 295.0239 5596327 245.1593  47.9690  4.88511875148616	");
@@ -204,7 +205,7 @@ strcpy(monstr[12], "Dec");
                 //printf(" %ld\n", satrec.satnum);
                 // call the propagator to get the initial state vector value
                 // sgp4 (whichconst, satrec,  0.0, ro,  vo);
-				fprintf(outfile, "%ld (%12.9lf)\n", satrec.satnum, pi * 2 / satrec.no);
+				fprintf(outfile, "%ld (%.8e)\n", satrec.satnum, 2*pi/satrec.no);
 
 // generate .e files for stk
 /*
@@ -250,10 +251,10 @@ fprintf(outfilee, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f\n",
                    if(tsince > stopmfe)
                        tsince = stopmfe;
 
-                   //sgp4 (whichconst, satrec,  tsince, ro,  vo);
+                   sgp4 (whichconst, satrec,  tsince, ro,  vo);
 				   if (satrec.error > 0) {
-					   printf("[ERROR] Sat %5d (%12.9lf),\tcode %2d at %8.f mfe\n",
-						   satrec.satnum, pi * 2 / satrec.no, satrec.error, satrec.t);
+					   printf("[ERROR] Sat %5d (%.8e) code %2d at %8.f mfe\n",
+						   satrec.satnum, 2*pi/satrec.no, satrec.error, satrec.t);
 					   break;
 				   }
                    if (satrec.error == 0)

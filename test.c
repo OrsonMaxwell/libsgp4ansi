@@ -33,6 +33,7 @@ main (int argc, char** argv)
   if (argv[1][0] == 't')
   {
     // Timing run
+    // TODO: improve by varying TLEs
     strcpy(tlestr0, "SL - 6 R / B(2)");
     strcpy(tlestr1, "1 16925U 86065D   06151.67415771  .02550794 -30915-6  18784-3 0  4486");
     strcpy(tlestr2, "2 16925  62.0906 295.0239 5596327 245.1593  47.9690  4.88511875148616 ");
@@ -77,18 +78,18 @@ main (int argc, char** argv)
 
     sat_load_tle(tlestr0, tlestr1, tlestr2, &s);
 
-    fprintf(outfile, "%ld (%12.9lf)\n", s.norad_number, TWOPI / s.mean_motion);
+    fprintf(outfile, "%ld (%.8e)\n", s.norad_number, s.period);
 
     // Iterate over time range
     for (double t = t_start; t <= t_stop + deltamin - 1.0e-12; t += deltamin)
     {
-      //int retval = sat_propagate(&s, t, 10, 1.0e-12, &posteme, &velteme);
-      int retval = 0;
+      int retval = sat_propagate(&s, t, 10, 1.0e-12, &posteme, &velteme);
+      //int retval = 0;
 
       if (retval != 0)
       {
-        printf("[ERROR] Sat %5d (%12.9lf),\tcode %2d at %8.f mfe\n",
-               s.norad_number, TWOPI / s.mean_motion, retval, t);
+        printf("[ERROR] Sat %5d (%.8e) code %2d at %8.f mfe\n",
+               s.norad_number, s.period, retval, t);
         break;
       }
       else

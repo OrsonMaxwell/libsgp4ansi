@@ -28,20 +28,20 @@ fullcat_filename = 'full.tle'
 aiaa_out_filename = 'i72.out'
 ansi_out_filename = 'ansi.out'
 
-sat_re = re.compile('([0-9]{1,5})\ \(([0-9. ]+)\)')
+sat_re = re.compile(r'([0-9]{1,5})\ \(([0-9. e+]+)\)')
 
 # Generate output #############################################################
 
 if (not dry_run):
   print('Running AIAA-2006-6753 timing mode...')
   start = datetime.datetime.now()
-  print(subprocess.Popen([aiaa_binary, 'i', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
+#  print(subprocess.Popen([aiaa_binary, 'i', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
   stop = datetime.datetime.now()
   tdiff_it = stop - start
 
   print('Running libsgp4ansi timing mode...')
   start = datetime.datetime.now()
-  print(subprocess.Popen(['ansi.exe', 't'],stdout=subprocess.PIPE).communicate()[0].decode())
+#  print(subprocess.Popen(['ansi.exe', 't'],stdout=subprocess.PIPE).communicate()[0].decode())
   stop = datetime.datetime.now()
   tdiff_ansit = stop - start
 

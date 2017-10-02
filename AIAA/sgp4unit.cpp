@@ -383,13 +383,6 @@ static void dpper
   }   // if init == 'n'
 
   //#include "debug1.cpp"
-//  printf("dpper>tdelta: %+.15e\n", t);
-//  printf("dpper>inc_lp: %+.15e\n", inclp);
-//  printf("dpper>ecc_lp: %+.15e\n", ep);
-//  printf("dpper>nod_lp: %+.15e\n", nodep);
-//  printf("dpper>arg_lp: %+.15e\n", argpp);
-//  printf("dpper>mo_lp:  %+.15e\n", mp);
-//  printf("----------------------------------------\n");
 }  // end dpper
 
 /*-----------------------------------------------------------------------------
@@ -538,20 +531,20 @@ static void dscom
   zcosgl = cos(zx);
   zsingl = sin(zx);
 
-   printf("======================================== id1\n");
-   printf("[DS] day    %+.15e\n", day);
-   printf("[DS] xnodce %+.15e\n", xnodce);
-   printf("[DS] stem   %+.15e\n", stem);
-   printf("[DS] ctem   %+.15e\n", ctem);
-   printf("[DS] zcosil %+.15e\n", zcosil);
-   printf("[DS] zsinil %+.15e\n", zsinil);
-   printf("[DS] zsinhl %+.15e\n", zsinhl);
-   printf("[DS] zcoshl %+.15e\n", zcoshl);
-   printf("[DS] gam    %+.15e\n", gam);
-   printf("[DS] zy     %+.15e\n", zy);
-   printf("[DS] zx     %+.15e\n", zx);
-   printf("[DS] zcosgl %+.15e\n", zcosgl);
-   printf("[DS] zsingl %+.15e\n", zsingl);
+//   printf("======================================== id1\n");
+//   printf("[DS] day    %+.15e\n", day);
+//   printf("[DS] xnodce %+.15e\n", xnodce);
+//   printf("[DS] stem   %+.15e\n", stem);
+//   printf("[DS] ctem   %+.15e\n", ctem);
+//   printf("[DS] zcosil %+.15e\n", zcosil);
+//   printf("[DS] zsinil %+.15e\n", zsinil);
+//   printf("[DS] zsinhl %+.15e\n", zsinhl);
+//   printf("[DS] zcoshl %+.15e\n", zcoshl);
+//   printf("[DS] gam    %+.15e\n", gam);
+//   printf("[DS] zy     %+.15e\n", zy);
+//   printf("[DS] zx     %+.15e\n", zx);
+//   printf("[DS] zcosgl %+.15e\n", zcosgl);
+//   printf("[DS] zsingl %+.15e\n", zsingl);
 
 
   /* ------------------------- do solar terms --------------------- */
@@ -646,65 +639,65 @@ static void dscom
   zmol = fmod(4.7199672 + 0.22997150  * day - gam, twopi);
   zmos = fmod(6.2565837 + 0.017201977 * day, twopi);
 
-  printf("======================================== id2\n");
-  printf("[DS] xnoi  %+.15e\n", xnoi);
-  printf("[DS] a1    %+.15e\n", a1);
-  printf("[DS] a2    %+.15e\n", a2);
-  printf("[DS] a3    %+.15e\n", a3);
-  printf("[DS] a4    %+.15e\n", a4);
-  printf("[DS] a5    %+.15e\n", a5);
-  printf("[DS] a6    %+.15e\n", a6);
-  printf("[DS] a7    %+.15e\n", a7);
-  printf("[DS] a8    %+.15e\n", a8);
-  printf("[DS] a9    %+.15e\n", a9);
-  printf("[DS] a10   %+.15e\n", a10);
-  printf("[DS] x1    %+.15e\n", x1);
-  printf("[DS] x2    %+.15e\n", x2);
-  printf("[DS] x3    %+.15e\n", x3);
-  printf("[DS] x4    %+.15e\n", x4);
-  printf("[DS] x5    %+.15e\n", x5);
-  printf("[DS] x6    %+.15e\n", x6);
-  printf("[DS] x7    %+.15e\n", x7);
-  printf("[DS] x8    %+.15e\n", x8);
-  printf("[DS] z1    %+.15e\n", z1);
-  printf("[DS] z2    %+.15e\n", z2);
-  printf("[DS] z3    %+.15e\n", z3);
-  printf("[DS] z11   %+.15e\n", z11);
-  printf("[DS] z12   %+.15e\n", z12);
-  printf("[DS] z13   %+.15e\n", z13);
-  printf("[DS] z21   %+.15e\n", z21);
-  printf("[DS] z22   %+.15e\n", z22);
-  printf("[DS] z23   %+.15e\n", z23);
-  printf("[DS] z31   %+.15e\n", z31);
-  printf("[DS] z32   %+.15e\n", z32);
-  printf("[DS] z33   %+.15e\n", z33);
-  printf("[DS] s1    %+.15e\n", s1);
-  printf("[DS] s2    %+.15e\n", s2);
-  printf("[DS] s3    %+.15e\n", s3);
-  printf("[DS] s4    %+.15e\n", s4);
-  printf("[DS] s5    %+.15e\n", s5);
-  printf("[DS] s6    %+.15e\n", s6);
-  printf("[DS] s7    %+.15e\n", s7);
-  printf("[DS] ss1   %+.15e\n", ss1);
-  printf("[DS] ss2   %+.15e\n", ss2);
-  printf("[DS] ss3   %+.15e\n", ss3);
-  printf("[DS] ss4   %+.15e\n", ss4);
-  printf("[DS] ss5   %+.15e\n", ss5);
-  printf("[DS] ss6   %+.15e\n", ss6);
-  printf("[DS] ss7   %+.15e\n", ss7);
-  printf("[DS] sz11  %+.15e\n", sz11);
-  printf("[DS] sz12  %+.15e\n", sz12);
-  printf("[DS] sz13  %+.15e\n", sz13);
-  printf("[DS] sz21  %+.15e\n", sz21);
-  printf("[DS] sz22  %+.15e\n", sz22);
-  printf("[DS] sz23  %+.15e\n", sz23);
-  printf("[DS] sz31  %+.15e\n", sz31);
-  printf("[DS] sz32  %+.15e\n", sz32);
-  printf("[DS] sz33  %+.15e\n", sz33);
-  printf("[DS] zcosh %+.15e\n", zcosh);
-  printf("[DS] zsinh %+.15e\n", zsinh);
-  printf("[DS] zmos  %+.15e\n", zmos);
-  printf("[DS] zmol  %+.15e\n", zmol);
+//  printf("======================================== id2\n");
+//  printf("[DS] xnoi  %+.15e\n", xnoi);
+//  printf("[DS] a1    %+.15e\n", a1);
+//  printf("[DS] a2    %+.15e\n", a2);
+//  printf("[DS] a3    %+.15e\n", a3);
+//  printf("[DS] a4    %+.15e\n", a4);
+//  printf("[DS] a5    %+.15e\n", a5);
+//  printf("[DS] a6    %+.15e\n", a6);
+//  printf("[DS] a7    %+.15e\n", a7);
+//  printf("[DS] a8    %+.15e\n", a8);
+//  printf("[DS] a9    %+.15e\n", a9);
+//  printf("[DS] a10   %+.15e\n", a10);
+//  printf("[DS] x1    %+.15e\n", x1);
+//  printf("[DS] x2    %+.15e\n", x2);
+//  printf("[DS] x3    %+.15e\n", x3);
+//  printf("[DS] x4    %+.15e\n", x4);
+//  printf("[DS] x5    %+.15e\n", x5);
+//  printf("[DS] x6    %+.15e\n", x6);
+//  printf("[DS] x7    %+.15e\n", x7);
+//  printf("[DS] x8    %+.15e\n", x8);
+//  printf("[DS] z1    %+.15e\n", z1);
+//  printf("[DS] z2    %+.15e\n", z2);
+//  printf("[DS] z3    %+.15e\n", z3);
+//  printf("[DS] z11   %+.15e\n", z11);
+//  printf("[DS] z12   %+.15e\n", z12);
+//  printf("[DS] z13   %+.15e\n", z13);
+//  printf("[DS] z21   %+.15e\n", z21);
+//  printf("[DS] z22   %+.15e\n", z22);
+//  printf("[DS] z23   %+.15e\n", z23);
+//  printf("[DS] z31   %+.15e\n", z31);
+//  printf("[DS] z32   %+.15e\n", z32);
+//  printf("[DS] z33   %+.15e\n", z33);
+//  printf("[DS] s1    %+.15e\n", s1);
+//  printf("[DS] s2    %+.15e\n", s2);
+//  printf("[DS] s3    %+.15e\n", s3);
+//  printf("[DS] s4    %+.15e\n", s4);
+//  printf("[DS] s5    %+.15e\n", s5);
+//  printf("[DS] s6    %+.15e\n", s6);
+//  printf("[DS] s7    %+.15e\n", s7);
+//  printf("[DS] ss1   %+.15e\n", ss1);
+//  printf("[DS] ss2   %+.15e\n", ss2);
+//  printf("[DS] ss3   %+.15e\n", ss3);
+//  printf("[DS] ss4   %+.15e\n", ss4);
+//  printf("[DS] ss5   %+.15e\n", ss5);
+//  printf("[DS] ss6   %+.15e\n", ss6);
+//  printf("[DS] ss7   %+.15e\n", ss7);
+//  printf("[DS] sz11  %+.15e\n", sz11);
+//  printf("[DS] sz12  %+.15e\n", sz12);
+//  printf("[DS] sz13  %+.15e\n", sz13);
+//  printf("[DS] sz21  %+.15e\n", sz21);
+//  printf("[DS] sz22  %+.15e\n", sz22);
+//  printf("[DS] sz23  %+.15e\n", sz23);
+//  printf("[DS] sz31  %+.15e\n", sz31);
+//  printf("[DS] sz32  %+.15e\n", sz32);
+//  printf("[DS] sz33  %+.15e\n", sz33);
+//  printf("[DS] zcosh %+.15e\n", zcosh);
+//  printf("[DS] zsinh %+.15e\n", zsinh);
+//  printf("[DS] zmos  %+.15e\n", zmos);
+//  printf("[DS] zmol  %+.15e\n", zmol);
 
   /* ------------------------ do solar terms ---------------------- */
   se2  =   2 * ss1 * ss6;
@@ -720,19 +713,19 @@ static void dscom
   sh2  =  -2 * ss2 * sz22;
   sh3  =  -2 * ss2 * (sz23 - sz21);
 
-  printf("======================================== id3\n");
-  printf("[DS] se2  %+.15e\n", se2);
-  printf("[DS] se3  %+.15e\n", se3);
-  printf("[DS] si2  %+.15e\n", si2);
-  printf("[DS] si3  %+.15e\n", si3);
-  printf("[DS] sl2  %+.15e\n", sl2);
-  printf("[DS] sl3  %+.15e\n", sl3);
-  printf("[DS] sl4  %+.15e\n", sl4);
-  printf("[DS] sgh2 %+.15e\n", sgh2);
-  printf("[DS] sgh3 %+.15e\n", sgh3);
-  printf("[DS] sgh4 %+.15e\n", sgh4);
-  printf("[DS] sh2  %+.15e\n", sh2);
-  printf("[DS] sh3  %+.15e\n", sh3);
+//  printf("======================================== id3\n");
+//  printf("[DS] se2  %+.15e\n", se2);
+//  printf("[DS] se3  %+.15e\n", se3);
+//  printf("[DS] si2  %+.15e\n", si2);
+//  printf("[DS] si3  %+.15e\n", si3);
+//  printf("[DS] sl2  %+.15e\n", sl2);
+//  printf("[DS] sl3  %+.15e\n", sl3);
+//  printf("[DS] sl4  %+.15e\n", sl4);
+//  printf("[DS] sgh2 %+.15e\n", sgh2);
+//  printf("[DS] sgh3 %+.15e\n", sgh3);
+//  printf("[DS] sgh4 %+.15e\n", sgh4);
+//  printf("[DS] sh2  %+.15e\n", sh2);
+//  printf("[DS] sh3  %+.15e\n", sh3);
 
   /* ------------------------ do lunar terms ---------------------- */
   ee2  =   2 * s1 * s6;
@@ -748,19 +741,19 @@ static void dscom
   xh2  =  -2 * s2 * z22;
   xh3  =  -2 * s2 * (z23 - z21);
 
-  printf("======================================== id4\n");
-  printf("[DS] ee2  %+.15e\n", ee2);
-  printf("[DS] e3   %+.15e\n", e3);
-  printf("[DS] xi2  %+.15e\n", xi2);
-  printf("[DS] xi3  %+.15e\n", xi3);
-  printf("[DS] xl2  %+.15e\n", xl2);
-  printf("[DS] xl3  %+.15e\n", xl3);
-  printf("[DS] xl4  %+.15e\n", xl4);
-  printf("[DS] xgh2 %+.15e\n", xgh2);
-  printf("[DS] xgh3 %+.15e\n", xgh3);
-  printf("[DS] xgh4 %+.15e\n", xgh4);
-  printf("[DS] xh2  %+.15e\n", xh2);
-  printf("[DS] xh3  %+.15e\n", xh3);
+//  printf("======================================== id4\n");
+//  printf("[DS] ee2  %+.15e\n", ee2);
+//  printf("[DS] e3   %+.15e\n", e3);
+//  printf("[DS] xi2  %+.15e\n", xi2);
+//  printf("[DS] xi3  %+.15e\n", xi3);
+//  printf("[DS] xl2  %+.15e\n", xl2);
+//  printf("[DS] xl3  %+.15e\n", xl3);
+//  printf("[DS] xl4  %+.15e\n", xl4);
+//  printf("[DS] xgh2 %+.15e\n", xgh2);
+//  printf("[DS] xgh3 %+.15e\n", xgh3);
+//  printf("[DS] xgh4 %+.15e\n", xgh4);
+//  printf("[DS] xh2  %+.15e\n", xh2);
+//  printf("[DS] xh3  %+.15e\n", xh3);
 
   //#include "debug2.cpp"
 }  // end dscom
@@ -932,20 +925,20 @@ static void dsinit
     dnodt = dnodt + shll / sinim;
   }
 
-  printf("======================================== id5\n");
-  printf("[DS] ses   %+.15e\n", ses);
-  printf("[DS] sis   %+.15e\n", sis);
-  printf("[DS] sls   %+.15e\n", sls);
-  printf("[DS] sghs  %+.15e\n", sghs);
-  printf("[DS] shs   %+.15e\n", shs);
-  printf("[DS] sgs   %+.15e\n", sgs);
-  printf("[DS] dedt  %+.15e\n", dedt);
-  printf("[DS] didt  %+.15e\n", didt);
-  printf("[DS] dmdt  %+.15e\n", dmdt);
-  printf("[DS] domdt %+.15e\n", domdt);
-  printf("[DS] dnodt %+.15e\n", dnodt);
-  printf("[DS] sghl  %+.15e\n", sghl);
-  printf("[DS] shll  %+.15e\n", shll);
+//  printf("======================================== id5\n");
+//  printf("[DS] ses   %+.15e\n", ses);
+//  printf("[DS] sis   %+.15e\n", sis);
+//  printf("[DS] sls   %+.15e\n", sls);
+//  printf("[DS] sghs  %+.15e\n", sghs);
+//  printf("[DS] shs   %+.15e\n", shs);
+//  printf("[DS] sgs   %+.15e\n", sgs);
+//  printf("[DS] dedt  %+.15e\n", dedt);
+//  printf("[DS] didt  %+.15e\n", didt);
+//  printf("[DS] dmdt  %+.15e\n", dmdt);
+//  printf("[DS] domdt %+.15e\n", domdt);
+//  printf("[DS] dnodt %+.15e\n", dnodt);
+//  printf("[DS] sghl  %+.15e\n", sghl);
+//  printf("[DS] shll  %+.15e\n", shll);
 
   /* ----------- calculate deep space resonance effects -------- */
   dndt   = 0.0;
@@ -965,9 +958,9 @@ static void dsinit
     nodem = nodem + pi;
   }
 
-  printf("======================================== id6\n");
-  printf("[DS] 12h res %d\n", (int)(irez == 2));
-  printf("[DS] 24h res %d\n", (int)(irez == 1));
+//  printf("======================================== id6\n");
+//  printf("[DS] 12h res %d\n", (int)(irez == 2));
+//  printf("[DS] 24h res %d\n", (int)(irez == 1));
 
   /* -------------- initialize the resonance terms ------------- */
   if (irez != 0)
@@ -1020,18 +1013,6 @@ static void dsinit
         g532 =-40023.880 + 170470.89 * em - 242699.48 * emsq + 115605.82 * eoc;
       }
 
-      //             printf("----------------------------\n");
-      //             printf("g201:   %+.15e\n", g201);
-      //             printf("g211:   %+.15e\n", g211);
-      //             printf("g310:   %+.15e\n", g310);
-      //             printf("g322:   %+.15e\n", g322);
-      //             printf("g410:   %+.15e\n", g410);
-      //             printf("g422:   %+.15e\n", g422);
-      //             printf("g520:   %+.15e\n", g520);
-      //             printf("g533:   %+.15e\n", g533);
-      //             printf("g521:   %+.15e\n", g521);
-      //             printf("g532:   %+.15e\n", g532);
-
       sini2=  sinim * sinim;
       f220 =  0.75 * (1.0 + 2.0 * cosim+cosisq);
       f221 =  1.5 * sini2;
@@ -1047,18 +1028,6 @@ static void dsinit
           (-12.0 + 8.0 * cosim + 10.0 * cosisq));
       f543 = 29.53125 * sinim * (-2.0 - 8.0 * cosim+cosisq *
           (12.0 + 8.0 * cosim - 10.0 * cosisq));
-
-      //             printf("----------------------------\n");
-      //             printf("f220:   %+.15e\n", f220);
-      //             printf("f221:   %+.15e\n", f221);
-      //             printf("f321:   %+.15e\n", f321);
-      //             printf("f322:   %+.15e\n", f322);
-      //             printf("f441:   %+.15e\n", f441);
-      //             printf("f442:   %+.15e\n", f442);
-      //             printf("f522:   %+.15e\n", f522);
-      //             printf("f523:   %+.15e\n", f523);
-      //             printf("f542:   %+.15e\n", f542);
-      //             printf("f543:   %+.15e\n", f543);
 
       xno2  =  nm * nm;
       ainv2 =  aonv * aonv;
@@ -1085,21 +1054,6 @@ static void dsinit
       xfact =  mdot + dmdt + 2.0 * (nodedot + dnodt - rptim) - no;
       em    = emo;
       emsq  = emsqo;
-
-      //             printf("----------------------------\n");
-      //             printf("ainv2:  %+.15e\n", ainv2);
-      //             printf("d2201:  %+.15e\n", d2201);
-      //             printf("d2211:  %+.15e\n", d2211);
-      //             printf("d3210:  %+.15e\n", d3210);
-      //             printf("d3222:  %+.15e\n", d3222);
-      //             printf("d4410:  %+.15e\n", d4410);
-      //             printf("d4422:  %+.15e\n", d4422);
-      //             printf("d5220:  %+.15e\n", d5220);
-      //             printf("d5232:  %+.15e\n", d5232);
-      //             printf("d5232:  %+.15e\n", d5232);
-      //             printf("d5433:  %+.15e\n", d5433);
-      //             printf("xlamo:  %+.15e\n", xlamo);
-      //             printf("xfact:  %+.15e\n", xfact);
     }
 
     /* ---------------- synchronous resonance terms -------------- */
@@ -1118,17 +1072,6 @@ static void dsinit
       del1  = del1 * f311 * g310 * q31 * aonv;
       xlamo = fmod(mo + nodeo + argpo - theta, twopi);
       xfact = mdot + xpidot - rptim + dmdt + domdt + dnodt - no;
-
-      //             printf("----------------------------\n");
-      //             printf("g200:   %+.15e\n", g200);
-      //             printf("g310:   %+.15e\n", g310);
-      //             printf("g300:   %+.15e\n", g300);
-      //             printf("f220:   %+.15e\n", f220);
-      //             printf("f311:   %+.15e\n", f311);
-      //             printf("f330:   %+.15e\n", f330);
-      //             printf("del1:   %+.15e\n", del1);
-      //             printf("del2:   %+.15e\n", del2);
-      //             printf("del3:   %+.15e\n", del3);
     }
 
     /* ------------ for sgp4, initialize the integrator ---------- */
@@ -1136,13 +1079,6 @@ static void dsinit
     xni   = no;
     atime = 0.0;
     nm    = no + dndt;
-
-    //         printf("xfact:  %+.15e\n", xfact);
-    //         printf("xlamo:  %+.15e\n", xlamo);
-    //         printf("xli:    %+.15e\n", xli);
-    //         printf("xni:    %+.15e\n", xni);
-    //         printf("atime:  %+.15e\n", atime);
-    //         printf("xnodp:  %+.15e\n", nm);
   }
 
   //#include "debug3.cpp"
@@ -1367,17 +1303,17 @@ static void dspace
     }
     nm = no + dndt;
 
-    printf("======================================== dp1\n");
-    printf("tdelta %+.15e\n", t);
-    printf("atime  %+.15e\n", atime);
-    printf("xndt   %+.15e\n", xndt);
-    printf("xldot  %+.15e\n", xldot);
-    printf("xnddt  %+.15e\n", xnddt);
-    printf("xomi   %+.15e\n", xomi);
-    printf("x2omi  %+.15e\n", x2omi);
-    printf("x2li   %+.15e\n", x2li);
-    printf("xli    %+.15e\n", xli);
-    printf("xni    %+.15e\n", xni );
+//    printf("======================================== dp1\n");
+//    printf("tdelta %+.15e\n", t);
+//    printf("atime  %+.15e\n", atime);
+//    printf("xndt   %+.15e\n", xndt);
+//    printf("xldot  %+.15e\n", xldot);
+//    printf("xnddt  %+.15e\n", xnddt);
+//    printf("xomi   %+.15e\n", xomi);
+//    printf("x2omi  %+.15e\n", x2omi);
+//    printf("x2li   %+.15e\n", x2li);
+//    printf("xli    %+.15e\n", xli);
+//    printf("xni    %+.15e\n", xni );
   }
 
   //#include "debug4.cpp"
@@ -1504,21 +1440,21 @@ static void initl
   else
     gsto = gstime(epoch + 2433281.5);
 
-  printf("---------------------------------------- i2\n");
-  printf("aa      %+.15e\n", ak);
-  printf("cosio   %+.15e\n", cosio);
-  printf("sinio   %+.15e\n", sinio);
-  printf("eo2     %+.15e\n", eccsq);
-  printf("theta2  %+.15e\n", cosio2);
-  printf("betao2  %+.15e\n", omeosq);
-  printf("betao   %+.15e\n", rteosq);
-  printf("delta1  %+.15e\n", d1);
-  printf("a0      %+.15e\n", adel);
-  printf("delta0  %+.15e\n", del);
-  printf("xnodp   %+.15e\n", no);
-  printf("aodp    %+.15e\n", ao);
-  printf("x1m5th2 %+.15e\n", con42);
-  printf("con41   %+.15e\n", con41);
+//  printf("---------------------------------------- i2\n");
+//  printf("aa      %+.15e\n", ak);
+//  printf("cosio   %+.15e\n", cosio);
+//  printf("sinio   %+.15e\n", sinio);
+//  printf("eo2     %+.15e\n", eccsq);
+//  printf("theta2  %+.15e\n", cosio2);
+//  printf("betao2  %+.15e\n", omeosq);
+//  printf("betao   %+.15e\n", rteosq);
+//  printf("delta1  %+.15e\n", d1);
+//  printf("a0      %+.15e\n", adel);
+//  printf("delta0  %+.15e\n", del);
+//  printf("xnodp   %+.15e\n", no);
+//  printf("aodp    %+.15e\n", ao);
+//  printf("x1m5th2 %+.15e\n", con42);
+//  printf("con41   %+.15e\n", con41);
 
   //#include "debug5.cpp"
 }  // end initl
@@ -1683,16 +1619,16 @@ bool sgp4init
   // sgp4fix add opsmode
   satrec.operationmode = opsmode;
 
-  printf("---------------------------------------- i1\n");
-  printf("mean_motion_dt2  %+.15e\n", satrec.ndot);
-  printf("mean_motion_ddt6 %+.15e\n", satrec.nddot);
-  printf("Bstar            %+.15e\n", satrec.bstar);
-  printf("inclination      %+.15e\n", satrec.inclo);
-  printf("right_asc_node   %+.15e\n", satrec.nodeo);
-  printf("eccentricity     %+.15e\n", satrec.ecco);
-  printf("argument_perigee %+.15e\n", satrec.argpo);
-  printf("mean_anomaly     %+.15e\n", satrec.mo);
-  printf("mean_motion      %+.15e\n", satrec.no);
+//  printf("---------------------------------------- i1\n");
+//  printf("mean_motion_dt2  %+.15e\n", satrec.ndot);
+//  printf("mean_motion_ddt6 %+.15e\n", satrec.nddot);
+//  printf("Bstar            %+.15e\n", satrec.bstar);
+//  printf("inclination      %+.15e\n", satrec.inclo);
+//  printf("right_asc_node   %+.15e\n", satrec.nodeo);
+//  printf("eccentricity     %+.15e\n", satrec.ecco);
+//  printf("argument_perigee %+.15e\n", satrec.argpo);
+//  printf("mean_anomaly     %+.15e\n", satrec.mo);
+//  printf("mean_motion      %+.15e\n", satrec.no);
 
   /* ------------------------ earth constants ----------------------- */
   // sgp4fix identify constants and allow alternate values
@@ -1806,32 +1742,32 @@ bool sgp4init
       satrec.isimp  = 1;
     }
 
-    printf("---------------------------------------- i3\n");
-    printf("qoms24 %+.15e\n", qzms24);
-    printf("s4     %+.15e\n", sfour);
-    printf("pinv2  %+.15e\n", pinvsq);
-    printf("tsi    %+.15e\n", tsi);
-    printf("eta    %+.15e\n", satrec.eta);
-    printf("eta2   %+.15e\n", etasq);
-    printf("eeta   %+.15e\n", eeta);
-    printf("psi2   %+.15e\n", psisq);
-    printf("coef   %+.15e\n", coef);
-    printf("coef1  %+.15e\n", coef1);
-    printf("C2     %+.15e\n", cc2);
-    printf("C1     %+.15e\n", satrec.cc1);
-    printf("C4     %+.15e\n", satrec.cc4);
-    printf("theta4 %+.15e\n", cosio4);
-    printf("xmdot  %+.15e\n", satrec.mdot);
-    printf("omgdot %+.15e\n", satrec.argpdot);
-    printf("xhdot1 %+.15e\n", xhdot1);
-    printf("xnodot %+.15e\n", satrec.nodedot);
-    printf("xnodcf %+.15e\n", satrec.nodecf);
-    printf("xlcof  %+.15e\n", satrec.xlcof);
-    printf("aycof  %+.15e\n", satrec.aycof);
-    printf("x7thm1 %+.15e\n", satrec.x7thm1);
-    printf("x1mth2 %+.15e\n", satrec.x1mth2);
-    printf("dspace %d\n", (satrec.method == 'd'));
-    printf("simple %d\n", satrec.isimp);
+//    printf("---------------------------------------- i3\n");
+//    printf("qoms24 %+.15e\n", qzms24);
+//    printf("s4     %+.15e\n", sfour);
+//    printf("pinv2  %+.15e\n", pinvsq);
+//    printf("tsi    %+.15e\n", tsi);
+//    printf("eta    %+.15e\n", satrec.eta);
+//    printf("eta2   %+.15e\n", etasq);
+//    printf("eeta   %+.15e\n", eeta);
+//    printf("psi2   %+.15e\n", psisq);
+//    printf("coef   %+.15e\n", coef);
+//    printf("coef1  %+.15e\n", coef1);
+//    printf("C2     %+.15e\n", cc2);
+//    printf("C1     %+.15e\n", satrec.cc1);
+//    printf("C4     %+.15e\n", satrec.cc4);
+//    printf("theta4 %+.15e\n", cosio4);
+//    printf("xmdot  %+.15e\n", satrec.mdot);
+//    printf("omgdot %+.15e\n", satrec.argpdot);
+//    printf("xhdot1 %+.15e\n", xhdot1);
+//    printf("xnodot %+.15e\n", satrec.nodedot);
+//    printf("xnodcf %+.15e\n", satrec.nodecf);
+//    printf("xlcof  %+.15e\n", satrec.xlcof);
+//    printf("aycof  %+.15e\n", satrec.aycof);
+//    printf("x7thm1 %+.15e\n", satrec.x7thm1);
+//    printf("x1mth2 %+.15e\n", satrec.x1mth2);
+//    printf("dspace %d\n", (satrec.method == 'd'));
+//    printf("simple %d\n", satrec.isimp);
 
     /* --------------- deep space initialization ------------- */
     if ((2*pi / satrec.no) >= 225.0)
@@ -1858,7 +1794,7 @@ bool sgp4init
           z12, z13, z21, z22, z23, z31, z32, z33,
           satrec.zmol, satrec.zmos
       );
-      printf("[DS] GSTo %+.15e\n", satrec.gsto);
+//      printf("[DS] GSTo %+.15e\n", satrec.gsto);
       dpper
       (
           satrec.e3, satrec.ee2, satrec.peo, satrec.pgho,
@@ -1920,21 +1856,21 @@ bool sgp4init
   // sgp4fix take out check to let satellites process until they are actually below earth surface
   //       if(satrec.error == 0)
 
-  printf("---------------------------------------- i4\n");
-  printf("C3     %+.15e\n", cc3);
-  printf("xmcof  %+.15e\n", satrec.xmcof);
-  printf("C5     %+.15e\n", satrec.cc5);
-  printf("omgcof %+.15e\n", satrec.omgcof);
-  printf("delmo  %+.15e\n", satrec.delmo);
-  printf("sinmo  %+.15e\n", satrec.sinmao);
-  printf("D2     %+.15e\n", satrec.d2);
-  printf("D3     %+.15e\n", satrec.d3);
-  printf("D4     %+.15e\n", satrec.d4);
-  printf("t3cof  %+.15e\n", satrec.t3cof);
-  printf("t4cof  %+.15e\n", satrec.t4cof);
-  printf("t5cof  %+.15e\n", satrec.t5cof);
+//  printf("---------------------------------------- i4\n");
+//  printf("C3     %+.15e\n", cc3);
+//  printf("xmcof  %+.15e\n", satrec.xmcof);
+//  printf("C5     %+.15e\n", satrec.cc5);
+//  printf("omgcof %+.15e\n", satrec.omgcof);
+//  printf("delmo  %+.15e\n", satrec.delmo);
+//  printf("sinmo  %+.15e\n", satrec.sinmao);
+//  printf("D2     %+.15e\n", satrec.d2);
+//  printf("D3     %+.15e\n", satrec.d3);
+//  printf("D4     %+.15e\n", satrec.d4);
+//  printf("t3cof  %+.15e\n", satrec.t3cof);
+//  printf("t4cof  %+.15e\n", satrec.t4cof);
+//  printf("t5cof  %+.15e\n", satrec.t5cof);
 
-  sgp4(whichconst, satrec, 1440.0, r, v);
+  sgp4(whichconst, satrec, 0.0, r, v);
   satrec.init = 'n';
   //print_orbit(satrec, "sgp4init post-sgp4 call");
 
@@ -2104,19 +2040,19 @@ bool sgp4
   em    = satrec.ecco;
   inclm = satrec.inclo;
 
-  printf("---------------------------------------- p1\n");
-  printf("xmdf   %+.15e\n", xmdf);
-  printf("xmp    %+.15e\n", mm);
-  printf("omgadf %+.15e\n", argpdf);
-  printf("xnoddf %+.15e\n", nodedf);
-  printf("t2     %+.15e\n", t2);
-  printf("tempa  %+.15e\n", tempa);
-  printf("tempe  %+.15e\n", tempe);
-  printf("templ  %+.15e\n", templ);
-  printf("omega  %+.15e\n", argpm);
-  printf("nm     %+.15e\n", nm);
-  printf("em     %+.15e\n", em);
-  printf("inclm  %+.15e\n", inclm);
+//  printf("---------------------------------------- p1\n");
+//  printf("xmdf   %+.15e\n", xmdf);
+//  printf("xmp    %+.15e\n", mm);
+//  printf("omgadf %+.15e\n", argpdf);
+//  printf("xnoddf %+.15e\n", nodedf);
+//  printf("t2     %+.15e\n", t2);
+//  printf("tempa  %+.15e\n", tempa);
+//  printf("tempe  %+.15e\n", tempe);
+//  printf("templ  %+.15e\n", templ);
+//  printf("omega  %+.15e\n", argpm);
+//  printf("nm     %+.15e\n", nm);
+//  printf("em     %+.15e\n", em);
+//  printf("inclm  %+.15e\n", inclm);
 
   if (satrec.method == 'd')
   {
@@ -2185,23 +2121,23 @@ bool sgp4
   sinip  = sinim;
   cosip  = cosim;
 
-  printf("---------------------------------------- p2\n");
-  printf("am     %+.15e\n", am);
-  printf("nm     %+.15e\n", nm);
-  printf("em     %+.15e\n", em);
-  printf("xlm    %+.15e\n", xlm);
-  printf("em2    %+.15e\n", emsq);
-  printf("em     %+.15e\n", em);
-  printf("omega  %+.15e\n", argpm);
-  printf("inclp  %+.15e\n", xincp);
-  printf("ep     %+.15e\n", ep);
-  printf("nodep  %+.15e\n", nodep);
-  printf("argpp  %+.15e\n", argpp);
-  printf("mp     %+.15e\n", mp);
-  printf("sinip  %+.15e\n", sinip);
-  printf("cosip  %+.15e\n", cosip);
+//  printf("---------------------------------------- p2\n");
+//  printf("am     %+.15e\n", am);
+//  printf("nm     %+.15e\n", nm);
+//  printf("em     %+.15e\n", em);
+//  printf("xlm    %+.15e\n", xlm);
+//  printf("em2    %+.15e\n", emsq);
+//  printf("em     %+.15e\n", em);
+//  printf("omega  %+.15e\n", argpm);
+//  printf("inclp  %+.15e\n", xincp);
+//  printf("ep     %+.15e\n", ep);
+//  printf("nodep  %+.15e\n", nodep);
+//  printf("argpp  %+.15e\n", argpp);
+//  printf("mp     %+.15e\n", mp);
+//  printf("sinip  %+.15e\n", sinip);
+//  printf("cosip  %+.15e\n", cosip);
 
-  if (satrec.method == 'd') // TODO: Debug dpper
+  if (satrec.method == 'd')
   //if (false)
   {
     dpper
@@ -2220,16 +2156,16 @@ bool sgp4
         'n', ep, xincp, nodep, argpp, mp, satrec.operationmode
     );
 
-    printf("======================================== dp2\n");
-    printf("xmp     %+.15e\n", mm);
-    printf("xlm     %+.15e\n", xlm);
-    printf("em2     %+.15e\n", emsq);
-    printf("omega   %+.15e\n", argpm);
-    printf("incl_lp %+.15e\n", xincp);
-    printf("node_lp %+.15e\n", nodep);
-    printf("argplp  %+.15e\n", argpp);
-    printf("ecc_lp  %+.15e\n", ep);
-    printf("mo_lp   %+.15e\n", mp);
+//    printf("======================================== dp2\n");
+//    printf("xmp     %+.15e\n", mm);
+//    printf("xlm     %+.15e\n", xlm);
+//    printf("em2     %+.15e\n", emsq);
+//    printf("omega   %+.15e\n", argpm);
+//    printf("incl_lp %+.15e\n", xincp);
+//    printf("node_lp %+.15e\n", nodep);
+//    printf("argplp  %+.15e\n", argpp);
+//    printf("ecc_lp  %+.15e\n", ep);
+//    printf("mo_lp   %+.15e\n", mp);
 
     if (xincp < 0.0)
     {
@@ -2264,19 +2200,18 @@ bool sgp4
   xl   = mp + argpp + nodep + temp * satrec.xlcof * axnl;
 
   /* --------------------- solve kepler's equation --------------- */
-  u    = fmod(xl - nodep, twopi); // TODO: This is evaluating incorrectly? Failed to reproduce
-  //u    = 7.699938584533328e-004; // CRUTCH!
+  u    = fmod(xl - nodep, twopi);
   eo1  = u;
   tem5 = 9999.9;
   ktr  = 1;
 
-  printf("---------------------------------------- p3\n");
-  printf("xlcof   %+.15e\n", satrec.xlcof);
-  printf("axnl    %+.15e\n", axnl);
-  printf("a1e2inv %+.15e\n", temp);
-  printf("aynl    %+.15e\n", aynl);
-  printf("xl      %+.15e\n", xl);
-  printf("u       %+.15e\n", u);
+//  printf("---------------------------------------- p3\n");
+//  printf("xlcof   %+.15e\n", satrec.xlcof);
+//  printf("axnl    %+.15e\n", axnl);
+//  printf("a1e2inv %+.15e\n", temp);
+//  printf("aynl    %+.15e\n", aynl);
+//  printf("xl      %+.15e\n", xl);
+//  printf("u       %+.15e\n", u);
 
   //   sgp4fix for kepler iteration
   //   the following iteration needs better limits on corrections
@@ -2289,12 +2224,12 @@ bool sgp4
     if(fabs(tem5) >= 0.95)
       tem5 = tem5 > 0.0 ? 0.95 : -0.95;
 
-    printf("> >>>>>> Kepler\n");
-    printf("> kdelta %+.15e\n", tem5);
-    printf("> sineo1 %+.15e\n", sineo1);
-    printf("> coseo1 %+.15e\n", coseo1);
-    printf("> eo1    %+.15e\n", eo1);
-    printf("> ktr    %d\n", ktr);
+//    printf("> >>>>>> Kepler\n");
+//    printf("> kdelta %+.15e\n", tem5);
+//    printf("> sineo1 %+.15e\n", sineo1);
+//    printf("> coseo1 %+.15e\n", coseo1);
+//    printf("> eo1    %+.15e\n", eo1);
+//    printf("> ktr    %d\n", ktr);
 
     eo1    = eo1 + tem5;
     ktr = ktr + 1;
@@ -2306,11 +2241,11 @@ bool sgp4
   el2   = axnl*axnl + aynl*aynl;
   pl    = am*(1.0-el2);
 
-  printf("---------------------------------------- p4\n");
-  printf("ecose %+.15e\n", ecose);
-  printf("esine %+.15e\n", esine);
-  printf("el2   %+.15e\n", el2);
-  printf("pl    %+.15e\n", pl);
+//  printf("---------------------------------------- p4\n");
+//  printf("ecose %+.15e\n", ecose);
+//  printf("esine %+.15e\n", esine);
+//  printf("el2   %+.15e\n", el2);
+//  printf("pl    %+.15e\n", pl);
 
   if (pl < 0.0)
   {
@@ -2352,25 +2287,25 @@ bool sgp4
     rvdot = rvdotl + nm * temp1 * (satrec.x1mth2 * cos2u +
         1.5 * satrec.con41) / xke;
 
-    printf("---------------------------------------- p5\n");
-    printf("rl     %+.15e\n", rl);
-    printf("rdotl  %+.15e\n", rdotl);
-    printf("rvdotl %+.15e\n", rvdotl);
-    printf("betal  %+.15e\n", betal);
-    printf("sinu   %+.15e\n", sinu);
-    printf("cosu   %+.15e\n", cosu);
-    printf("su     %+.15e\n", su);
-    printf("sin2u  %+.15e\n", sin2u);
-    printf("cos2u  %+.15e\n", cos2u);
-    printf("temp1  %+.15e\n", temp1);
-    printf("con41  %+.15e\n", satrec.con41);
-    printf("x1mth2 %+.15e\n", satrec.x1mth2);
-    printf("temp2  %+.15e\n", temp2);
-    printf("mrt    %+.15e\n", mrt);
-    printf("xnode  %+.15e\n", xnode);
-    printf("xinc   %+.15e\n", xinc);
-    printf("mvt    %+.15e\n", mvt);
-    printf("rvdot  %+.15e\n", rvdot);
+//    printf("---------------------------------------- p5\n");
+//    printf("rl     %+.15e\n", rl);
+//    printf("rdotl  %+.15e\n", rdotl);
+//    printf("rvdotl %+.15e\n", rvdotl);
+//    printf("betal  %+.15e\n", betal);
+//    printf("sinu   %+.15e\n", sinu);
+//    printf("cosu   %+.15e\n", cosu);
+//    printf("su     %+.15e\n", su);
+//    printf("sin2u  %+.15e\n", sin2u);
+//    printf("cos2u  %+.15e\n", cos2u);
+//    printf("temp1  %+.15e\n", temp1);
+//    printf("con41  %+.15e\n", satrec.con41);
+//    printf("x1mth2 %+.15e\n", satrec.x1mth2);
+//    printf("temp2  %+.15e\n", temp2);
+//    printf("mrt    %+.15e\n", mrt);
+//    printf("xnode  %+.15e\n", xnode);
+//    printf("xinc   %+.15e\n", xinc);
+//    printf("mvt    %+.15e\n", mvt);
+//    printf("rvdot  %+.15e\n", rvdot);
 
     /* --------------------- orientation vectors ------------------- */
     sinsu =  sin(su);
@@ -2396,13 +2331,14 @@ bool sgp4
     v[1] = (mvt * uy + rvdot * vy) * vkmpersec;
     v[2] = (mvt * uz + rvdot * vz) * vkmpersec;
 
-    printf("---------------------------------------- p6\n");
-    printf("px %12.6lf\n", r[0]);
-    printf("py %12.6lf\n", r[1]);
-    printf("pz %12.6lf\n", r[2]);
-    printf("vx %12.6lf\n", v[0]);
-    printf("vy %12.6lf\n", v[1]);
-    printf("vz %12.6lf\n", v[2]);
+//    printf("---------------------------------------- p6\n");
+//    printf("t %lf\n", satrec.t);
+//    printf("px %12.6lf\n", r[0]);
+//    printf("py %12.6lf\n", r[1]);
+//    printf("pz %12.6lf\n", r[2]);
+//    printf("vx %12.6lf\n", v[0]);
+//    printf("vy %12.6lf\n", v[1]);
+//    printf("vz %12.6lf\n", v[2]);
 
   }  // if pl > 0
 

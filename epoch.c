@@ -42,10 +42,8 @@ fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
 
   res_tm.tm_year = 100 + year;
 
-#ifdef USE_57_YEAR_WRAP
   if (year >= 57) // TODO: Will be valid only until 2057!
     res_tm.tm_year -= 100;
-#endif
 
   // Month and day of month
   if ((year % 4) == 0) // Leap year?
@@ -88,7 +86,7 @@ fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
  *
  * Inputs:  time - Timestamp in unix time
  *          ms   - Fracitonal second part, ms
- * Returns: Julian date
+ * Returns: Julian date on success
  */
 double
 unix2jul(time_t* time, float ms)
