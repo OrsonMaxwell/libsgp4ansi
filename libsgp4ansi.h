@@ -17,91 +17,112 @@
 #include <time.h>
 
 // ************************************************************************* //
+//                                VERSION                                    //
+// ************************************************************************* //
+
+#define VERSION "0.2"
+extern const char libsgp4ansi_version[];
+
+// ************************************************************************* //
 //                               CUSTOM TYPES                                //
 // ************************************************************************* //
-/*
- * 3D vector
- */
-typedef struct _vect
+
+typedef struct _vec3
 {
   union {
-    double i;
-    double l;
-    double u;
-    double x;
-    double lat;
+    double a, i, l, u, x, lat;
   };
   union {
-    double j;
-    double m;
-    double v;
-    double y;
-    double lon;
+    double b, j, m, v, y, lon;
   };
   union {
-    double k;
-    double n;
-    double w;
-    double z;
-    double alt;
+    double c, k, n, w, z, alt;
   };
-} vect;
+} vec3;
 
 /*
  * Satellite orbital element set
  */
-typedef struct _orbit
+typedef struct _sat
 {
-  // NORAD TLE portion
-  char         name[24];      // Satellite name
-  unsigned int number;        // Catalogue number
-  char         sec_class;     // Security classification
-  char         designator[8]; // International designator
-  time_t       epoch;         // Epoch of the TLE
-  unsigned int epoch_ms;      // Fractional seconds portion of epoch, ms
-  double       nprimediv2;    // First derivative of mean motion div2, rev/day2
-  double       ndprimediv6;   // Second derivative of mean motion div6, rev/day3
-  double       Bstar;         // Pseudo-ballistic drag coefficient, 1/Earth r
-  uint8_t      ephem_type;    // Ephemeris type
-  unsigned int elset_number;  // Current element set number
-  double       i;             // Orbital inclination, 0..180deg
-  double       alpha;         // Right ascension of ascension node, 0..360deg
-  double       e;             // Orbital eccentricity, 0.0..1.0
-  double       omega;         // Argument of perigee, 0..360deg
-  double       Mo;            // Mean anomaly at epoch, 0..360deg
-  double       no;            // Mean motion at epoch, rev/day
-  unsigned int rev_number;    // Number of revolutions at epoch
-  // Time
-  double julepoch, GSTo;
+  // NORAD TLE
+  char         name[25];          // Satellite name, 24 chars + \0
+  char         sec_class;         // Security classification, 1 char
+  char         int_designator[9]; // International designator, 8 chars + \0
+  time_t       epoch;             // Epoch of the TLE
+  float        epoch_ms;          // Fractional seconds portion of epoch, ms
+  double       julian_epoch;      // Julian time at epoch
+  double       mean_motion_dt2;   // 1st deriv. of mean motion div2, rev/day2
+  double       mean_motion_ddt6;  // 2nd deriv. of mean motion div6, rev/day3
+  double       Bstar;             // Pseudo-ballistic drag coefficient, 1/AE
+  double       inclination;       // Orbital inclination, [0;180) deg
+  double       right_asc_node;    // Right ascension of asc. node, [0;360) deg
+  double       eccentricity;      // Orbital eccentricity, [0;1)
+  double       argument_perigee;  // Argument of perigee, [0;360) deg
+  double       mean_anomaly;      // Mean anomaly at epoch, [0;360) deg
+  double       mean_motion;       // Mean motion at epoch, rev/day
+  unsigned int norad_number;      // Catalogue number
+  unsigned int orbit_number;      // Number of revolutions at epoch
   // Flags
-  bool isdeepspace, islowperigee;
-  // Standard orbital terms
-  double a, altapoR, altperR, aycof, C1, C4, C5, con41, cosi, d2, d3, d4,
-         delMo, eta,   mdot,  nodecf, nodedot, omegaprime, omgcof, sinMo, sini,
-         t2cof, t3cof, t4cof, t5cof,  x1mth2,  x7thm1,     xlcof,  xmcof;
-  // Deep space terms
-  double e3,  ee2,  peo, pgho, pho,  pinco, plo, se2,  se3,  sgh2, sgh3, sgh4,
-         sh2, sh3,  si2, si3,  sl2,  sl3,   sl4, xgh2, xgh3, xgh4, xh2,  xh3,
-         xi2, xi3,  xl2, xl3,  xl4,  zmol,  zmos;
-  // Resonant terms
-  double d2201, d2211, d3210, d3222, d4410, d4422, d5220, d5232, d5421, d5433,
-         dedt,  didt,  dmdt,  dnodt, domdt, del1,  del2,  del3,  xfact, xlamo,
-         xli,   xni;
-} orbit;
+  bool is_deep_space, use_simple_model, is_24h_resonant, is_12h_resonant;
+  // Standard orbital elements
+  double GSTo;                     // Greenwich Sidereal Time at epoch
+  double xnodp;                   // Original mean motion recovered from TLE
+  double aodp;                    // Semimajor axis, AE
+  double perigee;                 // Perigee, AE
+  double perigee_alt;             // Altitude of perigee from surface, km
+  double period;                  // Orbital period
+  // Common constants
+  double aycof, C1, C4, con41,  eta, omgdot, t2cof, x1mth2, x1m5th2, x7thm1,
+         xlcof, xnodcf, xnodot, xmdot;
+  // Near space constants
+  double C5, D2, D3, D4, delmo, omgcof, sinmo, t3cof, t4cof, t5cof, xmcof;
+  // Deep space solar terms
+  double se2, se3, si2, si3, sl2, sl3, sl4, sgh2, sgh3, sgh4, sh2, sh3;
+  double zmos;
+  // Deep space lunar terms
+  double ee2, e3,  xi2, xi3, xl2, xl3, xl4, xgh2, xgh3, xgh4, xh2, xh3;
+  double zmol;
+  // Deep space lunar solar terms
+  double peo, pinco, plo, pgho, pho;
+  // Deep space long period last perturbed elements
+  double inclination_lp;
+  double eccentricity_lp;
+  double right_asc_node_lp;
+  double argument_perigee_lp;
+  double mean_anomaly_lp;
+  // Deep space resonance terms
+  double dedt, didt, dmdt, dndt, dnodt, domdt;
+  double xlamo, xfact;
+  double d2201, d2211, d3210, d3222 , d4410, d4422, d5220, d5232, d5421, d5433;
+  double del1, del2, del3; // TODO: Rename
+  // Deep space integrator terms
+  double xli, xni, atime;
+} sat;
+
 
 // ************************************************************************* //
-//                                 INTERFACE                                 //
+//                                    API                                    //
 // ************************************************************************* //
-// SGP4/SDP4 math engine initialization
-extern int
-orbit_init(orbit*);
 
-// Get position and velocity vectors in the TEME frame at given time
+// Initialize SGP4/SDP4 orbit model from raw NORAD TLE lines
 extern int
-orbit_prop(orbit*, time_t*, unsigned int, unsigned int, double, vect*, vect*);
+sat_load_tle(char*, char*, char*, sat*);
 
-// TODO: Make private!
-extern void
-print_orbit(orbit*, char*);
+// Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
+extern int
+sat_init(sat*);
+
+// Get position and velocity vectors in the TEME frame at given time since epoch
+extern int
+sat_propagate(sat*, double, unsigned int, double, vec3*, vec3*);
+
+// Get classical orbital elements from TEME vectors
+extern int
+teme2coe
+(
+  vec3*, vec3*, double*, double*, double*, double*, double*, double*, double*,
+  double*, double*, double*, double*
+);
 
 #endif /* LIBSGP4ANSI_H_ */

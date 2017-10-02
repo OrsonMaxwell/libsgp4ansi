@@ -1,5 +1,5 @@
 /*
- * transform.c - Coordinate and time transformation routines for libsgp4ansi.
+ * transform.c - Coordinate transformation routines for libsgp4ansi.
  *
  * References:
  * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
@@ -10,180 +10,297 @@
  */
 
 #include <math.h>
-#include <time.h>
+#include <string.h> // TODO: get rid of this
 
 #include "libsgp4ansi.h"
 #include "const.h"
-#include "transform.h"
+#include "coord.h"
+#include "epoch.h"
+#include "vector.h"
 
-// ************************************************************************* //
-//                                 MISC MATH                                 //
-// ************************************************************************* //
 /*
- * Return unity multiplier with the sign of the argument
+ * Solve Kepler's equation for known true anomaly
  *
- * Inputs:  arg    - Source of the sign information
- * Outputs: None
- * Returns: unity with argument sign
+ * Inputs:  ecc - Eccentricity
+ *          nu  - True anomaly, (-2pi; 2pi) rad
+ * Returns: mean anomaly
+ */
+double
+kepler_newton(double ecc, double nu)
+{
+  double m = INFINITY;
+  double small = 1.0e-8;
+
+  double sine, cose, e0;
+
+  // Circular
+  if (fabs(ecc) < small)
+  {
+    m = nu;
+  }
+  else
+  {
+    // Elliptical
+    if (ecc < 1 - small)
+    {
+      sine = (sqrt(1 - pow(ecc, 2)) * sin(nu)) / (1 + ecc * cos(nu));
+      cose = (ecc + cos(nu)) / (1 + ecc * cos(nu));
+      e0   = atan2(sine, cose);
+      m   = e0 - ecc * sin(e0);
+    }
+    else
+    {
+      // Hyperbolic
+      if (ecc > 1 + small)
+      {
+        if ((ecc > 1) && (fabs(nu) + 0.00001 < PI - acos(1 / ecc)))
+        {
+          sine = (sqrt(pow(ecc, 2) - 1) * sin(nu)) / (1 + ecc * cos(nu) );
+          e0   = log(sine + sqrt(pow(sine, 2) + 1));
+          m   = ecc * sinh(e0) - e0;
+        }
+      }
+      else
+      {
+        // Parabolic
+        if (fabs(nu) < 168 * PI / 180) // Arbitrary
+        {
+          e0 = tan(nu * 0.5);
+          m = e0 + pow(e0, 3) / 3;
+        }
+      }
+    }
+  }
+
+  if (ecc < 1)
+  {
+    m = fmod(m, TWOPI);
+
+    if (m < 0)
+    {
+      m += TWOPI;
+    }
+  }
+
+  return m;
+}
+
+/*
+ * Get classical orbital elements from TEME vectors
+ *
+ * Inputs:  posteme - Position vector in TEME frame, km
+ *          velteme - Velocity vector in TEME frame, km/s
+ * Outputs: p       - semilatus rectum               km
+ *          a       - semimajor axis                 km
+ *          ecc     - eccentricity
+ *          incl    - inclination                    [0; pi)  rad
+ *          omega   - longitude of ascending node    [0; 2pi) rad
+ *          argp    - argument of perigee            [0; 2pi) rad
+ *          nu      - true anomaly                   [0; 2pi) rad
+ *          m       - mean anomaly                   [0; 2pi) rad
+ *          arglat  - argument of latitude      (ci) [0; 2pi) rad
+ *          truelon - true longitude            (ce) [0; 2pi) rad
+ *          lonper  - longitude of periapsis    (ee) [0; 2pi) rad
+ * Returns: 0       - Success
+ *         -1       - Decayed satellite
  */
 int
-signof(double arg)
-{
-  return (arg < 0.0)? -1 : 1;
-}
-
-/*
- * Find magnitude of a 3D vector
- *
- * Inputs:  arg    - Source vector
- * Outputs: None
- * Returns: vector arg magnitude
- */
-double
-mag(vect* arg)
-{
-  return sqrt(arg->x * arg->x + arg->y * arg->y + arg->z * arg->z);
-}
-
-/*
- * Copy a 3D vector
- *
- * Inputs:  from - Source vector
- * Outputs: to   - Destination vector
- * Returns: None
- */
-void
-copyvect(vect* from, vect* to)
-{
-  to->x = from->x;
-  to->y = from->y;
-  to->z = from->z;
-}
-
-/*
- * Add two 3D vectors with coefficients
- *
- * Inputs:  c1     - 1st vector coefficient
- *          vect1  - 1st vector
- *          c2     - 2nd vector coefficient
- *          vect2  - 2nd vector
- * Outputs: result - Resulting vector
- * Returns: None
- */
-void
-addvect(double c1, vect* vect1, double c2, vect* vect2, vect* result)
-{
-  result->x = c1 * vect1->x + c2 * vect2->x;
-  result->y = c1 * vect1->y + c2 * vect2->y;
-  result->z = c1 * vect1->z + c2 * vect2->z;
-}
-
-/*
- * Dot product of two 3D vectors
- *
- * Inputs:  vect1  - 1st vector
- *          vect2  - 2nd vector
- * Outputs: None
- * Returns: dot product
- */
-double
-dot(vect* vect1, vect* vect2)
-{
-  return vect1->x * vect2->x + vect1->y * vect2->y + vect1->z * vect2->z;
-}
-
-/*
- * Crossing of two 3D vectors
- *
- * Inputs:  vect1  - 1st vector
- *          vect2  - 2nd vector
- * Outputs: result - Resulting vector
- * Returns: None
- */
-void cross
+teme2coe
 (
-    vect* vect1, vect* vect2, vect* result
+    vec3* posteme, vec3 *velteme,
+    double* p,    double* a,  double* ecc, double* incl,   double* omega,
+    double* argp, double* nu, double* m,   double* arglat, double* truelon,
+    double* lonper
 )
 {
-  result->x= vect1->y * vect2->z - vect1->z * vect2->y;
-  result->y= vect1->z * vect2->x - vect1->x * vect2->z;
-  result->z= vect1->x * vect2->y - vect1->y * vect2->x;
+  int i;
+  char typeorbit[3]; // TODOL Change to numeric to get rid of strings
+
+  double tolerance = 1.0e-8; // TODO: Const?
+
+  double magr = vec3_mag(posteme);
+  double magv = vec3_mag(velteme);
+
+  // Find h n and e vectors
+  vec3 hbar, nbar, ebar;
+
+  vec3_cross(posteme, velteme, &hbar);
+  double magh = vec3_mag(&hbar);
+
+  if (magh < tolerance)
+  {
+    return -1;
+  }
+
+  nbar.x = -hbar.y;
+  nbar.y =  hbar.x;
+  nbar.z =  0;
+
+  double magn  = vec3_mag(&nbar);
+  double c1    = pow(magv, 2) - GM  / magr;
+  double rdotv = vec3_dot(posteme, velteme);
+
+  ebar.x = (c1 * posteme->x - rdotv * velteme->x) / GM;
+  ebar.y = (c1 * posteme->y - rdotv * velteme->y) / GM;
+  ebar.z = (c1 * posteme->z - rdotv * velteme->z) / GM;
+
+  *ecc = vec3_mag(&ebar);
+
+  // Find *a e and semi-latus rectum
+  double sme = (pow(magv, 2) * 0.5) - (GM  / magr);
+
+  if (fabs(sme) > tolerance)
+  {
+    *a = -GM / (2 * sme);
+  }
+  else
+  {
+    *a = INFINITY;
+  }
+  *p = pow(magh, 2) / GM;
+
+  // Find inclination
+  double hk = hbar.z / magh;
+  *incl= acos( hk );
+
+  // Determine type of orbit
+  // Elliptical, parabolic, hyperbolic inclined
+  strcpy(typeorbit, "ei");
+  if (*ecc < tolerance)
+  {
+    // Circular equatorial
+    if ((*incl < tolerance) || (fabs(*incl - PI) < tolerance))
+    {
+      strcpy(typeorbit,"ce");
+    }
+    else
+    {
+      // Circular inclined
+      strcpy(typeorbit,"ci");
+    }
+  }
+  else
+  {
+    // Elliptical, parabolic, hyperbolic equatorial
+    if ((*incl < tolerance) || (fabs(*incl - PI) < tolerance))
+    {
+      strcpy(typeorbit,"ee");
+    }
+  }
+
+  // Find longitude of ascending node
+  if (magn > tolerance)
+  {
+    double temp = nbar.x / magn;
+
+    if (fabs(temp) > 1) // TODO: WTF?
+    {
+      temp = (temp >= 0)?(1.0):(-1.0);
+    }
+
+    *omega = acos(temp);
+    if (nbar.y < 0)
+    {
+      *omega = TWOPI - *omega;
+    }
+  }
+  else
+    *omega = NAN;
+
+  // Find argument of perigee
+  if (strcmp(typeorbit, "ei") == 0)
+  {
+    *argp = vec3_angle(&nbar, &ebar);
+    if (ebar.z < 0)
+    {
+      *argp= TWOPI - *argp;
+    }
+  }
+  else
+    *argp= NAN;
+
+  // Find true anomaly at epoch
+  if (typeorbit[0] == 'e')
+  {
+    *nu = vec3_angle(&ebar, posteme);
+    if ( rdotv < 0)
+    {
+      *nu= TWOPI - *nu;
+    }
+  }
+  else
+    *nu= NAN;
+
+  // Find argument of latitude - circular inclined
+  if (strcmp(typeorbit,"ci") == 0)
+  {
+    *arglat = vec3_angle(&nbar, posteme);
+    if (posteme->z < 0)
+    {
+      *arglat = TWOPI - *arglat;
+    }
+    *m = *arglat;
+  }
+  else
+    *arglat = NAN;
+
+  // Find longitude of perigee - elliptical equatorial
+  if ((*ecc > tolerance) && (strcmp(typeorbit,"ee") == 0))
+  {
+    double temp = ebar.x / *ecc;
+
+    if (fabs(temp) > 1)
+    {
+      temp = (temp >= 0)?(1.0):(-1.0); // TODO: Bleh
+    }
+
+    *lonper = acos( temp );
+
+    if (ebar.y < 0)
+    {
+      *lonper = TWOPI - *lonper;
+    }
+    if (*incl > PIDIV2)
+    {
+      *lonper = TWOPI - *lonper;
+    }
+  }
+  else
+    *lonper = NAN;
+
+  // Find true longitude - circular equatorial
+  if  ((magr > tolerance) && (strcmp(typeorbit,"ce") == 0))
+  {
+    double temp = posteme->x / magr;
+
+    if ( fabs(temp) > 1)
+    {
+      temp = (temp >= 0)?(1.0):(-1.0); // TODO: Bleh
+    }
+
+    *truelon = acos(temp);
+
+    if (posteme->y < 0)
+    {
+      *truelon = TWOPI - *truelon;
+    }
+    if (*incl > PIDIV2)
+    {
+      *truelon = TWOPI - *truelon;
+    }
+    *m = *truelon;
+  }
+  else
+    *truelon = NAN;
+
+  // Find mean anomaly for all orbits
+  if (typeorbit[0] == 'e')
+  {
+    *m = kepler_newton(*ecc, *nu);
+  }
+
+  return 0;
 }
-
-void rotate2(vect* src, double angle, vect* result)
-{
-  double tempz = src->z;
-  double s     = sin(angle);
-  double c     = cos(angle);
-
-  result->x = src->x * c - tempz * s;
-  result->y = src->y;
-  result->z = src->z * c + src->x * s;
-}
-
-void rotate3(vect* src, double angle, vect* result)
-{
-  double tempy  = src->y;
-  double sine   = sin(angle);
-  double cosine = cos(angle);
-
-  result->y = src->y * cosine - src->x * sine;
-  result->x = src->x * cosine + tempy * sine;
-  result->z = src->z;
-}
-
-// ************************************************************************* //
-//                                   TIME                                    //
-// ************************************************************************* //
-
-/*
- * Convert unix time to Julian date
- *
- * Inputs:  time - Timestamp in unix time
- *          usec - Fracitonal second part, us
- * Returns: Julian date
- */
-double
-unix2jul(time_t* time, unsigned int usec)
-{
-  struct tm* t;
-  t = gmtime(time);
-
-  return 367.0 * (t->tm_year + 1900)
-  - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 10) / 12.0))) * 0.25)
-  + floor(275 * (t->tm_mon + 1) / 9.0 )
-  + t->tm_mday + 1721013.5
-  + ((((double)t->tm_sec + usec / 1000) / 60.0L + t->tm_min) / 60.0
-  + t->tm_hour) / 24.0;
-}
-
-/*
- * Convert Julian date to Greenwich Siderial Time
- *
- * Inputs:  julian - Julian date
- * Returns: GST time, rad
- */
-double
-jul2gst(double julian)
-{
-  double result, tempUT1;
-
-  tempUT1 = (julian - 2451545.0) / 36525.0;
-  result = -6.2e-6* tempUT1 * tempUT1 * tempUT1 + 0.093104 * tempUT1 * tempUT1 +
-      (876600.0*3600 + 8640184.812866) * tempUT1 + 67310.54841;
-
-  result = fmod(result * deg2rad / 240.0, twopi);
-
-  // Check quadrants
-  if (result < 0.0)
-    result += twopi;
-
-  return result;
-}
-
-// ************************************************************************* //
-//                               COORDINATES                                 //
-// ************************************************************************* //
 
 /*
  * Transform position and velocity vectors from TEME to ECEF frame of reference
@@ -198,11 +315,11 @@ jul2gst(double julian)
 void
 teme2ecef
 (
-    vect* posteme,
-    vect* velteme,
+    vec3* posteme,
+    vec3* velteme,
     double julian,
-    vect* posecef,
-    vect* velecef
+    vec3* posecef,
+    vec3* velecef
 )
 {
   // Greenwich Siderial Time, rad
@@ -227,8 +344,8 @@ teme2ecef
 
   // Refer to IERS Bulletin - A (Vol. XXVIII No. 030)
   double MJD = julian - 2400000.5;
-  double A   = 2 * pi * (MJD - 57226) / 365.25;
-  double C   = 2 * pi * (MJD - 57226) / 435;
+  double A   = 2 * PI * (MJD - 57226) / 365.25;
+  double C   = 2 * PI * (MJD - 57226) / 435;
 
   // Polar motion coefficients, rad
   double xp;
@@ -288,11 +405,11 @@ teme2ecef
 void
 ecef2latlonalt
 (
-    vect* posecef,
+    vec3* posecef,
     double julian,
     unsigned int maxiter,
     double tolerance,
-    vect* latlonalt
+    vec3* latlonalt
 )
 {
   if ((tolerance >= 10.0) || (tolerance < 0.0))
@@ -305,28 +422,28 @@ ecef2latlonalt
 
   if (fabs(ijsq) < tolerance)
   {
-    latlonalt->lon= signof(posecef->k) * pidiv2;
+    latlonalt->lon = ((posecef->k < 0)?-1:1) * PIDIV2;
   }
   else
   {
-    latlonalt->lon= atan2( posecef->j, posecef->i );
+    latlonalt->lon = atan2( posecef->j, posecef->i );
   }
 
   // Wrap around
-  if (fabs(latlonalt->lon) >= pi)
+  if (fabs(latlonalt->lon) >= PI)
   {
     if (latlonalt->lon < 0.0)
     {
-      latlonalt->lon += twopi;
+      latlonalt->lon += TWOPI;
     }
     else
     {
-      latlonalt->lon -= twopi;
+      latlonalt->lon -= TWOPI;
     }
   }
 
   // Latitude
-  double posmag = mag(posecef);
+  double posmag  = vec3_mag(posecef);
   latlonalt->lat = asin(posecef->k / posmag);
 
   // Converge latitude to the goid over 10 iterations or less
@@ -339,13 +456,13 @@ ecef2latlonalt
   {
     delta   = latlonalt->lat;
     latsine = sin(latlonalt->lat);
-    c       = Re / (sqrt(1.0 - eesqrd * latsine * latsine));
+    c       = RE / (sqrt(1.0 - eesqrd * latsine * latsine));
     latlonalt->lat = atan((posecef->k + c * eesqrd * latsine) / ijsq);
     i++;
   }
 
   // Altitude
-  if ((pidiv2 - fabs(latlonalt->lat)) > deg2rad)
+  if ((PIDIV2 - fabs(latlonalt->lat)) > DEG2RAD)
   {
     latlonalt->alt = (ijsq / cos(latlonalt->lat)) - c;
   }
@@ -365,15 +482,15 @@ ecef2latlonalt
 void
 latlonalt2ecef
 (
-    vect* latlonalt,
-    vect* posecef
+    vec3* latlonalt,
+    vec3* posecef
 )
 {
   // Geocentric latitude
-  double gclat = atan(pow(1 - flatt, 2) * tan(latlonalt->lat));
+  double gclat = atan(pow(1 - FLATT, 2) * tan(latlonalt->lat));
 
   // Radius of Earth ad surface point
-  double rsurf = sqrt(pow(Re, 2) / ((1 / pow(1.0 - flatt, 2) - 1) *
+  double rsurf = sqrt(pow(RE, 2) / ((1 / pow(1.0 - FLATT, 2) - 1) *
                  pow(sin(gclat), 2) + 1));
 
   // ECEF vector
@@ -429,7 +546,7 @@ latlonalt2ecef
 
 void rv_tradec
 (
-vect* rijk, vect* vijk, vect* rsijk,
+vec3* rijk, vec3* vijk, vec3* rsijk,
 int direct,
 double* rho, double* trtasc, double* tdecl,
 double* drho, double* dtrtasc, double* dtdecl
@@ -438,14 +555,14 @@ double* drho, double* dtrtasc, double* dtdecl
   const double small = 0.00000001;
   const double omegaearth = 0.05883359221938136;  // earth rot rad/tu
 
-  vect earthrate, rhov, drhov, vsijk;
+  vec3 earthrate, rhov, drhov, vsijk;
   double   latgc, temp, temp1;
 
-  latgc = asin(rsijk->k / mag(rsijk));
+  latgc = asin(rsijk->k / vec3_mag(rsijk));
   earthrate.x = 0.0;
   earthrate.y = 0.0;
   earthrate.z = omegaearth;
-  cross(&earthrate, rsijk, &vsijk);
+  vec3_cross(&earthrate, rsijk, &vsijk);
 
 /*  if (direct == 1) //from
   {
@@ -469,11 +586,11 @@ double* drho, double* dtrtasc, double* dtdecl
   else //to
   {*/
     /* ------ find ijk range vector from site to satellite ------ */
-    addvect(1.0, rijk, -1.0, rsijk, &rhov);
-    addvect(1.0, vijk, -cos(latgc), &vsijk, &drhov);
+    vec3_add(1.0, rijk, -1.0, rsijk, &rhov);
+    vec3_add(1.0, vijk, -cos(latgc), &vsijk, &drhov);
 
     /* -------- calculate topocentric angle and rate values ----- */
-    *rho = mag(&rhov);
+    *rho = vec3_mag(&rhov);
     temp = sqrt(rhov.x * rhov.x + rhov.y * rhov.y);
     if (temp < small)
     {
@@ -483,10 +600,10 @@ double* drho, double* dtrtasc, double* dtdecl
     else
       *trtasc = atan2(rhov.y / temp, rhov.x / temp);
 
-    *tdecl = asin(rhov.z / mag(&rhov));
+    *tdecl = asin(rhov.z / vec3_mag(&rhov));
 
     temp1 = -rhov.y * rhov.y - rhov.x * rhov.x;
-    *drho = dot(&rhov, &drhov) / *rho;
+    *drho = vec3_dot(&rhov, &drhov) / *rho;
     if (fabs(temp1) > small)
       *dtrtasc = (drhov.x * rhov.y - drhov.y * rhov.x) / temp1;
     else
@@ -499,20 +616,20 @@ double* drho, double* dtrtasc, double* dtdecl
 }
 
 double
-ecef2range(vect* obsposecef, vect* satposecef)
+ecef2range(vec3* obsposecef, vec3* satposecef)
 {
   // Observer to satellite vector
-  vect obs2sat;
-  addvect(1.0, satposecef, -1.0, obsposecef, &obs2sat);
+  vec3 obs2sat;
+  vec3_add(1.0, satposecef, -1.0, obsposecef, &obs2sat);
 
-  return mag(&obs2sat);
+  return vec3_mag(&obs2sat);
 }
 
 void ecef2azel
 (
-    vect* posecef,
-    vect* vecef,
-    vect* obsecef,
+    vec3* posecef,
+    vec3* vecef,
+    vec3* obsecef,
     double lat,
     double lon,
     double* range,
