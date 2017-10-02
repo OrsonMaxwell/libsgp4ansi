@@ -15,10 +15,12 @@ if (len(sys.argv) > 1):
     dry_run = True
 
 aiaa_binary = 'aiaa'
+ansi_binary = 'ansi'
 
 if os.name == 'nt':
   print("Assuming Windows environment")
   aiaa_binary += '.exe'
+  ansi_binary += '.exe'
 if os.name == 'posix':
   print("Assuming Linux (posix) environment")
 
@@ -35,30 +37,30 @@ sat_re = re.compile(r'([0-9]{1,5})\ \(([0-9. e+]+)\)')
 if (not dry_run):
   print('Running AIAA-2006-6753 timing mode...')
   start = datetime.datetime.now()
-  print(subprocess.Popen([aiaa_binary, 'i', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
+  print(subprocess.Popen([os.path.join(os.getcwd(), aiaa_binary), 'i', 't'], stdout=subprocess.PIPE).communicate()[0].decode())
   stop = datetime.datetime.now()
   tdiff_it = stop - start
 
   print('Running libsgp4ansi timing mode...')
   start = datetime.datetime.now()
-  print(subprocess.Popen(['ansi.exe', 't'],stdout=subprocess.PIPE).communicate()[0].decode())
+  print(subprocess.Popen([os.path.join(os.getcwd(), ansi_binary), 't'],stdout=subprocess.PIPE).communicate()[0].decode())
   stop = datetime.datetime.now()
   tdiff_ansit = stop - start
 
   print('Running AIAA-2006-6753 verification mode...')
-  print(subprocess.Popen([aiaa_binary, 'i', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+  print(subprocess.Popen([os.path.join(os.getcwd(), aiaa_binary), 'i', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
   print('Running libsgp4ansi verification mode...')
-  print(subprocess.Popen(['ansi.exe', 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+  print(subprocess.Popen([os.path.join(os.getcwd(), ansi_binary), 'v', ver_filename], stdout=subprocess.PIPE).communicate()[0].decode())
 
   print('Running AIAA-2006-6753 full catalogue mode...')
   start = datetime.datetime.now()
-  print(subprocess.Popen([aiaa_binary, 'i', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+  print(subprocess.Popen([os.path.join(os.getcwd(), aiaa_binary), 'i', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
   stop = datetime.datetime.now()
   tdiff_ic = stop - start
 
   print('Running libsgp4ansi full catalogue mode...')
   start = datetime.datetime.now()
-  print(subprocess.Popen(['ansi.exe', 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
+  print(subprocess.Popen([os.path.join(os.getcwd(), ansi_binary), 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
   stop = datetime.datetime.now()
   tdiff_ansic = stop - start
 
