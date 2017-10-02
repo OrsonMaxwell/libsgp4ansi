@@ -1238,9 +1238,9 @@ sat_propagate
   }
 
   // Avoid division by zero
-  if (em < 1.0e-12) // TODO: Move tolerance to a constant?
+  if (em < 1.0e-6) // TODO: Move tolerance to a constant?
   {
-    em  = 1.0e-12;
+    em  = 1.0e-6;
   }
 
          xmp += s->xnodp * templ;
