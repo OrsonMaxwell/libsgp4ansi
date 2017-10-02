@@ -89,8 +89,6 @@ strcpy(monstr[10], "Oct");
 strcpy(monstr[11], "Nov");
 strcpy(monstr[12], "Dec");
 
-        printf("%s\n",SGP4Version );
-
         //opsmode = 'a' best understanding of how afspc code works
         //opsmode = 'i' imporved sgp4 resulting in smoother behavior
         //printf("input operation mode a, i \n\n");
@@ -132,19 +130,60 @@ strcpy(monstr[12], "Dec");
 		if (typerun == 't')
 		{
 			// Timing run
-		  // TODO: improve by varying TLEs
-			strcpy(longstr0, "SL - 6 R / B(2)");
-			strcpy(longstr1, "1 16925U 86065D   06151.67415771  .02550794 -30915-6  18784-3 0  4486");
-			strcpy(longstr2, "2 16925  62.0906 295.0239 5596327 245.1593  47.9690  4.88511875148616	");
-			for (int t = 0; t < 5000000; t++) {
+		  printf("%s timing run\n",SGP4Version);
+
+	    strcpy(longstr0, "DELTA 1");
+	    strcpy(longstr1, "1 06251U 62025E   06176.82412014  .00008885  00000-0  12808-3 0  3985");
+	    strcpy(longstr2, "2 06251  58.0579  54.0425 0030035 139.1568 221.1854 15.56387291  6774");
+			for (int t = 0; t < 100000; t++) {
 				twoline2rv(longstr1, longstr2, typerun, typeinput, opsmode, whichconst,
 					startmfe, stopmfe, deltamin, satrec);
 			}
-			
-			for (int t = 0; t < 5000000; t++) {
+
+			for (int t = 0; t < 100000; t++) {
 				tsince = t % 2880 - 1440;
-				//sgp4(whichconst, satrec, tsince, ro, vo);
+				sgp4(whichconst, satrec, tsince, ro, vo);
 			}
+
+	    strcpy(longstr0, "SL - 6 R / B(2)");
+	    strcpy(longstr1, "1 16925U 86065D   06151.67415771  .02550794 -30915-6  18784-3 0  4486");
+	    strcpy(longstr2, "2 16925  62.0906 295.0239 5596327 245.1593  47.9690  4.88511875148616");
+      for (int t = 0; t < 100000; t++) {
+        twoline2rv(longstr1, longstr2, typerun, typeinput, opsmode, whichconst,
+          startmfe, stopmfe, deltamin, satrec);
+      }
+
+      for (int t = 0; t < 100000; t++) {
+        tsince = t % 2880 - 1440;
+        sgp4(whichconst, satrec, tsince, ro, vo);
+      }
+
+      strcpy(longstr0, "MOLNIYA 2-14");
+      strcpy(longstr1, "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813");
+      strcpy(longstr2, "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656");
+      for (int t = 0; t < 100000; t++) {
+        twoline2rv(longstr1, longstr2, typerun, typeinput, opsmode, whichconst,
+          startmfe, stopmfe, deltamin, satrec);
+      }
+
+      for (int t = 0; t < 100000; t++) {
+        tsince = t % 2880 - 1440;
+        sgp4(whichconst, satrec, tsince, ro, vo);
+      }
+
+      strcpy(longstr0, "ITALSAT 2");
+      strcpy(longstr1, "1 24208U 96044A   06177.04061740 -.00000094  00000-0  10000-3 0  1600");
+      strcpy(longstr2, "2 24208   3.8536  80.0121 0026640 311.0977  48.3000  1.00778054 36119");
+      for (int t = 0; t < 100000; t++) {
+        twoline2rv(longstr1, longstr2, typerun, typeinput, opsmode, whichconst,
+          startmfe, stopmfe, deltamin, satrec);
+      }
+
+      for (int t = 0; t < 100000; t++) {
+        tsince = t % 2880 - 1440;
+        sgp4(whichconst, satrec, tsince, ro, vo);
+      }
+
 			return 0;
 		}
 
@@ -162,20 +201,32 @@ strcpy(monstr[12], "Dec");
 	    return 1;
 	  }
 
-		if (typerun == 'c') {
-			if (opsmode == 'a')
-				outfile = fopen("a721.out", "w");
-			else
-				outfile = fopen("i72.out", "w");
-		}
-		else
+        if (typerun == 'c') {
+          if (opsmode == 'a')
+          {
+            printf("%s full catalogue legacy run\n",SGP4Version);
+            outfile = fopen("a721.out", "w");
+          }
+          else
+          {
+            printf("%s full catalogue run\n",SGP4Version);
+            outfile = fopen("i72.out", "w");
+          }
+        }
+        else
+        {
+          if (typerun == 'v')
+            if (opsmode == 'a')
             {
-            if (typerun == 'v')
-				if (opsmode == 'a')
-					outfile = fopen("a721_ver.out", "w");
-				else
-					outfile = fopen("i72_ver.out", "w");
+              printf("%s verification legacy run\n",SGP4Version);
+              outfile = fopen("a721_ver.out", "w");
             }
+            else
+            {
+              printf("%s verification legacy run\n",SGP4Version);
+              outfile = fopen("i72_ver.out", "w");
+            }
+        }
 
 //        dbgfile = fopen("sgp4test.dbg", "w");
 //        fprintf(dbgfile,"this is the debug output\n\n" );

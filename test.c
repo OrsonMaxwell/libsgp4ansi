@@ -13,8 +13,6 @@ main (int argc, char** argv)
   if ((argv[1][0] != 'c') && (argv[1][0] != 'v') && (argv[1][0] != 't'))
     return 0;
 
-  printf("libsgp4ansi v%s\n", libsgp4ansi_version);
-
   char tlestr0[130];
   char tlestr1[130];
   char tlestr2[130];
@@ -33,19 +31,60 @@ main (int argc, char** argv)
   if (argv[1][0] == 't')
   {
     // Timing run
-    // TODO: improve by varying TLEs
-    strcpy(tlestr0, "SL - 6 R / B(2)");
-    strcpy(tlestr1, "1 16925U 86065D   06151.67415771  .02550794 -30915-6  18784-3 0  4486");
-    strcpy(tlestr2, "2 16925  62.0906 295.0239 5596327 245.1593  47.9690  4.88511875148616 ");
+    printf("libsgp4ansi v%s: timing run\n", libsgp4ansi_version);
 
-    for (int t = 0; t < 5000000; t++) {
+    strcpy(tlestr0, "DELTA 1");
+    strcpy(tlestr1, "1 06251U 62025E   06176.82412014  .00008885  00000-0  12808-3 0  3985");
+    strcpy(tlestr2, "2 06251  58.0579  54.0425 0030035 139.1568 221.1854 15.56387291  6774");
+
+    for (int t = 0; t < 100000; t++) {
       sat_load_tle(tlestr0, tlestr1, tlestr2, &s);
     }
 
-    for (int t = 0; t < 5000000; t++) {
+    for (int t = 0; t < 100000; t++) {
       t_start = t % 2880 - 1440;
       sat_propagate(&s, t_start, 10, 1.0e-12, &posteme, &velteme);
     }
+
+    strcpy(tlestr0, "SL - 6 R / B(2)");
+    strcpy(tlestr1, "1 16925U 86065D   06151.67415771  .02550794 -30915-6  18784-3 0  4486");
+    strcpy(tlestr2, "2 16925  62.0906 295.0239 5596327 245.1593  47.9690  4.88511875148616");
+
+    for (int t = 0; t < 100000; t++) {
+      sat_load_tle(tlestr0, tlestr1, tlestr2, &s);
+    }
+
+    for (int t = 0; t < 100000; t++) {
+      t_start = t % 2880 - 1440;
+      sat_propagate(&s, t_start, 10, 1.0e-12, &posteme, &velteme);
+    }
+
+    strcpy(tlestr0, "MOLNIYA 2-14");
+    strcpy(tlestr1, "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813");
+    strcpy(tlestr2, "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656");
+
+    for (int t = 0; t < 100000; t++) {
+      sat_load_tle(tlestr0, tlestr1, tlestr2, &s);
+    }
+
+    for (int t = 0; t < 100000; t++) {
+      t_start = t % 2880 - 1440;
+      sat_propagate(&s, t_start, 10, 1.0e-12, &posteme, &velteme);
+    }
+
+    strcpy(tlestr0, "ITALSAT 2");
+    strcpy(tlestr1, "1 24208U 96044A   06177.04061740 -.00000094  00000-0  10000-3 0  1600");
+    strcpy(tlestr2, "2 24208   3.8536  80.0121 0026640 311.0977  48.3000  1.00778054 36119");
+
+    for (int t = 0; t < 100000; t++) {
+      sat_load_tle(tlestr0, tlestr1, tlestr2, &s);
+    }
+
+    for (int t = 0; t < 100000; t++) {
+      t_start = t % 2880 - 1440;
+      sat_propagate(&s, t_start, 10, 1.0e-12, &posteme, &velteme);
+    }
+
     return 0;
   }
 
@@ -57,9 +96,15 @@ main (int argc, char** argv)
   }
 
   if (argv[1][0] == 'v')
+  {
+    printf("libsgp4ansi v%s: verification run\n", libsgp4ansi_version);
     outfile  = fopen("ansi_ver.out", "w");
+  }
   else
+  {
+    printf("libsgp4ansi v%s: full catalogue run\n", libsgp4ansi_version);
     outfile  = fopen("ansi.out", "w");
+  }
 
   double p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper;
 
