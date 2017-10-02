@@ -915,13 +915,6 @@ static void dsinit
     shs = shs / sinim;
   sgs  = sghs - cosim * shs;
 
-  //     printf("ses:    %+.15e\n", ses);
-  //     printf("sis:    %+.15e\n", sis);
-  //     printf("sls:    %+.15e\n", sls);
-  //     printf("sghs:   %+.15e\n", sghs);
-  //     printf("shs:    %+.15e\n", shs);
-  //     printf("sgs:    %+.15e\n", sgs);
-
   /* ------------------------- do lunar terms ------------------ */
   dedt = ses + s1 * znl * s5;
   didt = sis + s2 * znl * (z11 + z13);
@@ -939,14 +932,20 @@ static void dsinit
     dnodt = dnodt + shll / sinim;
   }
 
-  //     printf("dedt:   %+.15e\n", dedt);
-  //     printf("didt:   %+.15e\n", didt);
-  //     printf("dmdt:   %+.15e\n", dmdt);
-  //     printf("dndt:   %+.15e\n", 0.0);
-  //     printf("sghl:   %+.15e\n", sghl);
-  //     printf("shll:   %+.15e\n", shll);
-  //     printf("domdt:  %+.15e\n", domdt);
-  //     printf("dnodt:  %+.15e\n", dnodt);
+  printf("======================================== id5\n");
+  printf("[DS] ses   %+.15e\n", ses);
+  printf("[DS] sis   %+.15e\n", sis);
+  printf("[DS] sls   %+.15e\n", sls);
+  printf("[DS] sghs  %+.15e\n", sghs);
+  printf("[DS] shs   %+.15e\n", shs);
+  printf("[DS] sgs   %+.15e\n", sgs);
+  printf("[DS] dedt  %+.15e\n", dedt);
+  printf("[DS] didt  %+.15e\n", didt);
+  printf("[DS] dmdt  %+.15e\n", dmdt);
+  printf("[DS] domdt %+.15e\n", domdt);
+  printf("[DS] dnodt %+.15e\n", dnodt);
+  printf("[DS] sghl  %+.15e\n", sghl);
+  printf("[DS] shll  %+.15e\n", shll);
 
   /* ----------- calculate deep space resonance effects -------- */
   dndt   = 0.0;
@@ -957,11 +956,6 @@ static void dsinit
   nodem  = nodem + dnodt * t;
   mm     = mm + dmdt * t;
 
-  //     printf("----------------------------\n");
-  //     printf("theta:  %+.15e\n", theta);
-  //     printf("em:     %+.15e\n", em);
-  //     printf("inclm:  %+.15e\n", inclm);
-
   //   sgp4fix for negative inclinations
   //   the following if statement should be commented out
   if ((inclm < 0.0) && (opsmode == 'a'))
@@ -970,6 +964,10 @@ static void dsinit
     argpm  = argpm - pi;
     nodem = nodem + pi;
   }
+
+  printf("======================================== id6\n");
+  printf("[DS] 12h res %d\n", (int)(irez == 2));
+  printf("[DS] 24h res %d\n", (int)(irez == 1));
 
   /* -------------- initialize the resonance terms ------------- */
   if (irez != 0)
@@ -2173,11 +2171,6 @@ bool sgp4
   nm = xke / pow(am, 1.5);
   em = em - tempe;
 
-//  printf("-------------------------------\n");
-//  printf("am:     %+.15e\n", am);
-//  printf("nm:     %+.15e\n", nm);
-//  printf("em:     %+.15e\n", em);
-
   // fix tolerance for error recognition
   // sgp4fix am is fixed from the previous nm check
   if ((em >= 1.0) || (em < -0.001) || ((am < 0.95) && (satrec.operationmode == 'a')) )
@@ -2220,7 +2213,6 @@ bool sgp4
   printf("xlm    %+.15e\n", xlm);
   printf("em2    %+.15e\n", emsq);
   printf("em     %+.15e\n", em);
-  printf("xnode  %+.15e\n", xnode);
   printf("omega  %+.15e\n", argpm);
   printf("inclp  %+.15e\n", xincp);
   printf("ep     %+.15e\n", ep);
@@ -2249,17 +2241,16 @@ bool sgp4
         'n', ep, xincp, nodep, argpp, mp, satrec.operationmode
     );
 
-//    printf("-------------------------------\n");
-//    printf("xmp:    %+.15e\n", mm);
-//    printf("xlm:    %+.15e\n", xlm);
-//    printf("em2:    %+.15e\n", emsq);
-//    printf("xnode:  %+.15e\n", nodem);
-//    printf("omega:  %+.15e\n", argpm);
-//    printf("incl_lp:%+.15e\n", xincp);
-//    printf("node_lp:%+.15e\n", nodep);
-//    printf("argplp: %+.15e\n", argpp);
-//    printf("ecc_lp: %+.15e\n", ep);
-//    printf("mo_lp:  %+.15e\n", mp);
+    printf("======================================== dp2\n");
+    printf("xmp     %+.15e\n", mm);
+    printf("xlm     %+.15e\n", xlm);
+    printf("em2     %+.15e\n", emsq);
+    printf("omega   %+.15e\n", argpm);
+    printf("incl_lp %+.15e\n", xincp);
+    printf("node_lp %+.15e\n", nodep);
+    printf("argplp  %+.15e\n", argpp);
+    printf("ecc_lp  %+.15e\n", ep);
+    printf("mo_lp   %+.15e\n", mp);
 
     if (xincp < 0.0)
     {
@@ -2305,9 +2296,7 @@ bool sgp4
   printf("axnl    %+.15e\n", axnl);
   printf("a1e2inv %+.15e\n", temp);
   printf("aynl    %+.15e\n", aynl);
-  printf("xl      %+.25e\n", xl);
-  printf("nodep   %+.25e\n", nodep);
-  printf("twopi   %+.25e\n", twopi);
+  printf("xl      %+.15e\n", xl);
   printf("u       %+.15e\n", u);
 
   //   sgp4fix for kepler iteration

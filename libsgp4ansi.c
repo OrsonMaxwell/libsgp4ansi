@@ -802,14 +802,20 @@ sat_init(sat* s)
       s->dnodt += shll / sinim;
     }
 
-//    printf("dedt:   %+.15e\n", s->dedt);
-//    printf("didt:   %+.15e\n", s->didt);
-//    printf("dmdt:   %+.15e\n", s->dmdt);
-//    printf("dndt:   %+.15e\n", s->dndt);
-//    printf("sghl:   %+.15e\n", sghl);
-//    printf("shll:   %+.15e\n", shll);
-//    printf("domdt:  %+.15e\n", s->domdt);
-//    printf("dnodt:  %+.15e\n", s->dnodt);
+    printf("======================================== id5\n");
+    printf("[DS] ses   %+.15e\n", ses);
+    printf("[DS] sis   %+.15e\n", sis);
+    printf("[DS] sls   %+.15e\n", sls);
+    printf("[DS] sghs  %+.15e\n", sghs);
+    printf("[DS] shs   %+.15e\n", shs);
+    printf("[DS] sgs   %+.15e\n", sgs);
+    printf("[DS] dedt  %+.15e\n", s->dedt);
+    printf("[DS] didt  %+.15e\n", s->didt);
+    printf("[DS] dmdt  %+.15e\n", s->dmdt);
+    printf("[DS] domdt %+.15e\n", s->domdt);
+    printf("[DS] dnodt %+.15e\n", s->dnodt);
+    printf("[DS] sghl  %+.15e\n", sghl);
+    printf("[DS] shll  %+.15e\n", shll);
 
     // Calculate deep space resonance effects
 
@@ -821,13 +827,12 @@ sat_init(sat* s)
      *mm     = *mm + *dmdt * t;
      */
 
-//    printf("----------------------------\n");
-//    printf("theta:  %+.15e\n", GSTo);
-//    printf("em:     %+.15e\n", s->eccentricity);
-//    printf("inclm:  %+.15e\n", s->inclination);
-
-    double aonv  = pow(s->xnodp / XKE, TWOTHIRD); // TODO: Duplicate?
+    double aonv  = pow(s->xnodp / XKE, TWOTHIRD);
     double ainv2 = pow(aonv, 2);
+
+    printf("======================================== id6\n");
+    printf("[DS] 12h res %d\n", (int)s->is_12h_resonant);
+    printf("[DS] 24h res %d\n", (int)s->is_24h_resonant);
 
     // Initialize the resonance terms
     if ((s->is_12h_resonant == true)
@@ -1195,27 +1200,12 @@ sat_propagate
     omega += s->domdt * tdelta;
     xnode += s->dnodt * tdelta;
     xmp   += s->dmdt  * tdelta;
-    //
-    //     if (tdelta != 0)
-    //     {
-    //       printf("tdelta: %+.15e\n", tdelta);
-    //       printf("theta:  %+.15e\n", theta);
-    //       printf("em:     %+.15e\n", em);
-    //       printf("inclm:  %+.15e\n", inclm);
-    //       printf("argpm:  %+.15e\n", omega);
-    //       printf("nodem:  %+.15e\n", xnode);
-    //       printf("dmdt:   %+.15e\n", s->dmdt);
-    //       printf("mm:     %+.15e\n", xmp);
-    //     }
-
-
 
     // Euler-Maclaurin numerical integration
     double ft = 0; // TODO:Remove?
     double delt; // TODO: Rename
     if ((s->is_12h_resonant == true) || (s->is_24h_resonant == true))
     {
-      // sgp4fix streamline check
       if ((s->atime == 0)
           || (tdelta * s->atime <= 0.0)
           || (fabs(tdelta) < fabs(s->atime)))
@@ -1229,14 +1219,6 @@ sat_propagate
         delt = stepp;
       else
         delt = stepn;
-
-      //      if (tdelta != 0)
-      //      {
-      //        printf("atime:  %+.15e\n", s->atime);
-      //        printf("xni:    %+.15e\n", s->xni);
-      //        printf("xli:    %+.15e\n", s->xli);
-      //        printf("delt:   %+.15e\n", delt);
-      //      }
 
       int iretn = 381; // added for do loop TODO: Alternatives?
       int iret  =   0; // added for loop
@@ -1324,9 +1306,6 @@ sat_propagate
       nm = s->xnodp + s->dndt;
     }
 
-//    printf("nm:     %+.15e\n", nm);
-//    printf("xmp:    %+.15e\n", xmp);
-//    printf("dndt:   %+.15e\n", s->dndt);
   }
 
   if (nm <= 0)
@@ -1359,7 +1338,7 @@ sat_propagate
   xlm    = fmod(xlm, TWOPI);
   xmp    = fmod(xlm - omega - xnode, TWOPI);
 
-  s->inclination_lp      = s->inclination;
+  s->inclination_lp      = inclm;
   s->eccentricity_lp     = em;
   s->right_asc_node_lp   = xnode;
   s->argument_perigee_lp = omega;
@@ -1374,7 +1353,6 @@ sat_propagate
   printf("xlm    %+.15e\n", xlm);
   printf("em2    %+.15e\n", em2);
   printf("em     %+.15e\n", em);
-  printf("xnode  %+.15e\n", xnode);
   printf("omega  %+.15e\n", omega);
   printf("inclp  %+.15e\n", s->inclination_lp);
   printf("ep     %+.15e\n", s->eccentricity_lp);
@@ -1387,19 +1365,18 @@ sat_propagate
   // Add lunar-solar periodics
   if (s->is_deep_space == true)
   {
-    //dpper(s, tdelta); TODO: Not working!
+    dpper(s, tdelta);
 
-//    printf("-------------------------------\n");
-//    printf("xmp:    %+.15e\n", xmp);
-//    printf("xlm:    %+.15e\n", xlm);
-//    printf("em2:    %+.15e\n", em2);
-//    printf("xnode:  %+.15e\n", xnode);
-//    printf("omega:  %+.15e\n", omega);
-//    printf("incl_lp:%+.15e\n", s->inclination_lp);
-//    printf("node_lp:%+.15e\n", s->right_asc_node_lp);
-//    printf("argplp: %+.15e\n", s->argument_perigee_lp);
-//    printf("ecc_lp: %+.15e\n", s->eccentricity_lp);
-//    printf("mo_lp:  %+.15e\n", s->mean_anomaly_lp);
+    printf("======================================== dp2\n");
+    printf("xmp     %+.15e\n", xmp);
+    printf("xlm     %+.15e\n", xlm);
+    printf("em2     %+.15e\n", em2);
+    printf("omega   %+.15e\n", omega);
+    printf("incl_lp %+.15e\n", s->inclination_lp);
+    printf("node_lp %+.15e\n", s->right_asc_node_lp);
+    printf("argplp  %+.15e\n", s->argument_perigee_lp);
+    printf("ecc_lp  %+.15e\n", s->eccentricity_lp);
+    printf("mo_lp   %+.15e\n", s->mean_anomaly_lp);
 
     if (s->inclination_lp < 0)
     {
@@ -1449,9 +1426,7 @@ sat_propagate
   printf("axnl    %+.15e\n", axnl);
   printf("a1e2inv %+.15e\n", a1e2inv);
   printf("aynl    %+.15e\n", aynl);
-  printf("xl      %+.25e\n", xl);
-  printf("nodep   %+.25e\n", s->right_asc_node_lp);
-  printf("twopi   %+.25e\n", TWOPI);
+  printf("xl      %+.15e\n", xl);
   printf("u       %+.15e\n", u);
 
   while ((fabs(kdelta) >= tolerance) && (ktr < maxiter) )
@@ -1736,13 +1711,6 @@ dpper(sat* s, double tdelta) // TODO: Rename
     s->mean_anomaly_lp    = s->mean_anomaly_lp + pl;
     s->argument_perigee_lp = xls - s->mean_anomaly_lp - cosip * s->right_asc_node_lp;
   }
-//  printf("dpper>tdelta: %+.15e\n", tdelta);
-//  printf("dpper>inc_lp: %+.15e\n", s->inclination_lp);
-//  printf("dpper>ecc_lp: %+.15e\n", s->eccentricity_lp);
-//  printf("dpper>nod_lp: %+.15e\n", s->right_asc_node_lp);
-//  printf("dpper>arg_lp: %+.15e\n", s->argument_perigee_lp);
-//  printf("dpper>mo_lp:  %+.15e\n", s->mean_anomaly_lp);
-//  printf("----------------------------------------\n");
 }
 
 double  sgn
