@@ -158,8 +158,6 @@ void twoline2rv
          }
 
        // ---- find no, ndot, nddot ----
-//       printf("*tle2rv no: %22.15lf\n", satrec.no);
-//       printf("*tle2rv xpdotp: %22.15lf\n", xpdotp);
        satrec.no   = satrec.no / xpdotp; //* rad/min
 
        satrec.nddot= satrec.nddot * pow(10.0, nexp);

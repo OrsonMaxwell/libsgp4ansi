@@ -259,17 +259,18 @@ sat_load_tle(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
 int
 sat_init(sat* s)
 {
-
-//  printf("---------------------------------------- i1\n");
-//  printf("mean_motion_dt2  %+.15e\n", s->mean_motion_dt2);
-//  printf("mean_motion_ddt6 %+.15e\n", s->mean_motion_ddt6);
-//  printf("Bstar            %+.15e\n", s->Bstar);
-//  printf("inclination      %+.15e\n", s->inclination);
-//  printf("right_asc_node   %+.15e\n", s->right_asc_node);
-//  printf("eccentricity     %+.15e\n", s->eccentricity);
-//  printf("argument_perigee %+.15e\n", s->argument_perigee);
-//  printf("mean_anomaly     %+.15e\n", s->mean_anomaly);
-//  printf("mean_motion      %+.15e\n", s->mean_motion);
+#ifdef MATH_TRACE
+  printf("---------------------------------------- i1\n");
+  printf("mean_motion_dt2  %+.15e\n", s->mean_motion_dt2);
+  printf("mean_motion_ddt6 %+.15e\n", s->mean_motion_ddt6);
+  printf("Bstar            %+.15e\n", s->Bstar);
+  printf("inclination      %+.15e\n", s->inclination);
+  printf("right_asc_node   %+.15e\n", s->right_asc_node);
+  printf("eccentricity     %+.15e\n", s->eccentricity);
+  printf("argument_perigee %+.15e\n", s->argument_perigee);
+  printf("mean_anomaly     %+.15e\n", s->mean_anomaly);
+  printf("mean_motion      %+.15e\n", s->mean_motion);
+#endif
 
   if ((s->eccentricity < 0) || (s->eccentricity > 0.999999))
   {
@@ -307,21 +308,23 @@ sat_init(sat* s)
   s->perigee_alt = s->perigee - RE;
   s->period      = TWOPI / s->xnodp;
 
-//  printf("---------------------------------------- i2\n");
-//  printf("aa      %+.15e\n", aa);
-//  printf("cosio   %+.15e\n", cosio);
-//  printf("sinio   %+.15e\n", sinio);
-//  printf("eo2     %+.15e\n", eo2);
-//  printf("theta2  %+.15e\n", theta2);
-//  printf("betao2  %+.15e\n", betao2);
-//  printf("betao   %+.15e\n", betao);
-//  printf("delta1  %+.15e\n", delta1);
-//  printf("a0      %+.15e\n", a0);
-//  printf("delta0  %+.15e\n", delta0);
-//  printf("xnodp   %+.15e\n", s->xnodp);
-//  printf("aodp    %+.15e\n", s->aodp);
-//  printf("x1m5th2 %+.15e\n", s->x1m5th2);
-//  printf("con41   %+.15e\n", s->con41);
+#ifdef MATH_TRACE
+  printf("---------------------------------------- i2\n");
+  printf("aa      %+.15e\n", aa);
+  printf("cosio   %+.15e\n", cosio);
+  printf("sinio   %+.15e\n", sinio);
+  printf("eo2     %+.15e\n", eo2);
+  printf("theta2  %+.15e\n", theta2);
+  printf("betao2  %+.15e\n", betao2);
+  printf("betao   %+.15e\n", betao);
+  printf("delta1  %+.15e\n", delta1);
+  printf("a0      %+.15e\n", a0);
+  printf("delta0  %+.15e\n", delta0);
+  printf("xnodp   %+.15e\n", s->xnodp);
+  printf("aodp    %+.15e\n", s->aodp);
+  printf("x1m5th2 %+.15e\n", s->x1m5th2);
+  printf("con41   %+.15e\n", s->con41);
+#endif
 
   if (s->period >= 225)
   {
@@ -395,32 +398,34 @@ sat_init(sat* s)
                  / ((fabs(cosio+1.0) > 1.5e-12) ? ((1.0 + cosio)) : (1.5e-12));
       s->aycof   = 0.25 * A3OVK2 * sinio;
 
-//  printf("---------------------------------------- i3\n");
-//  printf("qoms24 %+.15e\n", qoms24);
-//  printf("s4     %+.15e\n", sfour);
-//  printf("pinv2  %+.15e\n", pinv2);
-//  printf("tsi    %+.15e\n", tsi);
-//  printf("eta    %+.15e\n", s->eta);
-//  printf("eta2   %+.15e\n", eta2);
-//  printf("eeta   %+.15e\n", eeta);
-//  printf("psi2   %+.15e\n", psi2);
-//  printf("coef   %+.15e\n", coef);
-//  printf("coef1  %+.15e\n", coef1);
-//  printf("C2     %+.15e\n", C2);
-//  printf("C1     %+.15e\n", s->C1);
-//  printf("C4     %+.15e\n", s->C4);
-//  printf("theta4 %+.15e\n", theta4);
-//  printf("xmdot  %+.15e\n", s->xmdot);
-//  printf("omgdot %+.15e\n", s->omgdot);
-//  printf("xhdot1 %+.15e\n", xhdot1);
-//  printf("xnodot %+.15e\n", s->xnodot);
-//  printf("xnodcf %+.15e\n", s->xnodcf);
-//  printf("xlcof  %+.15e\n", s->xlcof);
-//  printf("aycof  %+.15e\n", s->aycof);
-//  printf("x7thm1 %+.15e\n", s->x7thm1);
-//  printf("x1mth2 %+.15e\n", s->x1mth2);
-//  printf("dspace %d\n", s->is_deep_space);
-//  printf("simple %d\n", s->use_simple_model);
+#ifdef MATH_TRACE
+  printf("---------------------------------------- i3\n");
+  printf("qoms24 %+.15e\n", qoms24);
+  printf("s4     %+.15e\n", sfour);
+  printf("pinv2  %+.15e\n", pinv2);
+  printf("tsi    %+.15e\n", tsi);
+  printf("eta    %+.15e\n", s->eta);
+  printf("eta2   %+.15e\n", eta2);
+  printf("eeta   %+.15e\n", eeta);
+  printf("psi2   %+.15e\n", psi2);
+  printf("coef   %+.15e\n", coef);
+  printf("coef1  %+.15e\n", coef1);
+  printf("C2     %+.15e\n", C2);
+  printf("C1     %+.15e\n", s->C1);
+  printf("C4     %+.15e\n", s->C4);
+  printf("theta4 %+.15e\n", theta4);
+  printf("xmdot  %+.15e\n", s->xmdot);
+  printf("omgdot %+.15e\n", s->omgdot);
+  printf("xhdot1 %+.15e\n", xhdot1);
+  printf("xnodot %+.15e\n", s->xnodot);
+  printf("xnodcf %+.15e\n", s->xnodcf);
+  printf("xlcof  %+.15e\n", s->xlcof);
+  printf("aycof  %+.15e\n", s->aycof);
+  printf("x7thm1 %+.15e\n", s->x7thm1);
+  printf("x1mth2 %+.15e\n", s->x1mth2);
+  printf("dspace %d\n", s->is_deep_space);
+  printf("simple %d\n", s->use_simple_model);
+#endif
 
   if (s->is_deep_space == true) // Deep space init here
   {
@@ -465,20 +470,22 @@ sat_init(sat* s)
     double zcosgl = cos(zx);
     double zsingl = sin(zx);
 
-//    printf("======================================== id1\n");
-//    printf("[DS] day    %+.15e\n", day);
-//    printf("[DS] xnodce %+.15e\n", xnodce);
-//    printf("[DS] stem   %+.15e\n", stem);
-//    printf("[DS] ctem   %+.15e\n", ctem);
-//    printf("[DS] zcosil %+.15e\n", zcosil);
-//    printf("[DS] zsinil %+.15e\n", zsinil);
-//    printf("[DS] zsinhl %+.15e\n", zsinhl);
-//    printf("[DS] zcoshl %+.15e\n", zcoshl);
-//    printf("[DS] gam    %+.15e\n", gam);
-//    printf("[DS] zy     %+.15e\n", zy);
-//    printf("[DS] zx     %+.15e\n", zx);
-//    printf("[DS] zcosgl %+.15e\n", zcosgl);
-//    printf("[DS] zsingl %+.15e\n", zsingl);
+#ifdef MATH_TRACE
+    printf("======================================== id1\n");
+    printf("[DS] day    %+.15e\n", day);
+    printf("[DS] xnodce %+.15e\n", xnodce);
+    printf("[DS] stem   %+.15e\n", stem);
+    printf("[DS] ctem   %+.15e\n", ctem);
+    printf("[DS] zcosil %+.15e\n", zcosil);
+    printf("[DS] zsinil %+.15e\n", zsinil);
+    printf("[DS] zsinhl %+.15e\n", zsinhl);
+    printf("[DS] zcoshl %+.15e\n", zcoshl);
+    printf("[DS] gam    %+.15e\n", gam);
+    printf("[DS] zy     %+.15e\n", zy);
+    printf("[DS] zx     %+.15e\n", zx);
+    printf("[DS] zcosgl %+.15e\n", zcosgl);
+    printf("[DS] zsingl %+.15e\n", zsingl);
+#endif
 
     s->zmos = fmod(6.2565837 + 0.017201977 * day, TWOPI);
 
@@ -583,65 +590,67 @@ sat_init(sat* s)
 
     s->zmol = fmod(4.7199672 + 0.22997150  * day - gam, TWOPI);
 
-//    printf("======================================== id2\n");
-//    printf("[DS] xnoi  %+.15e\n", xnoi);
-//    printf("[DS] a1    %+.15e\n", a1);
-//    printf("[DS] a2    %+.15e\n", a2);
-//    printf("[DS] a3    %+.15e\n", a3);
-//    printf("[DS] a4    %+.15e\n", a4);
-//    printf("[DS] a5    %+.15e\n", a5);
-//    printf("[DS] a6    %+.15e\n", a6);
-//    printf("[DS] a7    %+.15e\n", a7);
-//    printf("[DS] a8    %+.15e\n", a8);
-//    printf("[DS] a9    %+.15e\n", a9);
-//    printf("[DS] a10   %+.15e\n", a10);
-//    printf("[DS] x1    %+.15e\n", x1);
-//    printf("[DS] x2    %+.15e\n", x2);
-//    printf("[DS] x3    %+.15e\n", x3);
-//    printf("[DS] x4    %+.15e\n", x4);
-//    printf("[DS] x5    %+.15e\n", x5);
-//    printf("[DS] x6    %+.15e\n", x6);
-//    printf("[DS] x7    %+.15e\n", x7);
-//    printf("[DS] x8    %+.15e\n", x8);
-//    printf("[DS] z1    %+.15e\n", z1);
-//    printf("[DS] z2    %+.15e\n", z2);
-//    printf("[DS] z3    %+.15e\n", z3);
-//    printf("[DS] z11   %+.15e\n", z11);
-//    printf("[DS] z12   %+.15e\n", z12);
-//    printf("[DS] z13   %+.15e\n", z13);
-//    printf("[DS] z21   %+.15e\n", z21);
-//    printf("[DS] z22   %+.15e\n", z22);
-//    printf("[DS] z23   %+.15e\n", z23);
-//    printf("[DS] z31   %+.15e\n", z31);
-//    printf("[DS] z32   %+.15e\n", z32);
-//    printf("[DS] z33   %+.15e\n", z33);
-//    printf("[DS] s1    %+.15e\n", s1);
-//    printf("[DS] s2    %+.15e\n", s2);
-//    printf("[DS] s3    %+.15e\n", s3);
-//    printf("[DS] s4    %+.15e\n", s4);
-//    printf("[DS] s5    %+.15e\n", s5);
-//    printf("[DS] s6    %+.15e\n", s6);
-//    printf("[DS] s7    %+.15e\n", s7);
-//    printf("[DS] ss1   %+.15e\n", ss1);
-//    printf("[DS] ss2   %+.15e\n", ss2);
-//    printf("[DS] ss3   %+.15e\n", ss3);
-//    printf("[DS] ss4   %+.15e\n", ss4);
-//    printf("[DS] ss5   %+.15e\n", ss5);
-//    printf("[DS] ss6   %+.15e\n", ss6);
-//    printf("[DS] ss7   %+.15e\n", ss7);
-//    printf("[DS] sz11  %+.15e\n", sz11);
-//    printf("[DS] sz12  %+.15e\n", sz12);
-//    printf("[DS] sz13  %+.15e\n", sz13);
-//    printf("[DS] sz21  %+.15e\n", sz21);
-//    printf("[DS] sz22  %+.15e\n", sz22);
-//    printf("[DS] sz23  %+.15e\n", sz23);
-//    printf("[DS] sz31  %+.15e\n", sz31);
-//    printf("[DS] sz32  %+.15e\n", sz32);
-//    printf("[DS] sz33  %+.15e\n", sz33);
-//    printf("[DS] zcosh %+.15e\n", zcosh);
-//    printf("[DS] zsinh %+.15e\n", zsinh);
-//    printf("[DS] zmos  %+.15e\n", s->zmos);
-//    printf("[DS] zmol  %+.15e\n", s->zmol);
+#ifdef MATH_TRACE
+    printf("======================================== id2\n");
+    printf("[DS] xnoi  %+.15e\n", xnoi);
+    printf("[DS] a1    %+.15e\n", a1);
+    printf("[DS] a2    %+.15e\n", a2);
+    printf("[DS] a3    %+.15e\n", a3);
+    printf("[DS] a4    %+.15e\n", a4);
+    printf("[DS] a5    %+.15e\n", a5);
+    printf("[DS] a6    %+.15e\n", a6);
+    printf("[DS] a7    %+.15e\n", a7);
+    printf("[DS] a8    %+.15e\n", a8);
+    printf("[DS] a9    %+.15e\n", a9);
+    printf("[DS] a10   %+.15e\n", a10);
+    printf("[DS] x1    %+.15e\n", x1);
+    printf("[DS] x2    %+.15e\n", x2);
+    printf("[DS] x3    %+.15e\n", x3);
+    printf("[DS] x4    %+.15e\n", x4);
+    printf("[DS] x5    %+.15e\n", x5);
+    printf("[DS] x6    %+.15e\n", x6);
+    printf("[DS] x7    %+.15e\n", x7);
+    printf("[DS] x8    %+.15e\n", x8);
+    printf("[DS] z1    %+.15e\n", z1);
+    printf("[DS] z2    %+.15e\n", z2);
+    printf("[DS] z3    %+.15e\n", z3);
+    printf("[DS] z11   %+.15e\n", z11);
+    printf("[DS] z12   %+.15e\n", z12);
+    printf("[DS] z13   %+.15e\n", z13);
+    printf("[DS] z21   %+.15e\n", z21);
+    printf("[DS] z22   %+.15e\n", z22);
+    printf("[DS] z23   %+.15e\n", z23);
+    printf("[DS] z31   %+.15e\n", z31);
+    printf("[DS] z32   %+.15e\n", z32);
+    printf("[DS] z33   %+.15e\n", z33);
+    printf("[DS] s1    %+.15e\n", s1);
+    printf("[DS] s2    %+.15e\n", s2);
+    printf("[DS] s3    %+.15e\n", s3);
+    printf("[DS] s4    %+.15e\n", s4);
+    printf("[DS] s5    %+.15e\n", s5);
+    printf("[DS] s6    %+.15e\n", s6);
+    printf("[DS] s7    %+.15e\n", s7);
+    printf("[DS] ss1   %+.15e\n", ss1);
+    printf("[DS] ss2   %+.15e\n", ss2);
+    printf("[DS] ss3   %+.15e\n", ss3);
+    printf("[DS] ss4   %+.15e\n", ss4);
+    printf("[DS] ss5   %+.15e\n", ss5);
+    printf("[DS] ss6   %+.15e\n", ss6);
+    printf("[DS] ss7   %+.15e\n", ss7);
+    printf("[DS] sz11  %+.15e\n", sz11);
+    printf("[DS] sz12  %+.15e\n", sz12);
+    printf("[DS] sz13  %+.15e\n", sz13);
+    printf("[DS] sz21  %+.15e\n", sz21);
+    printf("[DS] sz22  %+.15e\n", sz22);
+    printf("[DS] sz23  %+.15e\n", sz23);
+    printf("[DS] sz31  %+.15e\n", sz31);
+    printf("[DS] sz32  %+.15e\n", sz32);
+    printf("[DS] sz33  %+.15e\n", sz33);
+    printf("[DS] zcosh %+.15e\n", zcosh);
+    printf("[DS] zsinh %+.15e\n", zsinh);
+    printf("[DS] zmos  %+.15e\n", s->zmos);
+    printf("[DS] zmol  %+.15e\n", s->zmol);
+#endif
 
     // Do final solar terms
     s->se2  =   2 * ss1 * ss6;
@@ -657,19 +666,21 @@ sat_init(sat* s)
     s->sh2  =  -2 * ss2 * sz22;
     s->sh3  =  -2 * ss2 * (sz23 - sz21);
 
-//    printf("======================================== id3\n");
-//    printf("[DS] se2  %+.15e\n", s->se2);
-//    printf("[DS] se3  %+.15e\n", s->se3);
-//    printf("[DS] si2  %+.15e\n", s->si2);
-//    printf("[DS] si3  %+.15e\n", s->si3);
-//    printf("[DS] sl2  %+.15e\n", s->sl2);
-//    printf("[DS] sl3  %+.15e\n", s->sl3);
-//    printf("[DS] sl4  %+.15e\n", s->sl4);
-//    printf("[DS] sgh2 %+.15e\n", s->sgh2);
-//    printf("[DS] sgh3 %+.15e\n", s->sgh3);
-//    printf("[DS] sgh4 %+.15e\n", s->sgh4);
-//    printf("[DS] sh2  %+.15e\n", s->sh2);
-//    printf("[DS] sh3  %+.15e\n", s->sh3);
+#ifdef MATH_TRACE
+    printf("======================================== id3\n");
+    printf("[DS] se2  %+.15e\n", s->se2);
+    printf("[DS] se3  %+.15e\n", s->se3);
+    printf("[DS] si2  %+.15e\n", s->si2);
+    printf("[DS] si3  %+.15e\n", s->si3);
+    printf("[DS] sl2  %+.15e\n", s->sl2);
+    printf("[DS] sl3  %+.15e\n", s->sl3);
+    printf("[DS] sl4  %+.15e\n", s->sl4);
+    printf("[DS] sgh2 %+.15e\n", s->sgh2);
+    printf("[DS] sgh3 %+.15e\n", s->sgh3);
+    printf("[DS] sgh4 %+.15e\n", s->sgh4);
+    printf("[DS] sh2  %+.15e\n", s->sh2);
+    printf("[DS] sh3  %+.15e\n", s->sh3);
+#endif
 
     // Do final lunar terms
     s->ee2  =   2 * s1 * s6;
@@ -685,22 +696,22 @@ sat_init(sat* s)
     s->xh2  =  -2 * s2 * z22;
     s->xh3  =  -2 * s2 * (z23 - z21);
 
-//    printf("======================================== id4\n");
-//    printf("[DS] ee2  %+.15e\n", s->ee2);
-//    printf("[DS] e3   %+.15e\n", s->e3);
-//    printf("[DS] xi2  %+.15e\n", s->xi2);
-//    printf("[DS] xi3  %+.15e\n", s->xi3);
-//    printf("[DS] xl2  %+.15e\n", s->xl2);
-//    printf("[DS] xl3  %+.15e\n", s->xl3);
-//    printf("[DS] xl4  %+.15e\n", s->xl4);
-//    printf("[DS] xgh2 %+.15e\n", s->xgh2);
-//    printf("[DS] xgh3 %+.15e\n", s->xgh3);
-//    printf("[DS] xgh4 %+.15e\n", s->xgh4);
-//    printf("[DS] xh2  %+.15e\n", s->xh2);
-//    printf("[DS] xh3  %+.15e\n", s->xh3);
-//    printf("[DS] GSTo %+.15e\n", s->GSTo);
-
-    //dpper(s, 0); // TODO: Investigate further
+#ifdef MATH_TRACE
+    printf("======================================== id4\n");
+    printf("[DS] ee2  %+.15e\n", s->ee2);
+    printf("[DS] e3   %+.15e\n", s->e3);
+    printf("[DS] xi2  %+.15e\n", s->xi2);
+    printf("[DS] xi3  %+.15e\n", s->xi3);
+    printf("[DS] xl2  %+.15e\n", s->xl2);
+    printf("[DS] xl3  %+.15e\n", s->xl3);
+    printf("[DS] xl4  %+.15e\n", s->xl4);
+    printf("[DS] xgh2 %+.15e\n", s->xgh2);
+    printf("[DS] xgh3 %+.15e\n", s->xgh3);
+    printf("[DS] xgh4 %+.15e\n", s->xgh4);
+    printf("[DS] xh2  %+.15e\n", s->xh2);
+    printf("[DS] xh3  %+.15e\n", s->xh3);
+    printf("[DS] GSTo %+.15e\n", s->GSTo);
+#endif
 
     const double q22    = 1.7891679e-6;  // TODO: Move to macros?
     const double q31    = 2.1460748e-6;
@@ -750,13 +761,6 @@ sat_init(sat* s)
 
     double sgs  = sghs - cosim * shs;
 
-//    printf("ses:    %+.15e\n", ses);
-//    printf("sis:    %+.15e\n", sis);
-//    printf("sls:    %+.15e\n", sls);
-//    printf("sghs:   %+.15e\n", sghs);
-//    printf("shs:    %+.15e\n", shs);
-//    printf("sgs:    %+.15e\n", sgs);
-
     // Do lunar terms
     s->dedt = ses + s1 * znl * s5;
     s->didt = sis + s2 * znl * (z11 + z13);
@@ -781,37 +785,32 @@ sat_init(sat* s)
       s->dnodt += shll / sinim;
     }
 
-//    printf("======================================== id5\n");
-//    printf("[DS] ses   %+.15e\n", ses);
-//    printf("[DS] sis   %+.15e\n", sis);
-//    printf("[DS] sls   %+.15e\n", sls);
-//    printf("[DS] sghs  %+.15e\n", sghs);
-//    printf("[DS] shs   %+.15e\n", shs);
-//    printf("[DS] sgs   %+.15e\n", sgs);
-//    printf("[DS] dedt  %+.15e\n", s->dedt);
-//    printf("[DS] didt  %+.15e\n", s->didt);
-//    printf("[DS] dmdt  %+.15e\n", s->dmdt);
-//    printf("[DS] domdt %+.15e\n", s->domdt);
-//    printf("[DS] dnodt %+.15e\n", s->dnodt);
-//    printf("[DS] sghl  %+.15e\n", sghl);
-//    printf("[DS] shll  %+.15e\n", shll);
+#ifdef MATH_TRACE
+    printf("======================================== id5\n");
+    printf("[DS] ses   %+.15e\n", ses);
+    printf("[DS] sis   %+.15e\n", sis);
+    printf("[DS] sls   %+.15e\n", sls);
+    printf("[DS] sghs  %+.15e\n", sghs);
+    printf("[DS] shs   %+.15e\n", shs);
+    printf("[DS] sgs   %+.15e\n", sgs);
+    printf("[DS] dedt  %+.15e\n", s->dedt);
+    printf("[DS] didt  %+.15e\n", s->didt);
+    printf("[DS] dmdt  %+.15e\n", s->dmdt);
+    printf("[DS] domdt %+.15e\n", s->domdt);
+    printf("[DS] dnodt %+.15e\n", s->dnodt);
+    printf("[DS] sghl  %+.15e\n", sghl);
+    printf("[DS] shll  %+.15e\n", shll);
+#endif
 
     // Calculate deep space resonance effects
-
-    /* TODO: t is zero at init, right?
-     *em     = *em + *dedt * t;
-     *inclm  = *inclm + *didt * t;
-     *argpm  = *argpm + *domdt * t;
-     *nodem  = *nodem + *dnodt * t;
-     *mm     = *mm + *dmdt * t;
-     */
-
     double aonv  = pow(s->xnodp / XKE, TWOTHIRD);
     double ainv2 = pow(aonv, 2);
 
-//    printf("======================================== id6\n");
-//    printf("[DS] 12h res %d\n", (int)s->is_12h_resonant);
-//    printf("[DS] 24h res %d\n", (int)s->is_24h_resonant);
+#ifdef MATH_TRACE
+    printf("======================================== id6\n");
+    printf("[DS] 12h res %d\n", (int)s->is_12h_resonant);
+    printf("[DS] 24h res %d\n", (int)s->is_24h_resonant);
+#endif
 
     // Initialize the resonance terms
     if ((s->is_12h_resonant == true)
@@ -820,18 +819,8 @@ sat_init(sat* s)
       // Geopotential resonance for 12 hour orbits
       if (s->is_12h_resonant == true)
       {
-        //cosisq = cosim * cosim;
-        //emo    = *em;
-        //*em     = ecco;
-        //emsqo  = emsq;
-        //emsq   = eccsq;
         double eocu   = pow(s->eccentricity, 3); // TODO: Unroll?
         double g201   = -0.306 - (s->eccentricity - 0.64) * 0.440;
-
-//        printf("----------------------------\n");
-//        printf("em:     %70.60lf\n", s->eccentricity);
-//        printf("emsq:   %70.60lf\n", eosq);
-//        printf("eoc:    %70.60lf\n", eocu);
 
         // 12h Resonant polynomials
         double g211, g310, g322, g410, g422, g520, g521, g523, g532, g533;
@@ -893,18 +882,6 @@ sat_init(sat* s)
                - 242699.48  * eo2 + 115605.82 * eocu;
         }
 
-//        printf("----------------------------\n");
-//        printf("g201:   %+.15e\n", g201);
-//        printf("g211:   %+.15e\n", g211);
-//        printf("g310:   %+.15e\n", g310);
-//        printf("g322:   %+.15e\n", g322);
-//        printf("g410:   %+.15e\n", g410);
-//        printf("g422:   %+.15e\n", g422);
-//        printf("g520:   %+.15e\n", g520);
-//        printf("g533:   %+.15e\n", g533);
-//        printf("g521:   %+.15e\n", g521);
-//        printf("g532:   %+.15e\n", g532);
-
         double sini2  =  sinim * sinim; // TODO: Copy of a copy of a copy?
         double cosisq =  cosim * cosim; // TODO: Copy of a copy of a copy?
 
@@ -924,18 +901,6 @@ sat_init(sat* s)
              * (-12.0 + 8.0 * cosim + 10.0 * cosisq));
         f543 = 29.53125 * sinim * (-2.0 - 8.0 * cosim+cosisq
              * (12.0 + 8.0 * cosim - 10.0 * cosisq));
-
-//        printf("----------------------------\n");
-//        printf("f220:   %+.15e\n", f220);
-//        printf("f221:   %+.15e\n", f221);
-//        printf("f321:   %+.15e\n", f321);
-//        printf("f322:   %+.15e\n", f322);
-//        printf("f441:   %+.15e\n", f441);
-//        printf("f442:   %+.15e\n", f442);
-//        printf("f522:   %+.15e\n", f522);
-//        printf("f523:   %+.15e\n", f523);
-//        printf("f542:   %+.15e\n", f542);
-//        printf("f543:   %+.15e\n", f543);
 
                temp1 = 3.0 * pow(s->xnodp, 2) * ainv2;
         double temp  = temp1 * root22;
@@ -960,21 +925,6 @@ sat_init(sat* s)
                      - 2 * s->GSTo, TWOPI);
             s->xfact = s->xmdot + s->dmdt
                      + 2 * (s->xnodot + s->dnodt - rptim) - s->xnodp;
-        //double em    = emo;
-        //double emsq  = emsqo;
-
-//        printf("----------------------------\n");
-//        printf("ainv2:  %+.15e\n", ainv2);
-//        printf("d2201:  %+.15e\n", d2201);
-//        printf("d2211:  %+.15e\n", d2211);
-//        printf("d3210:  %+.15e\n", d3210);
-//        printf("d3222:  %+.15e\n", d3222);
-//        printf("d4410:  %+.15e\n", d4410);
-//        printf("d4422:  %+.15e\n", d4422);
-//        printf("d5220:  %+.15e\n", d5220);
-//        printf("d5232:  %+.15e\n", d5232);
-//        printf("d5232:  %+.15e\n", d5232);
-//        printf("d5433:  %+.15e\n", d5433);
       }
 
       // Synchronous resonance terms
@@ -998,29 +948,12 @@ sat_init(sat* s)
                  + s->domdt + s->dnodt - s->xnodp;
         s->xlamo = fmod(s->mean_anomaly + s->right_asc_node
                  + s->argument_perigee - s->GSTo, TWOPI);
-
-//        printf("----------------------------\n");
-//        printf("g200:   %+.15e\n", g200);
-//        printf("g310:   %+.15e\n", g310);
-//        printf("g300:   %+.15e\n", g300);
-//        printf("f220:   %+.15e\n", f220);
-//        printf("f311:   %+.15e\n", f311);
-//        printf("f330:   %+.15e\n", f330);
-//        printf("del1:   %+.15e\n", del1);
-//        printf("del2:   %+.15e\n", del2);
-//        printf("del3:   %+.15e\n", del3);
       }
 
       // Initialize the integrator
       s->xli    = s->xlamo;
       s->xni    = s->xnodp;
       s->atime  = 0.0;
-
-//      printf("xfact:  %+.15e\n", s->xfact);
-//      printf("xlamo:  %+.15e\n", s->xlamo);
-//      printf("xli:    %+.15e\n", s->xli);
-//      printf("xni:    %+.15e\n", s->xni);
-//      printf("atime:  %+.15e\n", s->atime);
     }
   }
 
@@ -1033,11 +966,9 @@ sat_init(sat* s)
     C3           = coef * tsi * A3OVK2 * s->xnodp * sinio / s->eccentricity;
     s->xmcof     = -TWOTHIRD * coef * s->Bstar / eeta;
   }
- // printf("xmcof:     %20.15lf\n", s->xmcof);
       s->C5      = 2 * coef1 * s->aodp * betao2
                  * (1 + 2.75 * (eta2 + eeta) + eeta * eta2);
       s->omgcof  = s->Bstar * C3 * cos(s->argument_perigee);
-     // printf("omgcof:     %20.15lf\n", s->omgcof);
       s->delmo   = pow(1 + s->eta * cos(s->mean_anomaly), 3);
       s->sinmo   = sin(s->mean_anomaly);
 
@@ -1055,25 +986,27 @@ sat_init(sat* s)
                  + 15 * C12 * (2 * s->D2 + C12));
   }
 
-//  printf("---------------------------------------- i4\n");
-//  printf("C3     %+.15e\n", C3);
-//  printf("xmcof  %+.15e\n", s->xmcof);
-//  printf("C5     %+.15e\n", s->C5);
-//  printf("omgcof %+.15e\n", s->omgcof);
-//  printf("delmo  %+.15e\n", s->delmo);
-//  printf("sinmo  %+.15e\n", s->sinmo);
-//  printf("D2     %+.15e\n", s->D2);
-//  printf("D3     %+.15e\n", s->D3);
-//  printf("D4     %+.15e\n", s->D4);
-//  printf("t3cof  %+.15e\n", s->t3cof);
-//  printf("t4cof  %+.15e\n", s->t4cof);
-//  printf("t5cof  %+.15e\n", s->t5cof);
+#ifdef MATH_TRACE
+  printf("---------------------------------------- i4\n");
+  printf("C3     %+.15e\n", C3);
+  printf("xmcof  %+.15e\n", s->xmcof);
+  printf("C5     %+.15e\n", s->C5);
+  printf("omgcof %+.15e\n", s->omgcof);
+  printf("delmo  %+.15e\n", s->delmo);
+  printf("sinmo  %+.15e\n", s->sinmo);
+  printf("D2     %+.15e\n", s->D2);
+  printf("D3     %+.15e\n", s->D3);
+  printf("D4     %+.15e\n", s->D4);
+  printf("t3cof  %+.15e\n", s->t3cof);
+  printf("t4cof  %+.15e\n", s->t4cof);
+  printf("t5cof  %+.15e\n", s->t5cof);
 
-  //vec3 p, v; // TODO: Test only
-  //return sat_propagate(s, 1440.0, 10, 1.0e-12, &p, &v);
-
+  vec3 p, v;
+  return sat_propagate(s, 0.0, 4, 1.0e-12, &p, &v);
+#else
   // Propagate at zero time since epoch
   return sat_propagate(s, 0.0, 4, 1.0e-12, NULL, NULL);
+#endif
 }
 
 /*
@@ -1138,19 +1071,21 @@ sat_propagate
   double em    = s->eccentricity; // TODO: Optimize?
   double inclm = s->inclination; // TODO: Optimize?
 
-//  printf("---------------------------------------- p1\n");
-//  printf("xmdf   %+.15e\n", xmdf);
-//  printf("xmp    %+.15e\n", xmp);
-//  printf("omgadf %+.15e\n", omgadf);
-//  printf("xnoddf %+.15e\n", xnoddf);
-//  printf("t2     %+.15e\n", t2);
-//  printf("tempa  %+.15e\n", tempa);
-//  printf("tempe  %+.15e\n", tempe);
-//  printf("templ  %+.15e\n", templ);
-//  printf("omega  %+.15e\n", omega);
-//  printf("nm     %+.15e\n", nm);
-//  printf("em     %+.15e\n", em);
-//  printf("inclm  %+.15e\n", inclm);
+#ifdef MATH_TRACE
+  printf("---------------------------------------- p1\n");
+  printf("xmdf   %+.15e\n", xmdf);
+  printf("xmp    %+.15e\n", xmp);
+  printf("omgadf %+.15e\n", omgadf);
+  printf("xnoddf %+.15e\n", xnoddf);
+  printf("t2     %+.15e\n", t2);
+  printf("tempa  %+.15e\n", tempa);
+  printf("tempe  %+.15e\n", tempe);
+  printf("templ  %+.15e\n", templ);
+  printf("omega  %+.15e\n", omega);
+  printf("nm     %+.15e\n", nm);
+  printf("em     %+.15e\n", em);
+  printf("inclm  %+.15e\n", inclm);
+#endif
 
   if (s->is_deep_space == true)
   {
@@ -1271,17 +1206,20 @@ sat_propagate
         s->dndt = nm - s->xnodp;
       }
       nm = s->xnodp + s->dndt;
-//      printf("======================================== dp1\n");
-//      printf("tdelta %+.15e\n", tdelta);
-//      printf("atime  %+.15e\n", s->atime);
-//      printf("xndt   %+.15e\n", xndt);
-//      printf("xldot  %+.15e\n", xldot);
-//      printf("xnddt  %+.15e\n", xnddt);
-//      printf("xomi   %+.15e\n", xomi);
-//      printf("x2omi  %+.15e\n", x2omi);
-//      printf("x2li   %+.15e\n", x2li);
-//      printf("xli    %+.15e\n", s->xli);
-//      printf("xni    %+.15e\n", s->xni );
+
+#ifdef MATH_TRACE
+      printf("======================================== dp1\n");
+      printf("tdelta %+.15e\n", tdelta);
+      printf("atime  %+.15e\n", s->atime);
+      printf("xndt   %+.15e\n", xndt);
+      printf("xldot  %+.15e\n", xldot);
+      printf("xnddt  %+.15e\n", xnddt);
+      printf("xomi   %+.15e\n", xomi);
+      printf("x2omi  %+.15e\n", x2omi);
+      printf("x2li   %+.15e\n", x2li);
+      printf("xli    %+.15e\n", s->xli);
+      printf("xni    %+.15e\n", s->xni );
+#endif
     }
   }
 
@@ -1322,37 +1260,40 @@ sat_propagate
   double sinip = sin(s->inclination_lp);
   double cosip = cos(s->inclination_lp);
 
-//  printf("---------------------------------------- p2\n");
-//  printf("am     %+.15e\n", am);
-//  printf("nm     %+.15e\n", nm);
-//  printf("em     %+.15e\n", em);
-//  printf("xlm    %+.15e\n", xlm);
-//  printf("em2    %+.15e\n", em2);
-//  printf("em     %+.15e\n", em);
-//  printf("omega  %+.15e\n", omega);
-//  printf("inclp  %+.15e\n", s->inclination_lp);
-//  printf("ep     %+.15e\n", s->eccentricity_lp);
-//  printf("nodep  %+.15e\n", s->right_asc_node_lp);
-//  printf("argpp  %+.15e\n", s->argument_perigee_lp);
-//  printf("mp     %+.15e\n", s->mean_anomaly_lp);
-//  printf("sinip  %+.15e\n", sinip);
-//  printf("cosip  %+.15e\n", cosip);
+#ifdef MATH_TRACE
+  printf("---------------------------------------- p2\n");
+  printf("am     %+.15e\n", am);
+  printf("nm     %+.15e\n", nm);
+  printf("em     %+.15e\n", em);
+  printf("xlm    %+.15e\n", xlm);
+  printf("em2    %+.15e\n", em2);
+  printf("omega  %+.15e\n", omega);
+  printf("inclp  %+.15e\n", s->inclination_lp);
+  printf("ep     %+.15e\n", s->eccentricity_lp);
+  printf("nodep  %+.15e\n", s->right_asc_node_lp);
+  printf("argpp  %+.15e\n", s->argument_perigee_lp);
+  printf("mp     %+.15e\n", s->mean_anomaly_lp);
+  printf("sinip  %+.15e\n", sinip);
+  printf("cosip  %+.15e\n", cosip);
+#endif
 
   // Add lunar-solar periodics
   if (s->is_deep_space == true)
   {
     dpper(s, tdelta);
 
-//    printf("======================================== dp2\n");
-//    printf("xmp     %+.15e\n", xmp);
-//    printf("xlm     %+.15e\n", xlm);
-//    printf("em2     %+.15e\n", em2);
-//    printf("omega   %+.15e\n", omega);
-//    printf("incl_lp %+.15e\n", s->inclination_lp);
-//    printf("node_lp %+.15e\n", s->right_asc_node_lp);
-//    printf("argplp  %+.15e\n", s->argument_perigee_lp);
-//    printf("ecc_lp  %+.15e\n", s->eccentricity_lp);
-//    printf("mo_lp   %+.15e\n", s->mean_anomaly_lp);
+#ifdef MATH_TRACE
+    printf("======================================== dp2\n");
+    printf("xmp     %+.15e\n", xmp);
+    printf("xlm     %+.15e\n", xlm);
+    printf("em2     %+.15e\n", em2);
+    printf("omega   %+.15e\n", omega);
+    printf("incl_lp %+.15e\n", s->inclination_lp);
+    printf("node_lp %+.15e\n", s->right_asc_node_lp);
+    printf("argplp  %+.15e\n", s->argument_perigee_lp);
+    printf("ecc_lp  %+.15e\n", s->eccentricity_lp);
+    printf("mo_lp   %+.15e\n", s->mean_anomaly_lp);
+#endif
 
     if (s->inclination_lp < 0)
     {
@@ -1397,13 +1338,15 @@ sat_propagate
   uint8_t ktr     = 0;
   double  sineo1, coseo1;
 
-//  printf("---------------------------------------- p3\n");
-//  printf("xlcof   %+.15e\n", s->xlcof);
-//  printf("axnl    %+.15e\n", axnl);
-//  printf("a1e2inv %+.15e\n", a1e2inv);
-//  printf("aynl    %+.15e\n", aynl);
-//  printf("xl      %+.15e\n", xl);
-//  printf("u       %+.15e\n", u);
+#ifdef MATH_TRACE
+  printf("---------------------------------------- p3\n");
+  printf("xlcof   %+.15e\n", s->xlcof);
+  printf("axnl    %+.15e\n", axnl);
+  printf("a1e2inv %+.15e\n", a1e2inv);
+  printf("aynl    %+.15e\n", aynl);
+  printf("xl      %+.15e\n", xl);
+  printf("u       %+.15e\n", u);
+#endif
 
   while ((fabs(kdelta) >= tolerance) && (ktr < maxiter) )
   {
@@ -1417,12 +1360,14 @@ sat_propagate
       kdelta = kdelta > 0 ? 0.95 : -0.95;
     }
 
-//    printf("> >>>>>> Kepler\n");
-//    printf("> kdelta %+.15e\n", kdelta);
-//    printf("> sineo1 %+.15e\n", sineo1);
-//    printf("> coseo1 %+.15e\n", coseo1);
-//    printf("> eo1    %+.15e\n", eo1);
-//    printf("> ktr    %d\n", ktr);
+#ifdef MATH_TRACE
+    printf("> >>>>>> Kepler\n");
+    printf("> kdelta %+.15e\n", kdelta);
+    printf("> sineo1 %+.15e\n", sineo1);
+    printf("> coseo1 %+.15e\n", coseo1);
+    printf("> eo1    %+.15e\n", eo1);
+    printf("> ktr    %d\n", ktr);
+#endif
 
     eo1 += kdelta;
     ktr++;
@@ -1435,11 +1380,13 @@ sat_propagate
   double pl    = am * (1 - el2);
   double mrt;
 
-//  printf("---------------------------------------- p4\n");
-//  printf("ecose %+.15e\n", ecose);
-//  printf("esine %+.15e\n", esine);
-//  printf("el2   %+.15e\n", el2);
-//  printf("pl    %+.15e\n", pl);
+#ifdef MATH_TRACE
+  printf("---------------------------------------- p4\n");
+  printf("ecose %+.15e\n", ecose);
+  printf("esine %+.15e\n", esine);
+  printf("el2   %+.15e\n", el2);
+  printf("pl    %+.15e\n", pl);
+#endif
 
   if (pl < 0)
   {
@@ -1477,25 +1424,27 @@ sat_propagate
     double rvdot = rvdotl + nm * temp1 * (s->x1mth2 * cos2u
                  + 1.5 * s->con41) / XKE;
 
-//    printf("---------------------------------------- p5\n");
-//    printf("rl     %+.15e\n", rl);
-//    printf("rdotl  %+.15e\n", rdotl);
-//    printf("rvdotl %+.15e\n", rvdotl);
-//    printf("betal  %+.15e\n", betal);
-//    printf("sinu   %+.15e\n", sinu);
-//    printf("cosu   %+.15e\n", cosu);
-//    printf("su     %+.15e\n", su);
-//    printf("sin2u  %+.15e\n", sin2u);
-//    printf("cos2u  %+.15e\n", cos2u);
-//    printf("temp1  %+.15e\n", temp1);
-//    printf("con41  %+.15e\n", s->con41);
-//    printf("x1mth2 %+.15e\n", s->x1mth2);
-//    printf("temp2  %+.15e\n", temp2);
-//    printf("mrt    %+.15e\n", mrt);
-//    printf("xnode  %+.15e\n", xnode);
-//    printf("xinc   %+.15e\n", xinc);
-//    printf("mvt    %+.15e\n", mvt);
-//    printf("rvdot  %+.15e\n", rvdot);
+#ifdef MATH_TRACE
+    printf("---------------------------------------- p5\n");
+    printf("rl     %+.15e\n", rl);
+    printf("rdotl  %+.15e\n", rdotl);
+    printf("rvdotl %+.15e\n", rvdotl);
+    printf("betal  %+.15e\n", betal);
+    printf("sinu   %+.15e\n", sinu);
+    printf("cosu   %+.15e\n", cosu);
+    printf("su     %+.15e\n", su);
+    printf("sin2u  %+.15e\n", sin2u);
+    printf("cos2u  %+.15e\n", cos2u);
+    printf("temp1  %+.15e\n", temp1);
+    printf("con41  %+.15e\n", s->con41);
+    printf("x1mth2 %+.15e\n", s->x1mth2);
+    printf("temp2  %+.15e\n", temp2);
+    printf("mrt    %+.15e\n", mrt);
+    printf("xnode  %+.15e\n", xnode);
+    printf("xinc   %+.15e\n", xinc);
+    printf("mvt    %+.15e\n", mvt);
+    printf("rvdot  %+.15e\n", rvdot);
+#endif
 
     if ((p != NULL) && (v != NULL))
     {
@@ -1523,14 +1472,16 @@ sat_propagate
       v->y = (mvt * uy + rvdot * vy) * VKMPS;
       v->z = (mvt * uz + rvdot * vz) * VKMPS;
 
-//      printf("---------------------------------------- p6\n");
-//      printf("t %lf\n", tdelta);
-//      printf("px %12.6lf\n", p->x);
-//      printf("py %12.6lf\n", p->y);
-//      printf("pz %12.6lf\n", p->z);
-//      printf("vx %12.6lf\n", v->x);
-//      printf("vy %12.6lf\n", v->y);
-//      printf("vz %12.6lf\n", v->z);
+#ifdef MATH_TRACE
+      printf("---------------------------------------- p6\n");
+      printf("t %lf\n", tdelta);
+      printf("px %12.6lf\n", p->x);
+      printf("py %12.6lf\n", p->y);
+      printf("pz %12.6lf\n", p->z);
+      printf("vx %12.6lf\n", v->x);
+      printf("vy %12.6lf\n", v->y);
+      printf("vz %12.6lf\n", v->z);
+#endif
     }
   }
 

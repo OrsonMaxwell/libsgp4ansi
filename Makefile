@@ -6,6 +6,7 @@ LIBS = -lm
 RELEASEFLAGS = -O3 -flto -ffloat-store
 DEBUGFLAGS = -g3
 DEBUG = 0
+MATHTRACE = 0
 
 ifeq ($(OS),Windows_NT)
 	LIB_NAME = libsgp4ansi.dll
@@ -19,10 +20,12 @@ endif
 
 ifeq ($(DEBUG), 1)
 	CCFLAGS += ${DEBUGFLAGS}
-	CXXFLAGS += ${DEBUGFLAGS}
 else
 	CCFLAGS += ${RELEASEFLAGS}
-	CXXFLAGS += ${RELEASEFLAGS}
+endif
+
+ifeq ($(MATHTRACE), 1)
+	CCFLAGS += -DMATH_TRACE
 endif
 
 all: test ref_test

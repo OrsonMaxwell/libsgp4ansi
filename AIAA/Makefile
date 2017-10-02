@@ -4,6 +4,7 @@ CXXFLAGS = -lm -std=c++11
 RELEASEFLAGS = -O3 -flto -ffloat-store
 DEBUGFLAGS = -g3
 DEBUG = 0
+MATHTRACE = 0
 
 ifeq ($(OS),Windows_NT)
 	REF_TEST_NAME = aiaa.exe
@@ -15,6 +16,10 @@ ifeq ($(DEBUG), 1)
 	CXXFLAGS += ${DEBUGFLAGS}
 else
 	CXXFLAGS += ${RELEASEFLAGS}
+endif
+
+ifeq ($(MATHTRACE), 1)
+	CXXFLAGS += -DMATH_TRACE
 endif
 
 all: ../${OUTPUTDIR}/${REF_TEST_NAME}
