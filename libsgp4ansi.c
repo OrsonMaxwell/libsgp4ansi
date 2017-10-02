@@ -1091,7 +1091,7 @@ sat_init(sat* s)
   printf("t5cof  %+.15e\n", s->t5cof);
 
   vec3 p, v; // TODO: Test only
-  return sat_propagate(s, 1440.0, 4, 1.0e-12, &p, &v);
+  return sat_propagate(s, 1440.0, 10, 1.0e-12, &p, &v);
 
   // Propagate at zero time since epoch
   //return sat_propagate(s, 0.0, 4, 1.0e-12, NULL, NULL);
@@ -1390,22 +1390,22 @@ sat_propagate
     {
       return -3;
     }
-  }
 
-/*
-  // Long period periodics
-  if (s->method == 'd')
-  {
-    sinip =  sin(xincp);
-    cosip =  cos(xincp);
-    s->aycof = -0.5*j3oj2*sinip;
-    // sgp4fix for divide by zero for xincp = 180 deg
-    if ((fabs(cosip+1.0) > 1.5e-12) && (s->operationmode != 'a'))
-      s->xlcof = -0.25 * j3oj2 * sinip * (3.0 + 5.0 * cosip) / (1.0 + cosip);
+    // Long period periodics
+    sinip    =  sin(s->inclination_lp);
+    cosip    =  cos(s->inclination_lp);
+    s->aycof = -0.5 * J3DIVJ2 * sinip;
+
+    // Avoid division by zero for s->inclination_lp = 180 deg
+    if (fabs(cosip + 1) > 1.5e-12)
+    {
+      s->xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / (1 + cosip);
+    }
     else
-      s->xlcof = -0.25 * j3oj2 * sinip * (3.0 + 5.0 * cosip) / temp4;
+    {
+      s->xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / 1.5e-12;
+    }
   }
-*/
 
   double axnl    = s->eccentricity_lp * cos(s->argument_perigee_lp);
   double a1e2inv = 1 / (am * (1 - pow(s->eccentricity_lp, 2)));
@@ -1433,22 +1433,23 @@ sat_propagate
   {
     sineo1 = sin(eo1);
     coseo1 = cos(eo1);
-    kdelta = 1 - coseo1 * axnl - sineo1 * aynl;
-    kdelta = (u - aynl * coseo1 + axnl * sineo1 - eo1) / kdelta;
+    kdelta = (u - aynl * coseo1 + axnl * sineo1 - eo1)
+           / (1 - coseo1 * axnl - sineo1 * aynl);
 
     if(fabs(kdelta) >= 0.95)
     {
       kdelta = kdelta > 0 ? 0.95 : -0.95;
     }
 
-    eo1 += kdelta;
-    ktr++;
-
     printf("> >>>>>> Kepler\n");
+    printf("> kdelta %+.15e\n", kdelta);
     printf("> sineo1 %+.15e\n", sineo1);
     printf("> coseo1 %+.15e\n", coseo1);
     printf("> eo1    %+.15e\n", eo1);
     printf("> ktr    %d\n", ktr);
+
+    eo1 += kdelta;
+    ktr++;
   }
 
   // Short period preliminary quantities
@@ -1481,16 +1482,16 @@ sat_propagate
     double cos2u  = 1 - 2 * sinu * sinu;
     double temp1  = 0.5 * J2 * (1 / pl);
     double temp2  = temp1 * (1 / pl);
-/*
+
     // Update for short period periodics
-    if (s->method == 'd')
+    if (s->is_deep_space == true)
     {
-      cosisq                 = cosip * cosip;
-      s->con41  = 3.0*cosisq - 1.0;
-      s->x1mth2 = 1.0 - cosisq;
-      s->x7thm1 = 7.0*cosisq - 1.0;
+      double cosip2   = pow(cosip, 2); // TODO: Unroll?
+      s->con41        = 3 * cosip2 - 1;
+      s->x1mth2       = 1 - cosip2;
+      s->x7thm1       = 7 * cosip2 - 1;
     }
-*/
+
            mrt   = rl * (1 - 1.5 * temp2 * betal * s->con41)
                  + 0.5 * temp1 * s->x1mth2 * cos2u;
            su    = su - 0.25 * temp2 * s->x7thm1 * sin2u;
@@ -1663,8 +1664,8 @@ dpper(sat* s, double tdelta) // TODO: Rename
   pl    = pl - s->plo;
   pgh   = pgh - s->pgho;
   ph    = ph - s->pho;
-  s->inclination_lp  = s->inclination + pinc;
-  s->eccentricity_lp = s->eccentricity + pe;
+  s->inclination_lp  += pinc;
+  s->eccentricity_lp += pe;
   sinip = sin(s->inclination_lp);
   cosip = cos(s->inclination_lp);
 

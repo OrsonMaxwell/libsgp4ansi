@@ -2309,14 +2309,16 @@ bool sgp4
     tem5   = (u - aynl * coseo1 + axnl * sineo1 - eo1) / tem5;
     if(fabs(tem5) >= 0.95)
       tem5 = tem5 > 0.0 ? 0.95 : -0.95;
-    eo1    = eo1 + tem5;
-    ktr = ktr + 1;
 
     printf("> >>>>>> Kepler\n");
+    printf("> kdelta %+.15e\n", tem5);
     printf("> sineo1 %+.15e\n", sineo1);
     printf("> coseo1 %+.15e\n", coseo1);
     printf("> eo1    %+.15e\n", eo1);
     printf("> ktr    %d\n", ktr);
+
+    eo1    = eo1 + tem5;
+    ktr = ktr + 1;
   }
 
   /* ------------- short period preliminary quantities ----------- */

@@ -90,7 +90,7 @@
 #define RPTIM     (OMEGAE * 60)          // Earth angular velocity, rad/min
 #define VKMPS     (RE * XKE / 60)        // Earth angular velocity, rad/min
 #define TUMIN     (1 / XKE)              // Time units in minute TODO: Remove?
-#define J3DIVJ2   (J3 / J2)              // TODO: Remove?
+#define J3DIVJ2   (J3 / J2)
 #define THDT      4.37526908801129966e-3 // TODO: Remove?
 
 #endif /* CONST_H_ */
