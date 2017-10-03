@@ -17,12 +17,12 @@ double
 kepler_newton(double, double);
 
 // Get classical orbital elements from TEME vectors
-int
-teme2coe
-(
-  vec3*, vec3*, double*, double*, double*, double*, double*, double*, double*,
-  double*, double*, double*, double*
-);
+//int
+//teme2coe
+//(
+//  vec3*, vec3*, double*, double*, double*, double*, double*, double*, double*,
+//  double*, double*, double*, double*
+//);
 
 // Transform position and velocity vectors from TEME to ECEF frame of reference
 void

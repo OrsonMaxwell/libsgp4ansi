@@ -201,7 +201,7 @@ sat_load_tle(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
   int cardnum, epochyr, nexp, Bexp, checksum, ephem_type, elset_number;
   double nddot, Bstar, epochdays;
 
-  int retval = sscanf(tlestr1,"%2d %5ld %1c %8s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6ld ",
+  int retval = sscanf(tlestr1,"%2d %5u %1c %8s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6d ",
          &cardnum, &s->norad_number, &s->sec_class, s->int_designator, &epochyr,
          &epochdays,&s->mean_motion_dt2, &nddot, &nexp, &Bstar,
          &Bexp, &ephem_type, &elset_number);
@@ -212,11 +212,11 @@ sat_load_tle(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
   }
 
   if (tlestr2[52] == ' ') // check for minus sign
-    retval = sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %10lf %6ld \n",
+    retval = sscanf(tlestr2,"%2d %5u %9lf %9lf %8lf %9lf %9lf %10lf %6d \n",
            &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node, &s->eccentricity, &s->argument_perigee,
            &s->mean_anomaly, &s->mean_motion, &s->orbit_number);
   else
-    retval = sscanf(tlestr2,"%2d %5ld %9lf %9lf %8lf %9lf %9lf %11lf %6ld \n",
+    retval = sscanf(tlestr2,"%2d %5u %9lf %9lf %8lf %9lf %9lf %11lf %6d \n",
            &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node, &s->eccentricity, &s->argument_perigee,
            &s->mean_anomaly, &s->mean_motion, &s->orbit_number);
 
@@ -472,6 +472,7 @@ sat_init(sat* s)
 
 #ifdef MATH_TRACE
     printf("======================================== id1\n");
+    printf("[DS] julian %+.15e\n", s->julian_epoch);
     printf("[DS] day    %+.15e\n", day);
     printf("[DS] xnodce %+.15e\n", xnodce);
     printf("[DS] stem   %+.15e\n", stem);

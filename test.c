@@ -123,7 +123,7 @@ main (int argc, char** argv)
 
     sat_load_tle(tlestr0, tlestr1, tlestr2, &s);
 
-    fprintf(outfile, "%ld (%.8e)\n", s.norad_number, s.period);
+    fprintf(outfile, "%u (%.8e)\n", s.norad_number, s.period);
 
     // Iterate over time range
     for (double t = t_start; t <= t_stop + deltamin - 1.0e-12; t += deltamin)

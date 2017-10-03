@@ -493,6 +493,7 @@ static void dscom
 
 #ifdef MATH_TRACE
    printf("======================================== id1\n");
+   printf("[DS] julian %+.15e\n", epoch);
    printf("[DS] day    %+.15e\n", day);
    printf("[DS] xnodce %+.15e\n", xnodce);
    printf("[DS] stem   %+.15e\n", stem);

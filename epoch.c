@@ -12,6 +12,8 @@
 #include <time.h>
 #include <math.h>
 
+#include <stdio.h> // TODO: Remove
+
 #include "libsgp4ansi.h"
 #include "const.h"
 #include "epoch.h"
@@ -42,7 +44,7 @@ fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
 
   res_tm.tm_year = 100 + year;
 
-  if (year >= 57) // TODO: Will be valid only until 2057!
+  if (year >= 57) // Will be valid only until 2057!
     res_tm.tm_year -= 100;
 
   // Month and day of month
@@ -61,15 +63,14 @@ fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
   // Hours, minutes, and seconds
   double temp, sec;
   int result;
-  temp           = (days - day_of_year) * 24.0;
+  temp           = (days - day_of_year) * 24;
   res_tm.tm_hour = (int)floor(temp);
-  temp           = (temp - res_tm.tm_hour) * 60.0;
+  temp           = (temp - res_tm.tm_hour) * 60;
   res_tm.tm_min  = (int)floor(temp);
-  sec            = (temp - res_tm.tm_min) * 60.0;
+  sec            = (temp - res_tm.tm_min) * 60;
   res_tm.tm_sec  = (int)floor(sec);
   *ms            = (sec - res_tm.tm_sec) * 1000;
 
-  // TODO: Return error value of mktime
   result = mktime(&res_tm) - TIMEZONE;
 
   if (result == -1)
@@ -94,11 +95,11 @@ unix2jul(time_t* time, float ms)
   struct tm* t;
   t = gmtime(time);
 
-  return 367.0 * (t->tm_year + 1900)
-  - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 10) / 12.0))) * 0.25)
-  + floor(275 * (t->tm_mon + 1) / 9.0 )
+  return 367 * (t->tm_year + 1900)
+  - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 10) / 12))) * 0.25)
+  + floor(275 * (t->tm_mon + 1) / 9)
   + t->tm_mday + 1721013.5
-  + ((((double)t->tm_sec + ms / 1000.0) / 60.0 + t->tm_min) / 60.0 + t->tm_hour) / 24.0;
+  + ((((double)t->tm_sec + ms / 1000) / 60 + t->tm_min) / 60 + t->tm_hour) / 24;
 }
 
 /*

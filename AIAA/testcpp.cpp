@@ -304,7 +304,7 @@ fprintf(outfilee, " %16.8f %16.8f %16.8f %16.8f %12.9f %12.9f %12.9f\n",
 
                    sgp4 (whichconst, satrec,  tsince, ro,  vo);
 				   if (satrec.error > 0) {
-					   printf("[ERROR] Sat %5d (%.8e) code %2d at %8.f mfe\n",
+					   printf("[ERROR] Sat %5ld (%.8e) code %2d at %8.f mfe\n",
 						   satrec.satnum, 2*pi/satrec.no, satrec.error, satrec.t);
 					   break;
 				   }
