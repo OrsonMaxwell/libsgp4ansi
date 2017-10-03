@@ -71,6 +71,8 @@ fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
   res_tm.tm_sec  = (int)floor(sec);
   *ms            = (sec - res_tm.tm_sec) * 1000;
 
+  // Ignore DST
+  res_tm.tm_isdst = 0;
   result = mktime(&res_tm) - TIMEZONE;
 
   if (result == -1)
