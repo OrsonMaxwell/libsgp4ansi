@@ -114,7 +114,7 @@ teme2coe
 )
 {
   int i;
-  char typeorbit[3]; // TODOL Change to numeric to get rid of strings
+  char typeorbit[3]; // TODO: Change to numeric to get rid of strings
 
   double tolerance = 1.0e-8; // TODO: Const?
 
@@ -482,8 +482,8 @@ ecef2latlonalt
 void
 latlonalt2ecef
 (
-    vec3* latlonalt,
-    vec3* posecef
+    const vec3* latlonalt,
+          vec3* posecef
 )
 {
   // Geocentric latitude

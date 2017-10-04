@@ -3,14 +3,16 @@
 #include <time.h>
 
 #include "libsgp4ansi.h"
-#include "const.h"
 
 int
 main (int argc, char** argv)
 {
   if (argc < 2)
     return 0;
-  if ((argv[1][0] != 'c') && (argv[1][0] != 'v') && (argv[1][0] != 't'))
+  if ((argv[1][0] != 'c')
+      && (argv[1][0] != 'v')
+      && (argv[1][0] != 't')
+      && (argv[1][0] != 'o'))
     return 0;
 
   char tlestr0[130];
@@ -27,6 +29,45 @@ main (int argc, char** argv)
   double t_start = -1440, t_stop = 1440, deltamin = 20;
 
   sat s = {0};
+
+  if (argv[1][0] == 'o')
+  {
+    sat_load_tle("ISS (ZARYA)",
+                 "1 25544U 98067A   17276.21606951  .00004423  00000-0  74225-4 0  9990",
+                 "2 25544  51.6398 219.7869 0004167 337.1762 166.2321 15.54050189 78557",
+                 &s);
+    struct tm t = {
+      .tm_year  = 117,
+      .tm_mon   = 9,
+      .tm_mday  = 3,
+      .tm_hour  = 5,
+      .tm_min   = 11,
+      .tm_sec   = 8,
+      .tm_isdst = 0
+    };
+    double time_ms = 0;
+
+    time_t time = mktime(&t) - TIMEZONE;
+    vec3   lla  = {38.0475 * DEG2RAD, 54.9246 * DEG2RAD, 0.180};
+    obs    o    = {0};
+
+    sat_observe(&s, &time, time_ms, &lla, &o);
+
+    printf("Name:        %s\n", o.name);
+    printf("Lat:   %11.3lf deg\n", o.latlonalt.lat * RAD2DEG);
+    printf("Lon:   %11.3lf deg\n", o.latlonalt.lon * RAD2DEG);
+    printf("Alt:   %11.3lf km\n", o.latlonalt.alt);
+    printf("Vel:   %11.3lf km/s\n", o.velocity);
+    printf("Az:    %11.3lf deg\n", o.azimuth);
+    printf("El     %11.3lf deg\n", o.elevation);
+    printf("AzRt:  %11.3lf deg/s\n", o.az_rate);
+    printf("ElRt:  %11.3lf deg/s\n", o.el_rate);
+    printf("Range: %11.3lf km\n", o.range);
+    printf("RRate: %11.3lf km/s\n", o.rng_rate);
+    printf("Illum: %7d\n", o.is_illum);
+
+    return 0;
+  }
 
   if (argv[1][0] == 't')
   {
@@ -129,7 +170,6 @@ main (int argc, char** argv)
     for (double t = t_start; t <= t_stop + deltamin - 1.0e-12; t += deltamin)
     {
       int retval = sat_propagate(&s, t, 10, 1.0e-12, &posteme, &velteme);
-      //int retval = 0;
 
       if (retval != 0)
       {

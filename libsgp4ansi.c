@@ -6,7 +6,7 @@
  * https://celestrak.com/publications/AIAA/2006-6753/
  * IERS Bulletin - A (Vol. XXVIII No. 030)
  *
- * Copyright © 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright ï¿½ 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #include <ctype.h>
@@ -50,7 +50,12 @@ str_trim(const char*, size_t, char*);
  * Returns: Any   - Length of resulting string
  *         -1     - Failure to read TLE lines
  */
-size_t str_trim(const char* str, size_t len, char* out)
+size_t str_trim
+(
+  const char* str,
+  size_t len,
+  char* out
+)
 {
   if(len == 0)
   {
@@ -84,58 +89,6 @@ size_t str_trim(const char* str, size_t len, char* out)
   return out_size;
 }
 
-void sat_print(sat* s, char* caption)
-{
-  FILE *f = fopen("ansi_sat_print.txt", "a");
-  fprintf(f, "======================= %s ====================\n", caption);
-  fprintf(f, "------------------------ NORAD TLE --------------------------\n");
-  fprintf(f, "name             %s\n", s->name);
-  fprintf(f, "sec_class        %c\n", s->sec_class);
-  fprintf(f, "int_designator   %s\n", s->int_designator);
-  fprintf(f, "epoch            %s%lfms\n", ctime(&s->epoch), s->epoch_ms);
-  fprintf(f, "julian_epoch     %22.15lf\n", s->julian_epoch);
-  fprintf(f, "mean_motion_dt2  %+.15e\n", s->mean_motion_dt2);
-  fprintf(f, "mean_motion_ddt6 %+.15e\n", s->mean_motion_ddt6);
-  fprintf(f, "Bstar            %+.15e\n", s->Bstar);
-  fprintf(f, "inclination      %+.15e\n", s->inclination);
-  fprintf(f, "right_asc_node   %+.15e\n", s->right_asc_node);
-  fprintf(f, "eccentricity     %+.15e\n", s->eccentricity);
-  fprintf(f, "argument_perigee %+.15e\n", s->argument_perigee);
-  fprintf(f, "mean_anomaly     %+.15e\n", s->mean_anomaly);
-  fprintf(f, "mean_motion      %+.15e\n", s->mean_motion);
-  fprintf(f, "norad_number     %d\n", s->norad_number);
-  fprintf(f, "orbit_number     %d\n", s->orbit_number);
-  fprintf(f, "-------------------------- Flags ----------------------------\n");
-  fprintf(f, "is_deep_space    %d\n", s->is_deep_space);
-  fprintf(f, "use_simple_model %d\n", s->use_simple_model);
-  fprintf(f, "is_24h_resonant  %d\n", s->is_24h_resonant);
-  fprintf(f, "is_12h_resonant  %d\n", s->is_12h_resonant);
-  fprintf(f, "---------------- Standard orbital elements ------------------\n");
-  fprintf(f, "GSTo             %+.15e\n", s->GSTo);
-  fprintf(f, "xnodp            %+.15e\n", s->xnodp);
-  fprintf(f, "aodp             %+.15e\n", s->aodp);
-  fprintf(f, "perigee          %+.15e\n", s->perigee);
-  fprintf(f, "perigee_alt      %+.15e\n", s->perigee_alt);
-  fprintf(f, "period           %+.15e\n", s->period);
-  fprintf(f, "---------------------- Common constants ---------------------\n");
-  fprintf(f, "aycof            %+.15e\n", s->aycof);
-  fprintf(f, "C1               %+.15e\n", s->C1);
-  fprintf(f, "C4               %+.15e\n", s->C4);
-  fprintf(f, "eta              %+.15e\n", s->eta);
-  fprintf(f, "omgdot           %+.15e\n", s->omgdot);
-  fprintf(f, "t2cof            %+.15e\n", s->t2cof);
-  fprintf(f, "x1mth2           %+.15e\n", s->x1mth2);
-  fprintf(f, "x1m5th2          %+.15e\n", s->x1m5th2);
-  fprintf(f, "x1m7th2          %+.15e\n", s->con41);
-  fprintf(f, "x7thm1           %+.15e\n", s->x7thm1);
-  fprintf(f, "xlcof            %+.15e\n", s->xlcof);
-  fprintf(f, "xnodcf           %+.15e\n", s->xnodcf);
-  fprintf(f, "xnodot           %+.15e\n", s->xnodot);
-  fprintf(f, "xmdot            %+.15e\n", s->xmdot);
-  fclose(f);
-}
-
-
 // ************************************************************************* //
 //                                    API                                    //
 // ************************************************************************* //
@@ -152,47 +105,61 @@ void sat_print(sat* s, char* caption)
  * Calls: orbit_init
  */
 int
-sat_load_tle(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
+sat_load_tle
+(
+  const char* tlestr0,
+  const char* tlestr1,
+  const char* tlestr2,
+  sat* s
+)
 {
+  char str0[130];
+  char str1[130];
+  char str2[130];
+
+  strcpy(str0, tlestr0);
+  strcpy(str1, tlestr1);
+  strcpy(str2, tlestr2);
+
   // Pre-formatting the raw TLE input
   for (char j = 10; j <= 15; j++)
-    if (tlestr1[j] == ' ')
-      tlestr1[j] = '_';
+    if (str1[j] == ' ')
+      str1[j] = '_';
 
-  if (tlestr1[44] != ' ')
-    tlestr1[43] = tlestr1[44];
+  if (str1[44] != ' ')
+    str1[43] = str1[44];
 
-  tlestr1[44] = '.';
-  if (tlestr1[7] == ' ')
-    tlestr1[7] = 'U';
+  str1[44] = '.';
+  if (str1[7] == ' ')
+    str1[7] = 'U';
 
-  if (tlestr1[9] == ' ')
-    tlestr1[9] = '.';
+  if (str1[9] == ' ')
+    str1[9] = '.';
 
   for (char j = 45; j <= 49; j++)
-    if (tlestr1[j] == ' ')
-      tlestr1[j] = '0';
+    if (str1[j] == ' ')
+      str1[j] = '0';
 
-  if (tlestr1[51] == ' ')
-    tlestr1[51] = '0';
+  if (str1[51] == ' ')
+    str1[51] = '0';
 
-  if (tlestr1[53] != ' ')
-    tlestr1[52] = tlestr1[53];
+  if (str1[53] != ' ')
+    str1[52] = str1[53];
 
-  tlestr1[53] = '.';
-  tlestr2[25] = '.';
+  str1[53] = '.';
+  str2[25] = '.';
 
   for (char j = 26; j <= 32; j++)
-    if (tlestr2[j] == ' ')
-      tlestr2[j] = '0';
+    if (str2[j] == ' ')
+      str2[j] = '0';
 
-  if (tlestr1[62] == ' ')
-    tlestr1[62] = '0';
+  if (str1[62] == ' ')
+    str1[62] = '0';
 
-  if (tlestr1[68] == ' ')
-    tlestr1[68] = '0';
+  if (str1[68] == ' ')
+    str1[68] = '0';
 
-  str_trim(tlestr0, 24, s->name);
+  str_trim(str0, 24, s->name);
 
   struct tm epoch_tm, prop_tm;
 
@@ -201,7 +168,7 @@ sat_load_tle(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
   int cardnum, epochyr, nexp, Bexp, checksum, ephem_type, elset_number;
   double nddot, Bstar, epochdays;
 
-  int retval = sscanf(tlestr1,"%2d %5u %1c %8s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6d ",
+  int retval = sscanf(str1,"%2d %5u %1c %8s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6d ",
          &cardnum, &s->norad_number, &s->sec_class, s->int_designator, &epochyr,
          &epochdays,&s->mean_motion_dt2, &nddot, &nexp, &Bstar,
          &Bexp, &ephem_type, &elset_number);
@@ -211,12 +178,12 @@ sat_load_tle(char* tlestr0, char* tlestr1, char* tlestr2, sat* s)
     return -1;
   }
 
-  if (tlestr2[52] == ' ') // check for minus sign
-    retval = sscanf(tlestr2,"%2d %5u %9lf %9lf %8lf %9lf %9lf %10lf %6d \n",
+  if (str2[52] == ' ') // check for minus sign
+    retval = sscanf(str2,"%2d %5u %9lf %9lf %8lf %9lf %9lf %10lf %6d \n",
            &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node, &s->eccentricity, &s->argument_perigee,
            &s->mean_anomaly, &s->mean_motion, &s->orbit_number);
   else
-    retval = sscanf(tlestr2,"%2d %5u %9lf %9lf %8lf %9lf %9lf %11lf %6d \n",
+    retval = sscanf(str2,"%2d %5u %9lf %9lf %8lf %9lf %9lf %11lf %6d \n",
            &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node, &s->eccentricity, &s->argument_perigee,
            &s->mean_anomaly, &s->mean_motion, &s->orbit_number);
 
@@ -1592,4 +1559,53 @@ sat_propagate
   }
 
   return 0;
+}
+
+int
+sat_observe
+(
+        sat*    s,
+  const time_t* time,
+        double  time_ms,
+  const vec3*   obs_lla,
+        obs*    response
+)
+{
+  if ((s        == NULL) ||
+      (time     == NULL) ||
+      (time_ms  >= 1000) ||
+      (obs_lla  == NULL) ||
+      (response == NULL))
+  {
+    return -1;
+  }
+
+  double tdelta = difftime(*time + time_ms / 1000,
+                           s->epoch + s->epoch_ms / 1000) / 60;
+
+  vec3 p, v;
+
+  int retval = sat_propagate(s, 0, 10, 1.0e-12, &p, &v);
+
+  // Switching to ECEF system
+  vec3 pecef, vecef, obsecef;
+
+  teme2ecef(&p, &v, s->julian_epoch, &pecef, &vecef);
+  latlonalt2ecef(obs_lla, &obsecef);
+
+  vec3 sat_lla;
+
+  ecef2latlonalt(&pecef, s->julian_epoch, 10, 1.0e-12, &sat_lla);
+
+  strcpy(response->name, s->name);
+  response->latlonalt = sat_lla;
+  //response->velocity;
+  //response->azimuth;
+  //response->elevation;
+  //response->az_rate;
+  //response->el_rate;
+  response->range = ecef2range(&obsecef, &pecef);
+  //response->rng_rate;
+  //response->is_illum = 0;
+  return retval;
 }

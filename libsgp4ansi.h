@@ -16,6 +16,8 @@
 #include <stdint.h>
 #include <time.h>
 
+#include "const.h"
+
 // ************************************************************************* //
 //                                VERSION                                    //
 // ************************************************************************* //
@@ -100,6 +102,22 @@ typedef struct _sat
   double xli, xni, atime;
 } sat;
 
+/*
+ * Satellite observational data at given time from a given location
+ */
+typedef struct _obs
+{
+  char   name[25];  // Satellite name, 24 chars + \0
+  vec3   latlonalt; // Satellite projected geodetic coordinates
+  double velocity;  // Ground velocity
+  double azimuth;   // Azimuth from north
+  double elevation; // Elevation over horizon
+  double az_rate;   // Instantaneous azimuth rate
+  double el_rate;   // Instantaneous elevation rate
+  double range;     // Direct range, km
+  double rng_rate;  // Range rate, km/s
+  bool   is_illum;  // Is the satellite illuminated by the Sun?
+} obs;
 
 // ************************************************************************* //
 //                                    API                                    //
@@ -107,7 +125,13 @@ typedef struct _sat
 
 // Initialize SGP4/SDP4 orbit model from raw NORAD TLE lines
 extern int
-sat_load_tle(char*, char*, char*, sat*);
+sat_load_tle
+(
+  const char* tlestr0,
+  const char* tlestr1,
+  const char* tlestr2,
+  sat* s
+);
 
 // Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
 extern int
@@ -116,6 +140,16 @@ sat_init(sat*);
 // Get position and velocity vectors in the TEME frame at given time since epoch
 extern int
 sat_propagate(sat*, double, unsigned int, double, vec3*, vec3*);
+
+extern int
+sat_observe
+(
+        sat*    s,
+  const time_t* time,
+        double  time_ms,
+  const vec3*   obs_lla,
+        obs*    response
+);
 
 // Get classical orbital elements from TEME vectors
 extern int

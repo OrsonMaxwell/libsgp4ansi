@@ -17,12 +17,12 @@ double
 kepler_newton(double, double);
 
 // Get classical orbital elements from TEME vectors
-//int
-//teme2coe
-//(
-//  vec3*, vec3*, double*, double*, double*, double*, double*, double*, double*,
-//  double*, double*, double*, double*
-//);
+extern int
+teme2coe
+(
+  vec3*, vec3*, double*, double*, double*, double*, double*, double*, double*,
+  double*, double*, double*, double*
+);
 
 // Transform position and velocity vectors from TEME to ECEF frame of reference
 void
@@ -34,7 +34,11 @@ ecef2latlonalt(vec3*, double, unsigned int, double, vec3*);
 
 // Transform geodetic latitude, longitude, and altitude to ECEF position vector
 void
-latlonalt2ecef(vec3*, vec3*);
+latlonalt2ecef
+(
+    const vec3* latlonalt,
+          vec3* posecef
+);
 
 // Calculate range between observer and satellite from their ECEF vectors
 double
