@@ -11,6 +11,7 @@
 
 #include <math.h>
 #include <string.h> // TODO: get rid of this
+#include <stdio.h> // TODO: get rid of this
 
 #include "libsgp4ansi.h"
 #include "const.h"
@@ -26,7 +27,11 @@
  * Returns: mean anomaly
  */
 double
-kepler_newton(double ecc, double nu)
+kepler_newton
+(
+  const double ecc,
+  const double nu
+)
 {
   double m = INFINITY;
   double small = 1.0e-8;
@@ -74,11 +79,11 @@ kepler_newton(double ecc, double nu)
 
   if (ecc < 1)
   {
-    m = fmod(m, TWOPI);
+    m = fmod(m, TAU);
 
     if (m < 0)
     {
-      m += TWOPI;
+      m += TAU;
     }
   }
 
@@ -201,7 +206,7 @@ teme2coe
     *omega = acos(temp);
     if (nbar.y < 0)
     {
-      *omega = TWOPI - *omega;
+      *omega = TAU - *omega;
     }
   }
   else
@@ -213,7 +218,7 @@ teme2coe
     *argp = vec3_angle(&nbar, &ebar);
     if (ebar.z < 0)
     {
-      *argp= TWOPI - *argp;
+      *argp= TAU - *argp;
     }
   }
   else
@@ -225,7 +230,7 @@ teme2coe
     *nu = vec3_angle(&ebar, posteme);
     if ( rdotv < 0)
     {
-      *nu= TWOPI - *nu;
+      *nu= TAU - *nu;
     }
   }
   else
@@ -237,7 +242,7 @@ teme2coe
     *arglat = vec3_angle(&nbar, posteme);
     if (posteme->z < 0)
     {
-      *arglat = TWOPI - *arglat;
+      *arglat = TAU - *arglat;
     }
     *m = *arglat;
   }
@@ -258,11 +263,11 @@ teme2coe
 
     if (ebar.y < 0)
     {
-      *lonper = TWOPI - *lonper;
+      *lonper = TAU - *lonper;
     }
     if (*incl > PIDIV2)
     {
-      *lonper = TWOPI - *lonper;
+      *lonper = TAU - *lonper;
     }
   }
   else
@@ -282,11 +287,11 @@ teme2coe
 
     if (posteme->y < 0)
     {
-      *truelon = TWOPI - *truelon;
+      *truelon = TAU - *truelon;
     }
     if (*incl > PIDIV2)
     {
-      *truelon = TWOPI - *truelon;
+      *truelon = TAU - *truelon;
     }
     *m = *truelon;
   }
@@ -308,18 +313,18 @@ teme2coe
  * Inputs:  posteme - Position vector in TEME frame, km
  *          velteme - Velocity vector in TEME frame, km/s
  *          julian  - Julian time of interest
- * Outputs: posteme - Position vector in ECEF frame, km
- *          velteme - Velocity vector in ECEF frame, km/s
+ * Outputs: posecef - Position vector in ECEF frame, km
+ *          velecef - Velocity vector in ECEF frame, km/s
  * Returns: None
  */
 void
 teme2ecef
 (
-    vec3* posteme,
-    vec3* velteme,
-    double julian,
-    vec3* posecef,
-    vec3* velecef
+  const vec3*  posteme,
+  const vec3*  velteme,
+        double julian,
+        vec3*  posecef,
+        vec3*  velecef
 )
 {
   // Greenwich Siderial Time, rad
@@ -328,9 +333,9 @@ teme2ecef
   // Pef - tod matrix
   double pef_tod[3][3] =
   {
-    {cos(GST), -sin(GST),  0.0},
-    {sin(GST),  cos(GST),  0.0},
-    {0.0,       0.0,       1.0}
+    {cos(GST), -sin(GST),  0},
+    {sin(GST),  cos(GST),  0},
+    {0,         0,         1}
   };
 
   // Pseudo Earth fixed position vector
@@ -357,7 +362,7 @@ teme2ecef
 
   double pm[3][3] =
   {
-    {cos(xp),             0.0,      -sin(xp)},
+    {cos(xp),             0,        -sin(xp)},
     {sin(xp) * sin(yp),   cos(yp),   cos(xp) * sin(yp)},
     {sin(xp) * cos(yp),  -sin(yp),   cos(xp) * cos(yp)}
   };
@@ -371,7 +376,7 @@ teme2ecef
   // Earth angular rotation vector
   omegaearth[0] = 0.0;
   omegaearth[1] = 0.0;
-  omegaearth[2] = 7.29211514670698e-05 * (1.0  - 0.002 / 86400.0);
+  omegaearth[2] = OMEGAE * (1  - 0.002 / 86400.0);
 
   // Pseudo Earth Fixed velocity vector
   double vpef[3];
@@ -395,27 +400,19 @@ teme2ecef
  * Transform ECEF position to geodetic latitude, longitude, and altitude
  *
  * Inputs:  posecef   - Position vector in TEME frame, km
- *          velteme   - Velocity vector in TEME frame, km/s
- *          julian    - Julian time of interest
- *          maxiter   - Maximum iteration count for geodetic latitude
- *          tolerance - Desired precision threshold for geodetic latitude
  * Outputs: latlonalt - Position vector in ECEF frame, rad
  * Returns: None
  */
 void
 ecef2latlonalt
 (
-    vec3* posecef,
-    double julian,
-    unsigned int maxiter,
-    double tolerance,
-    vec3* latlonalt
+  const vec3* posecef,
+        vec3* latlonalt
 )
 {
-  if ((tolerance >= 10.0) || (tolerance < 0.0))
-  {
-    tolerance = 1.0e-6; // Default tolerance
-  }
+
+  unsigned int maxiter = 4;
+  double tolerance     = 1.0e-12;
 
   // Longitude
   double ijsq = sqrt(posecef->i * posecef->i + posecef->j * posecef->j);
@@ -426,7 +423,7 @@ ecef2latlonalt
   }
   else
   {
-    latlonalt->lon = atan2( posecef->j, posecef->i );
+    latlonalt->lon = atan2(posecef->j, posecef->i);
   }
 
   // Wrap around
@@ -434,11 +431,11 @@ ecef2latlonalt
   {
     if (latlonalt->lon < 0.0)
     {
-      latlonalt->lon += TWOPI;
+      latlonalt->lon += TAU;
     }
     else
     {
-      latlonalt->lon -= TWOPI;
+      latlonalt->lon -= TAU;
     }
   }
 
@@ -447,17 +444,16 @@ ecef2latlonalt
   latlonalt->lat = asin(posecef->k / posmag);
 
   // Converge latitude to the goid over 10 iterations or less
-  const double eesqrd = 0.006694385000; // Earth eccentricity squared
   double c, latsine;
   int i = 1;
-  double delta = latlonalt->lat + 10.0;
+  double delta = latlonalt->lat + 10;
 
   while ((fabs(delta - latlonalt->lat) >= tolerance) && (i < maxiter))
   {
     delta   = latlonalt->lat;
     latsine = sin(latlonalt->lat);
-    c       = RE / (sqrt(1.0 - eesqrd * latsine * latsine));
-    latlonalt->lat = atan((posecef->k + c * eesqrd * latsine) / ijsq);
+    c       = RE / (sqrt(1 - ECC * ECC * latsine * latsine));
+    latlonalt->lat = atan((posecef->k + c * ECC * ECC * latsine) / ijsq);
     i++;
   }
 
@@ -468,7 +464,7 @@ ecef2latlonalt
   }
   else
   {
-    latlonalt->alt = posecef->k / sin(latlonalt->lat) - c * (1.0 - eesqrd);
+    latlonalt->alt = posecef->k / sin(latlonalt->lat) - c * (1 - ECC * ECC);
   }
 }
 
@@ -501,126 +497,20 @@ latlonalt2ecef
   posecef->k = rsurf * sin(gclat) + latlonalt->alt * sin (latlonalt->lat);
 }
 
-/*------------------------------------------------------------------------------
-*
-*                           procedure rv_tradec
-*
-*  this procedure converts topocentric right-ascension declination with
-*    position and velocity vectors. uses velocity vector to find the
-*    solution of singular cases.
-*
-*  author        : david vallado                  719-573-2600   22 jun 2002
-*
-*  inputs          description                    range / units
-*    rijk        - ijk position vector            er
-*    vijk        - ijk velocity vector            er/tu
-*    rsijk       - ijk site position vector       er
-*    direct      -  direction to convert          eFrom  eTo
-*
-*  outputs       :
-*    rho         - top radius of the sat          er
-*    trtasc      - top right ascension            rad
-*    tdecl       - top declination                rad
-*    drho        - top radius of the sat rate     er/tu
-*    tdrtasc     - top right ascension rate       rad/tu
-*    tddecl      - top declination rate           rad/tu
-*
-*  locals        :
-*    rhov        - ijk range vector from site     er
-*    drhov       - ijk velocity vector from site  er / tu
-*    temp        - temporary extended value
-*    temp1       - temporary extended value
-*    i           - index
-*
-*  coupling      :
-*    astMath::mag         - astMath::magnitude of a vector
-*    atan2       - arc tangent function that resolves the quadrant ambiguities
-*    arcsin      - arc sine function
-*    lncom2      - linear combination of 2 vectors
-*    addvec      - add two vectors
-*    dot         - dot product of two vectors
-*
-*  references    :
-*    vallado       2013, 260, alg 26
------------------------------------------------------------------------------*/
-
-void rv_tradec
-(
-vec3* rijk, vec3* vijk, vec3* rsijk,
-int direct,
-double* rho, double* trtasc, double* tdecl,
-double* drho, double* dtrtasc, double* dtdecl
-)
-{
-  const double small = 0.00000001;
-  const double omegaearth = 0.05883359221938136;  // earth rot rad/tu
-
-  vec3 earthrate, rhov, drhov, vsijk;
-  double   latgc, temp, temp1;
-
-  latgc = asin(rsijk->k / vec3_mag(rsijk));
-  earthrate.x = 0.0;
-  earthrate.y = 0.0;
-  earthrate.z = omegaearth;
-  vec3_cross(&earthrate, rsijk, &vsijk);
-
-/*  if (direct == 1) //from
-  {
-    // --------  calculate topocentric vectors ------------------
-    rhov.x = (*rho * cos(*tdecl) * cos(*trtasc));
-    rhov.y = (*rho * cos(*tdecl) * sin(*trtasc));
-    rhov.z = (*rho * sin(*tdecl));
-
-    drhov.x = (*drho * cos(*tdecl) * cos(*trtasc) -
-      *rho * sin(*tdecl) * cos(*trtasc) * *dtdecl -
-      *rho * cos(*tdecl) * sin(*trtasc) * *dtrtasc);
-    drhov.y = (*drho * cos(*tdecl) * sin(*trtasc) -
-      *rho * sin(*tdecl) * sin(*trtasc) * *dtdecl +
-      *rho * cos(*tdecl) * cos(*trtasc) * *dtrtasc);
-    drhov.z = (*drho * sin(*tdecl) + *rho * cos(*tdecl) * *dtdecl);
-
-    // ------ find ijk range vector from site to satellite ------
-    addvect(1.0, &rhov, 1.0, rsijk, rijk);
-    addvect(1.0, &drhov, cos(latgc), &vsijk, vijk);
-  }
-  else //to
-  {*/
-    /* ------ find ijk range vector from site to satellite ------ */
-    vec3_add(1.0, rijk, -1.0, rsijk, &rhov);
-    vec3_add(1.0, vijk, -cos(latgc), &vsijk, &drhov);
-
-    /* -------- calculate topocentric angle and rate values ----- */
-    *rho = vec3_mag(&rhov);
-    temp = sqrt(rhov.x * rhov.x + rhov.y * rhov.y);
-    if (temp < small)
-    {
-      temp1 = sqrt(drhov.x * drhov.x + drhov.y * drhov.y);
-      *trtasc = atan2(drhov.y / temp1, drhov.x / temp1);
-    }
-    else
-      *trtasc = atan2(rhov.y / temp, rhov.x / temp);
-
-    *tdecl = asin(rhov.z / vec3_mag(&rhov));
-
-    temp1 = -rhov.y * rhov.y - rhov.x * rhov.x;
-    *drho = vec3_dot(&rhov, &drhov) / *rho;
-    if (fabs(temp1) > small)
-      *dtrtasc = (drhov.x * rhov.y - drhov.y * rhov.x) / temp1;
-    else
-      *dtrtasc = 0.0;
-    if (fabs(temp) > small)
-      *dtdecl = (drhov.z - *drho * sin(*tdecl)) / temp;
-    else
-      *dtdecl = 0.0;
-//  }
-}
-
 double
-ecef2range(vec3* obsposecef, vec3* satposecef)
+ecef2range
+(
+  const vec3* obsposecef,
+  const vec3* satposecef
+)
 {
   // Observer to satellite vector
   vec3 obs2sat;
-  vec3_add(1.0, satposecef, -1.0, obsposecef, &obs2sat);
+  vec3_add(1, obsposecef, -1, satposecef, &obs2sat);
+
+  printf("rx: %lf\n", obs2sat.x);
+  printf("ry: %lf\n", obs2sat.y);
+  printf("rz: %lf\n", obs2sat.z);
 
   return vec3_mag(&obs2sat);
 }

@@ -20,7 +20,7 @@ fractday2unix(unsigned int, double, time_t*, float*);
 
 // Convert unix time to Julian date
 double
-unix2jul(time_t*, float);
+unix2jul(const time_t*, float);
 
 // Convert Julian date to Greenwich Sidereal Time
 double

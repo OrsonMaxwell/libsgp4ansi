@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -40,8 +41,8 @@ main (int argc, char** argv)
       .tm_year  = 117,
       .tm_mon   = 9,
       .tm_mday  = 3,
-      .tm_hour  = 5,
-      .tm_min   = 11,
+      .tm_hour  = 15,
+      .tm_min   = atoi(argv[2]),
       .tm_sec   = 8,
       .tm_isdst = 0
     };

@@ -191,7 +191,10 @@ verif_annot = []
 for sat in list(aiaa_ver_sats.keys()):
   maxdelta = 0
   for time in aiaa_ver_sats[sat][2].keys():
-    delta = max(abs(aiaa_ver_sats[sat][2][time][0] - ansi_ver_sats[sat][2][time][0]), abs(aiaa_ver_sats[sat][2][time][1] - ansi_ver_sats[sat][2][time][1]), abs(aiaa_ver_sats[sat][2][time][2] - ansi_ver_sats[sat][2][time][2]))
+    try:
+      delta = max(abs(aiaa_ver_sats[sat][2][time][0] - ansi_ver_sats[sat][2][time][0]), abs(aiaa_ver_sats[sat][2][time][1] - ansi_ver_sats[sat][2][time][1]), abs(aiaa_ver_sats[sat][2][time][2] - ansi_ver_sats[sat][2][time][2]))
+    except:
+      delta = 0
     if delta > maxdelta:
       maxdelta = delta
   verif_points[sat] = maxdelta * 1000 # Convert to meters

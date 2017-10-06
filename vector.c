@@ -22,7 +22,10 @@
  * Returns: vector arg magnitude
  */
 double
-vec3_mag(vec3* arg)
+vec3_mag
+(
+  const vec3* arg
+)
 {
   return sqrt(arg->x * arg->x + arg->y * arg->y + arg->z * arg->z);
 }
@@ -35,7 +38,11 @@ vec3_mag(vec3* arg)
  * Returns: None
  */
 void
-vec3_copy(vec3* from, vec3* to)
+vec3_copy
+(
+  const vec3* from,
+        vec3* to
+)
 {
   to->x = from->x;
   to->y = from->y;
@@ -53,7 +60,14 @@ vec3_copy(vec3* from, vec3* to)
  * Returns: None
  */
 void
-vec3_add(double c1, vec3* vect1, double c2, vec3* vect2, vec3* result)
+vec3_add
+(
+        double c1,
+  const vec3*  vect1,
+        double c2,
+  const vec3*  vect2,
+        vec3*  result
+)
 {
   result->x = c1 * vect1->x + c2 * vect2->x;
   result->y = c1 * vect1->y + c2 * vect2->y;
@@ -69,7 +83,11 @@ vec3_add(double c1, vec3* vect1, double c2, vec3* vect2, vec3* result)
  * Returns: dot product
  */
 double
-vec3_dot(vec3* vect1, vec3* vect2)
+vec3_dot
+(
+  const vec3* vect1,
+  const vec3* vect2
+)
 {
   return vect1->x * vect2->x + vect1->y * vect2->y + vect1->z * vect2->z;
 }
@@ -85,7 +103,9 @@ vec3_dot(vec3* vect1, vec3* vect2)
 void
 vec3_cross
 (
-    vec3* vect1, vec3* vect2, vec3* result
+  const vec3* vect1,
+  const vec3* vect2,
+        vec3* result
 )
 {
   result->x= vect1->y * vect2->z - vect1->z * vect2->y;
@@ -103,7 +123,8 @@ vec3_cross
 double
 vec3_angle
 (
-    vec3* vect1, vec3* vect2
+  const vec3* vect1,
+  const vec3* vect2
 )
 {
   double magv1 = vec3_mag(vect1);
@@ -116,9 +137,9 @@ vec3_angle
 
   double temp = vec3_dot(vect1, vect2) / (magv1 * magv2);
 
-  if (fabs(temp) > 1) // TODO: WTF?
+  if (fabs(temp) > 1)
   {
-    temp = (temp >= 0)?(1.0):(-1.0) * 1;
+    temp = (temp >= 0)?(1):(-1) * 1;
   }
 
   return acos(temp);

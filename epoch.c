@@ -92,7 +92,7 @@ fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
  * Returns: Julian date on success
  */
 double
-unix2jul(time_t* time, float ms)
+unix2jul(const time_t* time, float ms)
 {
   struct tm* t;
   t = gmtime(time);
@@ -119,11 +119,11 @@ jul2gst(double julian)
   result = -6.2e-6* tempUT1 * tempUT1 * tempUT1 + 0.093104 * tempUT1 * tempUT1 +
       (876600.0*3600 + 8640184.812866) * tempUT1 + 67310.54841;
 
-  result = fmod(result * DEG2RAD / 240.0, TWOPI);
+  result = fmod(result * DEG2RAD / 240.0, TAU);
 
   // Check quadrants
   if (result < 0.0)
-    result += TWOPI;
+    result += TAU;
 
   return result;
 }

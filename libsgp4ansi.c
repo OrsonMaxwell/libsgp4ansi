@@ -273,7 +273,7 @@ sat_init(sat* s)
   s->aodp        = pow(XKE / s->xnodp, TWOTHIRD);
   s->perigee     = (s->aodp * (1 - s->eccentricity)) * RE; // TODO: Remove?
   s->perigee_alt = s->perigee - RE;
-  s->period      = TWOPI / s->xnodp;
+  s->period      = TAU / s->xnodp;
 
 #ifdef MATH_TRACE
   printf("---------------------------------------- i2\n");
@@ -424,7 +424,7 @@ sat_init(sat* s)
     s->pho    = 0;
 
     double day    = s->julian_epoch + 18261.5 - DEC31_1949_0000H;
-    double xnodce = fmod(4.5236020 - 9.2422029e-4 * day, TWOPI);
+    double xnodce = fmod(4.5236020 - 9.2422029e-4 * day, TAU);
     double stem   = sin(xnodce);
     double ctem   = cos(xnodce);
     double zcosil = 0.91375164 - 0.03568096 * ctem;
@@ -455,7 +455,7 @@ sat_init(sat* s)
     printf("[DS] zsingl %+.15e\n", zsingl);
 #endif
 
-    s->zmos = fmod(6.2565837 + 0.017201977 * day, TWOPI);
+    s->zmos = fmod(6.2565837 + 0.017201977 * day, TAU);
 
     // Do solar terms
     double cosq  = cos(s->right_asc_node);
@@ -556,7 +556,7 @@ sat_init(sat* s)
       }
     }
 
-    s->zmol = fmod(4.7199672 + 0.22997150  * day - gam, TWOPI);
+    s->zmol = fmod(4.7199672 + 0.22997150  * day - gam, TAU);
 
 #ifdef MATH_TRACE
     printf("======================================== id2\n");
@@ -890,7 +890,7 @@ sat_init(sat* s)
             s->d5421 = temp * f542 * g521;
             s->d5433 = temp * f543 * g533;
             s->xlamo = fmod(s->mean_anomaly + 2 * s->right_asc_node
-                     - 2 * s->GSTo, TWOPI);
+                     - 2 * s->GSTo, TAU);
             s->xfact = s->xmdot + s->dmdt
                      + 2 * (s->xnodot + s->dnodt - rptim) - s->xnodp;
       }
@@ -915,13 +915,13 @@ sat_init(sat* s)
         s->xfact = s->xmdot + (s->omgdot + s->xnodot) - rptim + s->dmdt
                  + s->domdt + s->dnodt - s->xnodp;
         s->xlamo = fmod(s->mean_anomaly + s->right_asc_node
-                 + s->argument_perigee - s->GSTo, TWOPI);
+                 + s->argument_perigee - s->GSTo, TAU);
       }
 
       // Initialize the integrator
       s->xli    = s->xlamo;
       s->xni    = s->xnodp;
-      s->atime  = 0.0;
+      s->atime  = 0;
     }
   }
 
@@ -970,10 +970,10 @@ sat_init(sat* s)
   printf("t5cof  %+.15e\n", s->t5cof);
 
   vec3 p, v;
-  return sat_propagate(s, 0.0, 10, 1.0e-12, &p, &v);
+  return sat_propagate(s, 0, 10, 1.0e-12, &p, &v);
 #else
   // Propagate at zero time since epoch
-  return sat_propagate(s, 0.0, 10, 1.0e-12, NULL, NULL);
+  return sat_propagate(s, 0, 10, 1.0e-12, NULL, NULL);
 #endif
 }
 
@@ -1066,13 +1066,13 @@ sat_propagate
     const double g52   = 1.0508330;
     const double g54   = 4.4108898;
     const double rptim = 4.37526908801129966e-3; // TODO: Move to macros?
-    const double stepp =    720.0;
-    const double stepn =   -720.0;
-    const double step2 = 259200.0;
+    const double stepp =    720;
+    const double stepn =   -720;
+    const double step2 = 259200;
 
     // Calculate deep space resonance effects
     s->dndt       = 0;
-    double theta  = fmod(s->GSTo + tdelta * rptim, TWOPI); // TODO: Move to struct?
+    double theta  = fmod(s->GSTo + tdelta * rptim, TAU); // TODO: Move to struct?
 
     // Perturbed quantities
     em += s->dedt * tdelta;
@@ -1087,24 +1087,23 @@ sat_propagate
     if ((s->is_12h_resonant == true) || (s->is_24h_resonant == true))
     {
       if ((s->atime == 0)
-          || (tdelta * s->atime <= 0.0)
+          || (tdelta * s->atime <= 0)
           || (fabs(tdelta) < fabs(s->atime)))
       {
-        s->atime = 0.0;
+        s->atime = 0;
         s->xni   = s->xnodp;
         s->xli   = s->xlamo;
       }
 
-      if (tdelta > 0.0)
+      if (tdelta > 0)
         delt = stepp;
       else
         delt = stepn;
 
-      int iretn = 381; // added for do loop TODO: Alternatives?
-      int iret  =   0; // added for loop
+      bool integrating = true;
       double xndt, xldot, xnddt, xomi, x2omi, x2li;
 
-      while (iretn == 381)
+      while (integrating == true)
       {
         // Synchronous resonance dot terms
         if (s->is_24h_resonant == true)
@@ -1133,25 +1132,20 @@ sat_propagate
           xnddt = s->d2201 * cos(x2omi + s->xli - g22) + s->d2211 * cos(s->xli - g22) +
               s->d3210 * cos(xomi + s->xli - g32) + s->d3222 * cos(-xomi + s->xli - g32) +
               s->d5220 * cos(xomi + s->xli - g52) + s->d5232 * cos(-xomi + s->xli - g52) +
-              2.0 * (s->d4410 * cos(x2omi + x2li - g44) +
+              2 * (s->d4410 * cos(x2omi + x2li - g44) +
                   s->d4422 * cos(x2li - g44) + s->d5421 * cos(xomi + x2li - g54) +
                   s->d5433 * cos(-xomi + x2li - g54));
           xnddt = xnddt * xldot;
         }
 
         // Integrator
-        if (fabs(tdelta - s->atime) >= stepp)
-        {
-          iret  = 0;
-          iretn = 381;
-        }
-        else // exit here
+        if (fabs(tdelta - s->atime) < stepp)
         {
           ft    = tdelta - s->atime;
-          iretn = 0;
+          integrating = false;
         }
 
-        if (iretn == 381)
+        if (integrating == true)
         {
           s->xli   = s->xli + xldot * delt + xndt * step2;
           s->xni   = s->xni + xndt * delt + xnddt * step2;
@@ -1214,10 +1208,10 @@ sat_propagate
   double xlm  = xmp + omega + xnode;
   double em2  = pow(em, 2); // TODO: Unroll?
 
-  xnode  = fmod(xnode, TWOPI);
-  omega  = fmod(omega, TWOPI);
-  xlm    = fmod(xlm, TWOPI);
-  xmp    = fmod(xlm - omega - xnode, TWOPI);
+  xnode  = fmod(xnode, TAU);
+  omega  = fmod(omega, TAU);
+  xlm    = fmod(xlm, TAU);
+  xmp    = fmod(xlm - omega - xnode, TAU);
 
   s->inclination_lp      = inclm;
   s->eccentricity_lp     = em;
@@ -1313,12 +1307,12 @@ sat_propagate
       double dbet   = -ph * sinop + pinc * cosip * cosop;
       alfdp  = alfdp + dalf;
       betdp  = betdp + dbet;
-      s->right_asc_node_lp  = fmod(s->right_asc_node_lp, TWOPI);
+      s->right_asc_node_lp  = fmod(s->right_asc_node_lp, TAU);
 
       // Wrap negative node for atan below
       if (s->right_asc_node_lp < 0)
       {
-        s->right_asc_node_lp += TWOPI;
+        s->right_asc_node_lp += TAU;
       }
 
       double xls    = s->mean_anomaly_lp + s->argument_perigee_lp + cosip * s->right_asc_node_lp;
@@ -1330,18 +1324,18 @@ sat_propagate
       // Wrap negative node for fabs below
       if (s->right_asc_node_lp < 0)
       {
-        s->right_asc_node_lp += TWOPI;
+        s->right_asc_node_lp += TAU;
       }
 
       if (fabs(xnoh - s->right_asc_node_lp) > PI)
       {
         if (s->right_asc_node_lp < xnoh)
         {
-          s->right_asc_node_lp = s->right_asc_node_lp + TWOPI;
+          s->right_asc_node_lp = s->right_asc_node_lp + TAU;
         }
         else
         {
-          s->right_asc_node_lp = s->right_asc_node_lp - TWOPI;
+          s->right_asc_node_lp = s->right_asc_node_lp - TAU;
         }
       }
 
@@ -1399,7 +1393,7 @@ sat_propagate
                  + s->right_asc_node_lp + a1e2inv * s->xlcof * axnl;
 
   // Kepler's equation
-  double  u       = fmod(xl - s->right_asc_node_lp, TWOPI);
+  double  u       = fmod(xl - s->right_asc_node_lp, TAU);
   double  eo1     = u;
   double  kdelta  = 9999.9;
   uint8_t ktr     = 0;
@@ -1582,20 +1576,27 @@ sat_observe
 
   double tdelta = difftime(*time + time_ms / 1000,
                            s->epoch + s->epoch_ms / 1000) / 60;
+  printf("tdelta = %lf\n", tdelta);
 
   vec3 p, v;
 
-  int retval = sat_propagate(s, 0, 10, 1.0e-12, &p, &v);
+  int retval = sat_propagate(s, tdelta, 10, 1.0e-12, &p, &v);
 
   // Switching to ECEF system
   vec3 pecef, vecef, obsecef;
 
-  teme2ecef(&p, &v, s->julian_epoch, &pecef, &vecef);
+  teme2ecef(&p, &v, unix2jul(time, time_ms), &pecef, &vecef);
   latlonalt2ecef(obs_lla, &obsecef);
 
-  vec3 sat_lla;
+  printf("X: %lf\n", pecef.x);
+  printf("Y: %lf\n", pecef.y);
+  printf("Z: %lf\n", pecef.z);
+  printf("x: %lf\n", obsecef.x);
+  printf("y: %lf\n", obsecef.y);
+  printf("z: %lf\n", obsecef.z);
 
-  ecef2latlonalt(&pecef, s->julian_epoch, 10, 1.0e-12, &sat_lla);
+  vec3 sat_lla;
+  ecef2latlonalt(&pecef, &sat_lla);
 
   strcpy(response->name, s->name);
   response->latlonalt = sat_lla;
