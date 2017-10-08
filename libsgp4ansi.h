@@ -179,6 +179,7 @@ sat_init(sat*);
 extern int
 sat_propagate(sat*, double, unsigned int, double, vec3*, vec3*);
 
+// Get observational data about the satellite from ground station
 extern int
 sat_observe
 (

@@ -1602,6 +1602,21 @@ sat_propagate
   return 0;
 }
 
+/*
+ * Get observational data about the satellite from ground station
+ *
+ * Inputs:  s         - sat struct pointer with initialized orbital data
+ *          time      - Unix timestamp of observation
+ *          time_ms   - Milllisecond portion of the above
+ *          obs_geo   - Geodetic coordinates of the ground station
+ * Outputs: result    - Observational data
+ * Returns: 0         - Success
+ *         -1         - Invalid inputs or parametres
+ *         -2         - Negative mean motion
+ *         -3         - Eccentricity out of range (e >= 1; e < -1.0e-12)
+ *         -4         - Short period preliminary quantities error
+ *         -5         - Decayed satellite
+ */
 int
 sat_observe
 (
@@ -1655,14 +1670,6 @@ sat_observe
   result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->range;
   result->azimuth   = ecef2az(&obsposecef, &posdiffecef);
   result->elevation = ecef2el(&obsposecef, &posdiffecef);
-/*
-  vec3 sp = solar_position(unix2jul(time, time_ms));
-  vec3 spd = vec3_add(1, &posecef, -1, &obsposecef);
-  printf("--> %lf\n", sp.x);
-  printf("--> %lf\n", sp.y);
-  printf("--> %lf\n", sp.z);
-  printf("--> %lf\n", ecef2az(&obsposecef, &spd));
-  printf("--> %lf\n", ecef2el(&obsposecef, &spd));
-*/
+
   return retval;
 }
