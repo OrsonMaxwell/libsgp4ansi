@@ -86,10 +86,11 @@
 #define K2        (J2 / 2)
 #define S         (78 / RE) + 1
 #define A3OVK2    (-J3 / K2)
-
-#define RPTIM     (OMEGAE * 60)          // Earth angular velocity, rad/min
 #define VKMPS     (RE * XKE / 60)        // Earth surface velocity, km/s
 #define J3DIVJ2   (J3 / J2)
+#define RPTIM     4.37526908801129966e-3 // Earth angular velocity, rad/min
 #define RPSID     1.00273790934          // Earth rotations per sidereal day
+#define ZNS       1.19459e-5
+#define ZNL       1.5835218e-4
 
 #endif /* CONST_H_ */

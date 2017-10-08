@@ -10,8 +10,6 @@
  */
 
 #include <math.h>
-#include <string.h> // TODO: get rid of this
-#include <stdio.h> // TODO: get rid of this
 
 #include "libsgp4ansi.h"
 #include "const.h"
@@ -190,7 +188,7 @@ teme2coe
   {
     double temp = nbar.x / magn;
 
-    if (fabs(temp) > 1) // TODO: WTF?
+    if (fabs(temp) > 1)
     {
       temp = (temp >= 0)?(1.0):(-1.0);
     }

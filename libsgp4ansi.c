@@ -163,8 +163,6 @@ sat_load_tle
 
   struct tm epoch_tm, prop_tm;
 
-  // TODO: Do real checks
-
   int cardnum, epochyr, nexp, Bexp, checksum, ephem_type, elset_number;
   double nddot, Bstar, epochdays;
 
@@ -269,10 +267,8 @@ sat_init(sat* s)
                  * pow(delta1 / pow(aa, 2), 2) / 81.0));
   double delta0  = delta1 / pow(a0, 2);
   s->xnodp       = s->mean_motion / (1 + delta0);
-  //s->aodp        = a0 / (1 - delta0);
   s->aodp        = pow(XKE / s->xnodp, TWOTHIRD);
-  s->perigee     = (s->aodp * (1 - s->eccentricity)) * RE; // TODO: Remove?
-  s->perigee_alt = s->perigee - RE;
+  s->perigee_alt = (s->aodp * (1 - s->eccentricity)) * RE - RE;
   s->period      = TAU / s->xnodp;
 
 #ifdef MATH_TRACE
@@ -359,7 +355,7 @@ sat_init(sat* s)
       s->xnodot  = xhdot1 + (0.5 * temp2 * (4 - 19 * theta2)
                  + 2 * temp3 * (3 - 7 * theta2)) * cosio;
       s->xnodcf  = 3.5 * betao2 * xhdot1 * s->C1;
-      s->t2cof   = 1.5 * s->C1; // TODO: Remove?
+      s->t2cof   = 1.5 * s->C1;
   // Division by zero check then inclination = 180 deg
       s->xlcof   = 0.125 * A3OVK2 * sinio * (3.0 + 5.0 * cosio)
                  / ((fabs(cosio+1.0) > 1.5e-12) ? ((1.0 + cosio)) : (1.5e-12));
@@ -400,7 +396,7 @@ sat_init(sat* s)
     s->GSTo  = jul2gst(s->julian_epoch);
 
     // Constants
-    const double zes    =  0.01675; // TODO: Move to macros?
+    const double zes    =  0.01675;
     const double zel    =  0.05490;
     const double c1ss   =  2.9864797e-6;
     const double c1l    =  4.7968065e-7;
@@ -409,8 +405,6 @@ sat_init(sat* s)
     const double zcosgs =  0.1945905;
     const double zsings = -0.98088458;
 
-    double snodm  = sin(s->right_asc_node); // TODO: duplicates?
-    double cnodm  = cos(s->right_asc_node);
     double sinomm = sin(s->argument_perigee);
     double cosomm = cos(s->argument_perigee);
     double sinim  = sin(s->inclination);
@@ -464,8 +458,8 @@ sat_init(sat* s)
     double zsing = zsings;
     double zcosi = zcosis;
     double zsini = zsinis;
-    double zcosh = cosq; // TODO: Move down?
-    double zsinh = sinq; // TODO: Move down?
+    double zcosh = cosq;
+    double zsinh = sinq;
     double cc    = c1ss;
     double xnoi  = 1.0 / s->xnodp;
 
@@ -550,8 +544,8 @@ sat_init(sat* s)
         zsing = zsingl;
         zcosi = zcosil;
         zsini = zsinil;
-        zcosh = zcoshl * cnodm + zsinhl * snodm;
-        zsinh = snodm * zcoshl - cnodm * zsinhl;
+        zcosh = zcoshl * cosq + zsinhl * sinq;
+        zsinh = sinq * zcoshl - cosq * zsinhl;
         cc    = c1l;
       }
     }
@@ -681,22 +675,19 @@ sat_init(sat* s)
     printf("[DS] GSTo %+.15e\n", s->GSTo);
 #endif
 
-    const double q22    = 1.7891679e-6;  // TODO: Move to macros?
+    const double q22    = 1.7891679e-6;
     const double q31    = 2.1460748e-6;
     const double q33    = 2.2123015e-7;
     const double root22 = 1.7891679e-6;
     const double root44 = 7.3636953e-9;
     const double root54 = 2.1765803e-9;
-    const double rptim  = 4.37526908801129966e-3; // this equates to 7.29211514668855e-5 rad/sec
     const double root32 = 3.7393792e-7;
     const double root52 = 1.1428639e-7;
-    const double znl    = 1.5835218e-4;
-    const double zns    = 1.19459e-5;
 
     // Deep space resonance initialization
     s->is_12h_resonant = false;
     s->is_24h_resonant = false;
-    // TODO: Check for period instead for readability?
+
     if ((s->mean_motion < 0.0052359877) && (s->mean_motion > 0.0034906585))
     {
       s->is_24h_resonant = true; // 24h resonance
@@ -709,11 +700,11 @@ sat_init(sat* s)
     }
 
     // Do solar terms
-    double ses  =  ss1 * zns * ss5;
-    double sis  =  ss2 * zns * (sz11 + sz13);
-    double sls  = -zns * ss3 * (sz1 + sz3 - 14 - 6 * eo2);
-    double sghs =  ss4 * zns * (sz31 + sz33 - 6);
-    double shs  = -zns * ss2 * (sz21 + sz23);
+    double ses  =  ss1 * ZNS * ss5;
+    double sis  =  ss2 * ZNS * (sz11 + sz13);
+    double sls  = -ZNS * ss3 * (sz1 + sz3 - 14 - 6 * eo2);
+    double sghs =  ss4 * ZNS * (sz31 + sz33 - 6);
+    double shs  = -ZNS * ss2 * (sz21 + sz23);
 
     // Fix for 180 deg inclination
     if ((s->inclination < 5.2359877e-2)
@@ -730,12 +721,12 @@ sat_init(sat* s)
     double sgs  = sghs - cosim * shs;
 
     // Do lunar terms
-    s->dedt = ses + s1 * znl * s5;
-    s->didt = sis + s2 * znl * (z11 + z13);
-    s->dmdt = sls - znl * s3 * (z1 + z3 - 14.0 - 6.0 * eo2);
+    s->dedt = ses + s1 * ZNL * s5;
+    s->didt = sis + s2 * ZNL * (z11 + z13);
+    s->dmdt = sls - ZNL * s3 * (z1 + z3 - 14.0 - 6.0 * eo2);
 
-    double sghl = s4 * znl * (z31 + z33 - 6.0);
-    double shll = -znl * s2 * (z21 + z23);
+    double sghl = s4 * ZNL * (z31 + z33 - 6.0);
+    double shll = -ZNL * s2 * (z21 + z23);
 
     // sgp4fix for 180 deg incl
     if ((s->inclination < 5.2359877e-2)
@@ -780,6 +771,9 @@ sat_init(sat* s)
     printf("[DS] 24h res %d\n", (int)s->is_24h_resonant);
 #endif
 
+    double sini2  =  sinim * sinim;
+    double cosisq =  cosim * cosim;
+
     // Initialize the resonance terms
     if ((s->is_12h_resonant == true)
         || (s->is_24h_resonant == true))
@@ -787,7 +781,7 @@ sat_init(sat* s)
       // Geopotential resonance for 12 hour orbits
       if (s->is_12h_resonant == true)
       {
-        double eocu   = pow(s->eccentricity, 3); // TODO: Unroll?
+        double eocu   = s->eccentricity * s->eccentricity * s->eccentricity;
         double g201   = -0.306 - (s->eccentricity - 0.64) * 0.440;
 
         // 12h Resonant polynomials
@@ -850,9 +844,6 @@ sat_init(sat* s)
                - 242699.48  * eo2 + 115605.82 * eocu;
         }
 
-        double sini2  =  sinim * sinim; // TODO: Copy of a copy of a copy?
-        double cosisq =  cosim * cosim; // TODO: Copy of a copy of a copy?
-
         double f220, f221, f321, f322, f441, f442, f522, f523, f542, f543;
 
         f220 =  0.75 * (1.0 + 2.0 * cosim+cosisq);
@@ -874,7 +865,7 @@ sat_init(sat* s)
         double temp  = temp1 * root22;
             s->d2201 = temp * f220 * g201;
             s->d2211 = temp * f221 * g211;
-               temp1 = temp1 * aonv; // TODO: Rename/Remove?
+               temp1 = temp1 * aonv;
                temp  = temp1 * root32;
             s->d3210 = temp * f321 * g310;
             s->d3222 = temp * f322 * g322;
@@ -892,7 +883,7 @@ sat_init(sat* s)
             s->xlamo = fmod(s->mean_anomaly + 2 * s->right_asc_node
                      - 2 * s->GSTo, TAU);
             s->xfact = s->xmdot + s->dmdt
-                     + 2 * (s->xnodot + s->dnodt - rptim) - s->xnodp;
+                     + 2 * (s->xnodot + s->dnodt - RPTIM) - s->xnodp;
       }
 
       // Synchronous resonance terms
@@ -905,14 +896,14 @@ sat_init(sat* s)
             g310 = 1 + 2 * eo2;
             g300 = 1 + eo2 * (-6 + 6.60937 * eo2);
             f220 = 0.75 * (1 + cosim) * (1 + cosim);
-            f311 = 0.9375 * sinim * sinim * (1 + 3 * cosim) - 0.75 * (1 + cosim);
+            f311 = 0.9375 * sini2 * (1 + 3 * cosim) - 0.75 * (1 + cosim);
             f330 = 1 + cosim;
             f330 = 1.875 * f330 * f330 * f330;
          s->del1 = 3 * pow(s->xnodp, 2) * ainv2;
          s->del2 = 2 * s->del1 * f220 * g200 * q22;
          s->del3 = 3 * s->del1 * f330 * g300 * q33 * aonv;
          s->del1 = s->del1 * f311 * g310 * q31 * aonv;
-        s->xfact = s->xmdot + (s->omgdot + s->xnodot) - rptim + s->dmdt
+        s->xfact = s->xmdot + (s->omgdot + s->xnodot) - RPTIM + s->dmdt
                  + s->domdt + s->dnodt - s->xnodp;
         s->xlamo = fmod(s->mean_anomaly + s->right_asc_node
                  + s->argument_perigee - s->GSTo, TAU);
@@ -1034,9 +1025,9 @@ sat_propagate
     templ         = templ + s->t3cof * t3 + t4 * (s->t4cof + tdelta * s->t5cof);
   }
 
-  double nm    = s->xnodp; // TODO: Rename? Optimize?
-  double em    = s->eccentricity; // TODO: Optimize?
-  double inclm = s->inclination; // TODO: Optimize?
+  double nm    = s->xnodp;
+  double em    = s->eccentricity;
+  double inclm = s->inclination;
 
 #ifdef MATH_TRACE
   printf("---------------------------------------- p1\n");
@@ -1065,14 +1056,13 @@ sat_propagate
     const double g44   = 1.8014998;
     const double g52   = 1.0508330;
     const double g54   = 4.4108898;
-    const double rptim = 4.37526908801129966e-3; // TODO: Move to macros?
-    const double stepp =    720;
-    const double stepn =   -720;
+    const double stepp = 720;
+    const double stepn = -720;
     const double step2 = 259200;
 
     // Calculate deep space resonance effects
     s->dndt       = 0;
-    double theta  = fmod(s->GSTo + tdelta * rptim, TAU); // TODO: Move to struct?
+    double theta  = fmod(s->GSTo + tdelta * RPTIM, TAU);
 
     // Perturbed quantities
     em += s->dedt * tdelta;
@@ -1082,8 +1072,8 @@ sat_propagate
     xmp   += s->dmdt  * tdelta;
 
     // Euler-Maclaurin numerical integration
-    double ft = 0; // TODO:Remove?
-    double delt; // TODO: Rename
+    double ft = 0;
+    double delta;
     if ((s->is_12h_resonant == true) || (s->is_24h_resonant == true))
     {
       if ((s->atime == 0)
@@ -1096,9 +1086,9 @@ sat_propagate
       }
 
       if (tdelta > 0)
-        delt = stepp;
+        delta = stepp;
       else
-        delt = stepn;
+        delta = stepn;
 
       bool integrating = true;
       double xndt, xldot, xnddt, xomi, x2omi, x2li;
@@ -1141,15 +1131,15 @@ sat_propagate
         // Integrator
         if (fabs(tdelta - s->atime) < stepp)
         {
-          ft    = tdelta - s->atime;
+          ft          = tdelta - s->atime;
           integrating = false;
         }
 
         if (integrating == true)
         {
-          s->xli   = s->xli + xldot * delt + xndt * step2;
-          s->xni   = s->xni + xndt * delt + xnddt * step2;
-          s->atime = s->atime + delt;
+          s->xli   = s->xli + xldot * delta + xndt * step2;
+          s->xni   = s->xni + xndt * delta + xnddt * step2;
+          s->atime = s->atime + delta;
         }
       }
 
@@ -1163,7 +1153,7 @@ sat_propagate
       }
       else
       {
-        xmp   = xl - xnode - omega + theta;
+        xmp     = xl - xnode - omega + theta;
         s->dndt = nm - s->xnodp;
       }
       nm = s->xnodp + s->dndt;
@@ -1189,7 +1179,7 @@ sat_propagate
     return -2;
   }
 
-  double am = pow((XKE / nm), TWOTHIRD) * pow(tempa, 2); // TODO: Unroll
+  double am = pow((XKE / nm), TWOTHIRD) * tempa * tempa;
   nm = XKE / pow(am, 1.5);
   em = em - tempe;
 
@@ -1199,14 +1189,14 @@ sat_propagate
   }
 
   // Avoid division by zero
-  if (em < 1.0e-6) // TODO: Move tolerance to a constant?
+  if (em < 1.0e-6)
   {
     em  = 1.0e-6;
   }
 
          xmp += s->xnodp * templ;
   double xlm  = xmp + omega + xnode;
-  double em2  = pow(em, 2); // TODO: Unroll?
+  double em2  = em * em;
 
   xnode  = fmod(xnode, TAU);
   omega  = fmod(omega, TAU);
@@ -1241,15 +1231,12 @@ sat_propagate
   // Add lunar-solar periodics
   if (s->is_deep_space == true)
   {
-    //sat_ds_longper(s, tdelta); //**********************************************
     // Constants
-    double zns   = 1.19459e-5; // TODO: const keyword?
-    double zes   = 0.01675;
-    double znl   = 1.5835218e-4;
-    double zel   = 0.05490;
+    const double zes = 0.01675;
+    const double zel = 0.05490;
 
     // Calculate time varying periodics
-    double zm    = s->zmos + zns * tdelta;
+    double zm    = s->zmos + ZNS * tdelta;
     double zf    = zm + 2 * zes * sin(zm);
     double sinzf = sin(zf);
     double f2    =  0.5 * sinzf * sinzf - 0.25;
@@ -1259,7 +1246,7 @@ sat_propagate
     double sls   = s->sl2 * f2 + s->sl3 * f3 + s->sl4 * sinzf;
     double sghs  = s->sgh2 * f2 + s->sgh3 * f3 + s->sgh4 * sinzf;
     double shs   = s->sh2 * f2 + s->sh3 * f3;
-    zm    = s->zmol + znl * tdelta;
+    zm    = s->zmol + ZNL * tdelta;
 
     zf    = zm + 2 * zel * sin(zm);
     sinzf = sin(zf);
@@ -1316,8 +1303,7 @@ sat_propagate
       }
 
       double xls    = s->mean_anomaly_lp + s->argument_perigee_lp + cosip * s->right_asc_node_lp;
-      double dls    = pl + pgh - pinc * s->right_asc_node_lp * sinip; // TODO: Remove?
-      xls   += dls;
+      xls          += pl + pgh - pinc * s->right_asc_node_lp * sinip;
       double xnoh   = s->right_asc_node_lp;
       s->right_asc_node_lp  = atan2(alfdp, betdp);
 
@@ -1409,7 +1395,7 @@ sat_propagate
   printf("u       %+.15e\n", u);
 #endif
 
-  while ((fabs(kdelta) >= tolerance) && (ktr < maxiter)) // TODO: Unroll?
+  while ((fabs(kdelta) >= tolerance) && (ktr < maxiter))
   {
     sineo1 = sin(eo1);
     coseo1 = cos(eo1);
@@ -1470,7 +1456,7 @@ sat_propagate
     // Update for short period periodics
     if (s->is_deep_space == true)
     {
-      double cosip2 = pow(cosip, 2); // TODO: Unroll?
+      double cosip2 = cosip * cosip;
       s->con41      = 3 * cosip2 - 1;
       s->x1mth2     = 1 - cosip2;
       s->x7thm1     = 7 * cosip2 - 1;
@@ -1596,13 +1582,13 @@ sat_observe
   result->latlonalt = ecef2geo(&posecef);
 
   // Vis-viva equation
-  result->velocity = sqrt(GM * (2 / (RE + result->latlonalt.alt)
-                                - 1 / (RE * s->aodp)));
+  result->velocity  = sqrt(GM * (2 / (RE + result->latlonalt.alt)
+                               - 1 / (RE * s->aodp)));
 
   geo2ecef(obs_geo, &obsposecef, &obsvelecef);
 
   // Difference vector in ECEF frame
-  vec3 posdiffecef = vec3_add(1, &posecef, -1, &obsposecef);
+  vec3 posdiffecef  = vec3_add(1, &posecef, -1, &obsposecef);
 
   result->range     = vec3_mag(&posdiffecef);
   result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->range;

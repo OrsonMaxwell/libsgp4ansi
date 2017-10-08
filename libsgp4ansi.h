@@ -22,7 +22,7 @@
 //                                VERSION                                    //
 // ************************************************************************* //
 
-#define VERSION "0.2"
+#define VERSION "0.3"
 extern const char libsgp4ansi_version[];
 
 // ************************************************************************* //
@@ -71,7 +71,6 @@ typedef struct _sat
   double GSTo;                    // Greenwich Sidereal Time at epoch
   double xnodp;                   // Original mean motion recovered from TLE
   double aodp;                    // Semimajor axis, AE
-  double perigee;                 // Perigee, AE
   double perigee_alt;             // Altitude of perigee from surface, km
   double period;                  // Orbital period
   // Common constants
