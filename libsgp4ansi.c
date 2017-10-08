@@ -1594,13 +1594,9 @@ sat_observe
   teme2ecef(&posteme, &velteme, unix2jul(time, time_ms), &posecef, &velecef);
 
   result->latlonalt = ecef2geo(&posecef);
-  result->velocity = vec3_mag(&velecef); // TODO incorrect?
+  result->velocity = vec3_mag(&velecef); // TODO incorrect by 300m/s?
 
-  geo2ecef(obs_geo, &obsposecef, &obsvelecef); // TODO: geo2ecef gives unexpected resuts?
-
-  obsposecef.x = RE;
-  obsposecef.y = 0;
-  obsposecef.z = 0;
+  geo2ecef(obs_geo, &obsposecef, &obsvelecef);
 
   // Difference vector in ECEF frame
   vec3 posdiffecef = vec3_add(1, &posecef, -1, &obsposecef);

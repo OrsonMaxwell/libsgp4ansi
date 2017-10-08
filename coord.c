@@ -547,5 +547,10 @@ ecef2az
          / sqrt((pow(op->x, 2) + pow(op->y, 2))
               * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
 
-  return PIDIV2 - atan2(cosaz, sinaz);
+  double az = atan2(cosaz, sinaz);
+  if (az > PIDIV2)
+  {
+    return TAU - (az - PIDIV2);
+  }
+  return PIDIV2 - az;
 }
