@@ -34,35 +34,33 @@ main (int argc, char** argv)
   if (argv[1][0] == 'o')
   {
     sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   17276.21606951  .00004423  00000-0  74225-4 0  9990",
-                 "2 25544  51.6398 219.7869 0004167 337.1762 166.2321 15.54050189 78557",
+                 "1 25544U 98067A   17241.20968750  .00016118  00000-0  25119-3 0  9990",
+                 "2 25544  51.6408  34.2995 0004424 198.2687 159.0461 15.54014642 73102",
                  &s);
     struct tm t = {
       .tm_year  = 117,
-      .tm_mon   = 9,
-      .tm_mday  = 3,
-      .tm_hour  = 15,
-      .tm_min   = atoi(argv[2]),
-      .tm_sec   = 8,
+      .tm_mon   = 7,
+      .tm_mday  = 29,
+      .tm_hour  = 6,
+      .tm_min   = 1,
+      .tm_sec   = 57,
       .tm_isdst = 0
     };
     double time_ms = 0;
 
-    time_t time = mktime(&t) - TIMEZONE;
-    vec3   lla  = {38.0475 * DEG2RAD, 54.9246 * DEG2RAD, 0.180};
-    obs    o    = {0};
+    time_t timestamp = mktime(&t) - TIMEZONE;
 
-    sat_observe(&s, &time, time_ms, &lla, &o);
+    vec3   observer_geo  = {38.0475 * DEG2RAD, 54.9246 * DEG2RAD, 0.180};
+    obs    o = {0};
 
+    sat_observe(&s, &timestamp, time_ms, &observer_geo, &o);
     printf("Name:        %s\n", o.name);
     printf("Lat:   %11.3lf deg\n", o.latlonalt.lat * RAD2DEG);
     printf("Lon:   %11.3lf deg\n", o.latlonalt.lon * RAD2DEG);
     printf("Alt:   %11.3lf km\n", o.latlonalt.alt);
     printf("Vel:   %11.3lf km/s\n", o.velocity);
-    printf("Az:    %11.3lf deg\n", o.azimuth);
-    printf("El     %11.3lf deg\n", o.elevation);
-    printf("AzRt:  %11.3lf deg/s\n", o.az_rate);
-    printf("ElRt:  %11.3lf deg/s\n", o.el_rate);
+    printf("Az:    %11.3lf deg\n", o.azimuth * RAD2DEG);
+    printf("El     %11.3lf deg\n", o.elevation * RAD2DEG);
     printf("Range: %11.3lf km\n", o.range);
     printf("RRate: %11.3lf km/s\n", o.rng_rate);
     printf("Illum: %7d\n", o.is_illum);
@@ -150,6 +148,8 @@ main (int argc, char** argv)
 
   double p, a, ecc, incl, node, argp, nu, m, arglat, truelon, lonper;
 
+  coe e;
+
   while (feof(tle_file) == 0)
   {
     fgets(tlestr0, 130, tle_file);
@@ -185,10 +185,10 @@ main (int argc, char** argv)
 
         if (argv[1][0] == 'v')
         {
-          teme2coe(&posteme, &velteme, &p, &a, &ecc, &incl, &node, &argp, &nu, &m,
-                 &arglat, &truelon, &lonper);
+          e = teme2coe(&posteme, &velteme);
           fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f\n",
-                  a, ecc, incl*RAD2DEG, node*RAD2DEG, argp*RAD2DEG, nu*RAD2DEG, m*RAD2DEG);
+                  e.a, e.ecc, e.incl*RAD2DEG, e.omega*RAD2DEG, e.argp*RAD2DEG,
+                  e.nu*RAD2DEG, e.m*RAD2DEG);
         }
         else
         {

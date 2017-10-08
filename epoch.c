@@ -29,7 +29,13 @@
  *         -1      - Invalid input
  */
 int
-fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
+fractday2unix
+(
+  unsigned int year,
+  double       days,
+  time_t*      unix,
+  float*       ms
+)
 {
   if (days > ((year % 4 == 0) ? 366 : 365))
   {
@@ -92,7 +98,11 @@ fractday2unix(unsigned int year, double days, time_t* unix, float* ms)
  * Returns: Julian date on success
  */
 double
-unix2jul(const time_t* time, float ms)
+unix2jul
+(
+  const time_t* time,
+        float   ms
+)
 {
   struct tm* t;
   t = gmtime(time);
@@ -111,7 +121,10 @@ unix2jul(const time_t* time, float ms)
  * Returns: GST time, rad
  */
 double
-jul2gst(double julian)
+jul2gst
+(
+  double julian
+)
 {
   double result, tempUT1;
 

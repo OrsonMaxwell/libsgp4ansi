@@ -21,11 +21,11 @@ kepler_newton
 );
 
 // Get classical orbital elements from TEME vectors
-extern int
+coe
 teme2coe
 (
-  vec3*, vec3*, double*, double*, double*, double*, double*, double*, double*,
-  double*, double*, double*, double*
+  const vec3* posteme,
+  const vec3* velteme
 );
 
 // Transform position and velocity vectors from TEME to ECEF frame of reference
@@ -40,26 +40,35 @@ teme2ecef
 );
 
 // Transform ECEF position to geodetic latitude, longitude, and altitude
-void
-ecef2latlonalt
+vec3
+ecef2geo
 (
-  const vec3* posecef,
-        vec3* latlonalt
-);
-// Transform geodetic latitude, longitude, and altitude to ECEF position vector
-void
-latlonalt2ecef
-(
-  const vec3* latlonalt,
-        vec3* posecef
+  const vec3* posecef
 );
 
-// Calculate range between observer and satellite from their ECEF vectors
-double
-ecef2range
+// Transform geodetic latitude, longitude, and altitude to ECEF position vector
+void
+geo2ecef
 (
-  const vec3* obsposecef,
-  const vec3* satposecef
+  const vec3* latlonalt,
+        vec3* posecef,
+        vec3* velecef
+);
+
+// Find elevation from ECEF vectors
+double
+ecef2el
+(
+  const vec3*  op,
+  const vec3*  dp
+);
+
+// Find azimuth from ECEF vectors
+double
+ecef2az
+(
+  const vec3*  op,
+  const vec3*  dp
 );
 
 #endif /* COORD_H_ */

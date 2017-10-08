@@ -95,33 +95,21 @@ kepler_newton
  *
  * Inputs:  posteme - Position vector in TEME frame, km
  *          velteme - Velocity vector in TEME frame, km/s
- * Outputs: p       - semilatus rectum               km
- *          a       - semimajor axis                 km
- *          ecc     - eccentricity
- *          incl    - inclination                    [0; pi)  rad
- *          omega   - longitude of ascending node    [0; 2pi) rad
- *          argp    - argument of perigee            [0; 2pi) rad
- *          nu      - true anomaly                   [0; 2pi) rad
- *          m       - mean anomaly                   [0; 2pi) rad
- *          arglat  - argument of latitude      (ci) [0; 2pi) rad
- *          truelon - true longitude            (ce) [0; 2pi) rad
- *          lonper  - longitude of periapsis    (ee) [0; 2pi) rad
- * Returns: 0       - Success
- *         -1       - Decayed satellite
+ * Outputs: None
+ * Returns: coe     - Success - struct containint the elements
+ *          NULL    - Decayed satellite
  */
-int
+coe
 teme2coe
 (
-    vec3* posteme, vec3 *velteme,
-    double* p,    double* a,  double* ecc, double* incl,   double* omega,
-    double* argp, double* nu, double* m,   double* arglat, double* truelon,
-    double* lonper
+  const vec3* posteme,
+  const vec3* velteme
 )
 {
-  int i;
-  char typeorbit[3]; // TODO: Change to numeric to get rid of strings
+  coe e = {0};
+  char orbit_type;
 
-  double tolerance = 1.0e-8; // TODO: Const?
+  double tolerance = 1.0e-8;
 
   double magr = vec3_mag(posteme);
   double magv = vec3_mag(velteme);
@@ -129,12 +117,12 @@ teme2coe
   // Find h n and e vectors
   vec3 hbar, nbar, ebar;
 
-  vec3_cross(posteme, velteme, &hbar);
+  hbar = vec3_cross(posteme, velteme);
   double magh = vec3_mag(&hbar);
 
   if (magh < tolerance)
   {
-    return -1;
+    return e;
   }
 
   nbar.x = -hbar.y;
@@ -149,47 +137,51 @@ teme2coe
   ebar.y = (c1 * posteme->y - rdotv * velteme->y) / GM;
   ebar.z = (c1 * posteme->z - rdotv * velteme->z) / GM;
 
-  *ecc = vec3_mag(&ebar);
+  e.ecc = vec3_mag(&ebar);
 
-  // Find *a e and semi-latus rectum
+  // Find a e and semi-latus rectum
   double sme = (pow(magv, 2) * 0.5) - (GM  / magr);
 
   if (fabs(sme) > tolerance)
   {
-    *a = -GM / (2 * sme);
+    e.a = -GM / (2 * sme);
   }
   else
   {
-    *a = INFINITY;
+    e.a = INFINITY;
   }
-  *p = pow(magh, 2) / GM;
+  e.p = pow(magh, 2) / GM;
 
   // Find inclination
   double hk = hbar.z / magh;
-  *incl= acos( hk );
+  e.incl= acos( hk );
 
   // Determine type of orbit
   // Elliptical, parabolic, hyperbolic inclined
-  strcpy(typeorbit, "ei");
-  if (*ecc < tolerance)
+  //strcpy(orbit_type, "ei");
+  orbit_type = 1;
+  if (e.ecc < tolerance)
   {
     // Circular equatorial
-    if ((*incl < tolerance) || (fabs(*incl - PI) < tolerance))
+    if ((e.incl < tolerance) || (fabs(e.incl - PI) < tolerance))
     {
-      strcpy(typeorbit,"ce");
+      //strcpy(orbit_type,"ce");
+      orbit_type = -2;
     }
     else
     {
       // Circular inclined
-      strcpy(typeorbit,"ci");
+      //strcpy(orbit_type,"ci");
+      orbit_type = -1;
     }
   }
   else
   {
     // Elliptical, parabolic, hyperbolic equatorial
-    if ((*incl < tolerance) || (fabs(*incl - PI) < tolerance))
+    if ((e.incl < tolerance) || (fabs(e.incl - PI) < tolerance))
     {
-      strcpy(typeorbit,"ee");
+      //strcpy(orbit_type,"ee");
+      orbit_type = 2;
     }
   }
 
@@ -203,108 +195,108 @@ teme2coe
       temp = (temp >= 0)?(1.0):(-1.0);
     }
 
-    *omega = acos(temp);
+    e.omega = acos(temp);
     if (nbar.y < 0)
     {
-      *omega = TAU - *omega;
+      e.omega = TAU - e.omega;
     }
   }
   else
-    *omega = NAN;
+    e.omega = NAN;
 
   // Find argument of perigee
-  if (strcmp(typeorbit, "ei") == 0)
+  if (orbit_type == 1)
   {
-    *argp = vec3_angle(&nbar, &ebar);
+    e.argp = vec3_angle(&nbar, &ebar);
     if (ebar.z < 0)
     {
-      *argp= TAU - *argp;
+      e.argp= TAU - e.argp;
     }
   }
   else
-    *argp= NAN;
+    e.argp= NAN;
 
   // Find true anomaly at epoch
-  if (typeorbit[0] == 'e')
+  if (orbit_type > 0)
   {
-    *nu = vec3_angle(&ebar, posteme);
+    e.nu = vec3_angle(&ebar, posteme);
     if ( rdotv < 0)
     {
-      *nu= TAU - *nu;
+      e.nu= TAU - e.nu;
     }
   }
   else
-    *nu= NAN;
+    e.nu= NAN;
 
   // Find argument of latitude - circular inclined
-  if (strcmp(typeorbit,"ci") == 0)
+  if (orbit_type == -1)
   {
-    *arglat = vec3_angle(&nbar, posteme);
+    e.arglat = vec3_angle(&nbar, posteme);
     if (posteme->z < 0)
     {
-      *arglat = TAU - *arglat;
+      e.arglat = TAU - e.arglat;
     }
-    *m = *arglat;
+    e.m = e.arglat;
   }
   else
-    *arglat = NAN;
+    e.arglat = NAN;
 
   // Find longitude of perigee - elliptical equatorial
-  if ((*ecc > tolerance) && (strcmp(typeorbit,"ee") == 0))
+  if ((e.ecc > tolerance) && (orbit_type == 2))
   {
-    double temp = ebar.x / *ecc;
+    double temp = ebar.x / e.ecc;
 
     if (fabs(temp) > 1)
     {
-      temp = (temp >= 0)?(1.0):(-1.0); // TODO: Bleh
+      temp = (temp >= 0)?(1):(-1);
     }
 
-    *lonper = acos( temp );
+    e.lonper = acos( temp );
 
     if (ebar.y < 0)
     {
-      *lonper = TAU - *lonper;
+      e.lonper = TAU - e.lonper;
     }
-    if (*incl > PIDIV2)
+    if (e.incl > PIDIV2)
     {
-      *lonper = TAU - *lonper;
+      e.lonper = TAU - e.lonper;
     }
   }
   else
-    *lonper = NAN;
+    e.lonper = NAN;
 
   // Find true longitude - circular equatorial
-  if  ((magr > tolerance) && (strcmp(typeorbit,"ce") == 0))
+  if  ((magr > tolerance) && (orbit_type == -2))
   {
     double temp = posteme->x / magr;
 
     if ( fabs(temp) > 1)
     {
-      temp = (temp >= 0)?(1.0):(-1.0); // TODO: Bleh
+      temp = (temp >= 0)?(1):(-1);
     }
 
-    *truelon = acos(temp);
+    e.truelon = acos(temp);
 
     if (posteme->y < 0)
     {
-      *truelon = TAU - *truelon;
+      e.truelon = TAU - e.truelon;
     }
-    if (*incl > PIDIV2)
+    if (e.incl > PIDIV2)
     {
-      *truelon = TAU - *truelon;
+      e.truelon = TAU - e.truelon;
     }
-    *m = *truelon;
+    e.m = e.truelon;
   }
   else
-    *truelon = NAN;
+    e.truelon = NAN;
 
   // Find mean anomaly for all orbits
-  if (typeorbit[0] == 'e')
+  if (orbit_type > 0)
   {
-    *m = kepler_newton(*ecc, *nu);
+    e.m = kepler_newton(e.ecc, e.nu);
   }
 
-  return 0;
+  return e;
 }
 
 /*
@@ -340,25 +332,25 @@ teme2ecef
 
   // Pseudo Earth fixed position vector
   double ppef[3];
-  ppef[0] = pef_tod[0][0] * posteme->x + pef_tod[1][0] * posteme->y +
-              pef_tod[2][0] * posteme->z;
-  ppef[1] = pef_tod[0][1] * posteme->x + pef_tod[1][1] * posteme->y +
-              pef_tod[2][1] * posteme->z;
-  ppef[2] = pef_tod[0][2] * posteme->x + pef_tod[1][2] * posteme->y +
-              pef_tod[2][2] * posteme->z;
+  ppef[0] = pef_tod[0][0] * posteme->x + pef_tod[1][0] * posteme->y
+          + pef_tod[2][0] * posteme->z;
+  ppef[1] = pef_tod[0][1] * posteme->x + pef_tod[1][1] * posteme->y
+          + pef_tod[2][1] * posteme->z;
+  ppef[2] = pef_tod[0][2] * posteme->x + pef_tod[1][2] * posteme->y
+          + pef_tod[2][2] * posteme->z;
 
   // Refer to IERS Bulletin - A (Vol. XXVIII No. 030)
   double MJD = julian - 2400000.5;
-  double A   = 2 * PI * (MJD - 57226) / 365.25;
-  double C   = 2 * PI * (MJD - 57226) / 435;
+  double A   = TAU * (MJD - 57226) / 365.25;
+  double C   = TAU * (MJD - 57226) / 435;
 
   // Polar motion coefficients, rad
   double xp;
   double yp;
-  xp = (0.1033 + 0.0494*cos(A) + 0.0482*sin(A) + 0.0297*cos(C) + 0.0307*sin(C))
-       * 4.84813681e-6;
-  yp = (0.3498 + 0.0441*cos(A) - 0.0393*sin(A) + 0.0307*cos(C) - 0.0297*sin(C))
-       * 4.84813681e-6;
+  xp = (0.1033 + 0.0494*cos(A) + 0.0482*sin(A) + 0.0297*cos(C)
+     + 0.0307*sin(C)) * 4.84813681e-6;
+  yp = (0.3498 + 0.0441*cos(A) - 0.0393*sin(A) + 0.0307*cos(C)
+     - 0.0297*sin(C)) * 4.84813681e-6;
 
   double pm[3][3] =
   {
@@ -374,8 +366,8 @@ teme2ecef
   posecef->k = pm[0][2] * ppef[0] + pm[1][2] * ppef[1] + pm[2][2] * ppef[2];
 
   // Earth angular rotation vector
-  omegaearth[0] = 0.0;
-  omegaearth[1] = 0.0;
+  omegaearth[0] = 0;
+  omegaearth[1] = 0;
   omegaearth[2] = OMEGAE * (1  - 0.002 / 86400.0);
 
   // Pseudo Earth Fixed velocity vector
@@ -400,18 +392,18 @@ teme2ecef
  * Transform ECEF position to geodetic latitude, longitude, and altitude
  *
  * Inputs:  posecef   - Position vector in TEME frame, km
- * Outputs: latlonalt - Position vector in ECEF frame, rad
- * Returns: None
+ * Outputs: None
+ * Returns: geodetic coordinates vector
  */
-void
-ecef2latlonalt
+vec3
+ecef2geo
 (
-  const vec3* posecef,
-        vec3* latlonalt
+  const vec3* posecef
 )
 {
+  vec3 geo;
 
-  unsigned int maxiter = 4;
+  unsigned int maxiter = 5;
   double tolerance     = 1.0e-12;
 
   // Longitude
@@ -419,117 +411,141 @@ ecef2latlonalt
 
   if (fabs(ijsq) < tolerance)
   {
-    latlonalt->lon = ((posecef->k < 0)?-1:1) * PIDIV2;
+    geo.lon = ((posecef->k < 0)?-1:1) * PIDIV2;
   }
   else
   {
-    latlonalt->lon = atan2(posecef->j, posecef->i);
+    geo.lon = atan2(posecef->j, posecef->i);
   }
 
   // Wrap around
-  if (fabs(latlonalt->lon) >= PI)
+  if (fabs(geo.lon) >= PI)
   {
-    if (latlonalt->lon < 0.0)
+    if (geo.lon < 0)
     {
-      latlonalt->lon += TAU;
+      geo.lon += TAU;
     }
     else
     {
-      latlonalt->lon -= TAU;
+      geo.lon -= TAU;
     }
   }
 
   // Latitude
   double posmag  = vec3_mag(posecef);
-  latlonalt->lat = asin(posecef->k / posmag);
+  geo.lat = asin(posecef->k / posmag);
 
   // Converge latitude to the goid over 10 iterations or less
   double c, latsine;
   int i = 1;
-  double delta = latlonalt->lat + 10;
+  double delta = geo.lat + 10;
 
-  while ((fabs(delta - latlonalt->lat) >= tolerance) && (i < maxiter))
+  while ((fabs(delta - geo.lat) >= tolerance) && (i < maxiter))
   {
-    delta   = latlonalt->lat;
-    latsine = sin(latlonalt->lat);
+    delta   = geo.lat;
+    latsine = sin(geo.lat);
     c       = RE / (sqrt(1 - ECC * ECC * latsine * latsine));
-    latlonalt->lat = atan((posecef->k + c * ECC * ECC * latsine) / ijsq);
+    geo.lat = atan((posecef->k + c * ECC * ECC * latsine) / ijsq);
     i++;
   }
 
   // Altitude
-  if ((PIDIV2 - fabs(latlonalt->lat)) > DEG2RAD)
+  if ((PIDIV2 - fabs(geo.lat)) > DEG2RAD)
   {
-    latlonalt->alt = (ijsq / cos(latlonalt->lat)) - c;
+    geo.alt = (ijsq / cos(geo.lat)) - c;
   }
   else
   {
-    latlonalt->alt = posecef->k / sin(latlonalt->lat) - c * (1 - ECC * ECC);
+    geo.alt = posecef->k / sin(geo.lat) - c * (1 - ECC * ECC);
   }
+
+  return geo;
 }
 
 /*
  * Transform geodetic latitude, longitude, and altitude to ECEF position vector
  *
  * Inputs:  latlonalt - Geodetic latitude, longitude and altitude vector
- * Outputs: posecef   - Position vector in ECEF frame, rad
+ * Outputs: posecef   - Position vector in ECEF frame, km
+ *          velecef   - Velocity vector in ECEF frame, km/s
  * Returns: None
  */
 void
-latlonalt2ecef
+geo2ecef
 (
     const vec3* latlonalt,
-          vec3* posecef
+          vec3* posecef,
+          vec3* velecef
 )
 {
   // Geocentric latitude
   double gclat = atan(pow(1 - FLATT, 2) * tan(latlonalt->lat));
 
-  // Radius of Earth ad surface point
+  // Radius of Earth at surface point
   double rsurf = sqrt(pow(RE, 2) / ((1 / pow(1.0 - FLATT, 2) - 1) *
                  pow(sin(gclat), 2) + 1));
 
-  // ECEF vector
-  posecef->i = rsurf * cos(gclat) * cos(latlonalt->lon)
+  // ECEF position vector
+  posecef->x = rsurf * cos(gclat) * cos(latlonalt->lon)
              + latlonalt->alt * cos(latlonalt->lat) * cos(latlonalt->lon);
-  posecef->j = rsurf * cos(gclat) * sin(latlonalt->lon)
+  posecef->y = rsurf * cos(gclat) * sin(latlonalt->lon)
              + latlonalt->alt * cos(latlonalt->lat) * sin(latlonalt->lon);
-  posecef->k = rsurf * sin(gclat) + latlonalt->alt * sin (latlonalt->lat);
+  posecef->z = rsurf * sin(gclat) + latlonalt->alt * sin (latlonalt->lat);
+
+  // ECEF velocity vector
+  double factor = TAU * RPSID / 86400;
+  velecef->x = -factor * posecef->y;
+  velecef->y = factor * posecef->x;
+  velecef->z = 0;
 }
 
+/*
+ * Find elevation from ECEF vectors
+ *
+ * Inputs:  op - Observer position vector in ECEF frame
+ *          dp - Observer to satellite position vector in ECEF frame
+ * Outputs: None
+ * Returns: elevation angle, [-pi/2; pi/2] rad
+ */
 double
-ecef2range
+ecef2el
 (
-  const vec3* obsposecef,
-  const vec3* satposecef
+  const vec3*  op,
+  const vec3*  dp
 )
 {
-  // Observer to satellite vector
-  vec3 obs2sat;
-  vec3_add(1, obsposecef, -1, satposecef, &obs2sat);
+  // Cosine of elevation
+  double cosel = (op->x * dp->x + op->y * dp->y + op->z * dp->z)
+               / sqrt((pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
+                    * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
 
-  printf("rx: %lf\n", obs2sat.x);
-  printf("ry: %lf\n", obs2sat.y);
-  printf("rz: %lf\n", obs2sat.z);
-
-  return vec3_mag(&obs2sat);
+  return PIDIV2 - acos(cosel);
 }
 
-void ecef2azel
+/*
+ * Find azimuth from ECEF vectors
+ *
+ * Inputs:  op - Observer position vector in ECEF frame
+ *          dp - Observer to satellite position vector in ECEF frame
+ * Outputs: None
+ * Returns: azimuth angle, [0; 2pi] rad
+ */
+double
+ecef2az
 (
-    vec3* posecef,
-    vec3* vecef,
-    vec3* obsecef,
-    double lat,
-    double lon,
-    double* range,
-    double* az,
-    double* el,
-    double* rrate,
-    double* azrate,
-    double* elrate
+  const vec3*  op,
+  const vec3*  dp
 )
 {
+  double cosaz = (-op->z * op->x * dp->x - op->z * op->y * dp->y
+               + (pow(op->x, 2) + pow(op->y, 2)) * dp->z)
+          / sqrt((pow(op->x, 2) + pow(op->y, 2))
+               * (pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
+               * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
 
+  double sinaz = (-op->y * dp->x + op->x * dp->y)
+         / sqrt((pow(op->x, 2) + pow(op->y, 2))
+              * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+
+  return PIDIV2 - atan2(cosaz, sinaz);
 }
-

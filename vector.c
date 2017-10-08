@@ -34,19 +34,20 @@ vec3_mag
  * Copy a 3D vector
  *
  * Inputs:  from - Source vector
- * Outputs: to   - Destination vector
- * Returns: None
+ * Outputs: None
+ * Returns: Destination vector
  */
-void
+vec3
 vec3_copy
 (
-  const vec3* from,
-        vec3* to
+  const vec3* from
 )
 {
-  to->x = from->x;
-  to->y = from->y;
-  to->z = from->z;
+  vec3 to;
+  to.x = from->x;
+  to.y = from->y;
+  to.z = from->z;
+  return to;
 }
 
 /*
@@ -56,22 +57,23 @@ vec3_copy
  *          vect1  - 1st vector
  *          c2     - 2nd vector coefficient
  *          vect2  - 2nd vector
- * Outputs: result - Resulting vector
- * Returns: None
+ * Outputs: None
+ * Returns: Resulting vector
  */
-void
+vec3
 vec3_add
 (
         double c1,
   const vec3*  vect1,
         double c2,
-  const vec3*  vect2,
-        vec3*  result
+  const vec3*  vect2
 )
 {
-  result->x = c1 * vect1->x + c2 * vect2->x;
-  result->y = c1 * vect1->y + c2 * vect2->y;
-  result->z = c1 * vect1->z + c2 * vect2->z;
+  vec3 result;
+  result.x = c1 * vect1->x + c2 * vect2->x;
+  result.y = c1 * vect1->y + c2 * vect2->y;
+  result.z = c1 * vect1->z + c2 * vect2->z;
+  return result;
 }
 
 /*
@@ -97,20 +99,21 @@ vec3_dot
  *
  * Inputs:  vect1  - 1st vector
  *          vect2  - 2nd vector
- * Outputs: result - Resulting vector
- * Returns: None
+ * Outputs: None
+ * Returns: Resulting vector
  */
-void
+vec3
 vec3_cross
 (
   const vec3* vect1,
-  const vec3* vect2,
-        vec3* result
+  const vec3* vect2
 )
 {
-  result->x= vect1->y * vect2->z - vect1->z * vect2->y;
-  result->y= vect1->z * vect2->x - vect1->x * vect2->z;
-  result->z= vect1->x * vect2->y - vect1->y * vect2->x;
+  vec3 result;
+  result.x= vect1->y * vect2->z - vect1->z * vect2->y;
+  result.y= vect1->z * vect2->x - vect1->x * vect2->z;
+  result.z= vect1->x * vect2->y - vect1->y * vect2->x;
+  return result;
 }
 
 /*

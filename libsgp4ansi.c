@@ -1561,52 +1561,54 @@ sat_observe
         sat*    s,
   const time_t* time,
         double  time_ms,
-  const vec3*   obs_lla,
-        obs*    response
+  const vec3*   obs_geo,
+        obs*    result
 )
 {
   if ((s        == NULL) ||
       (time     == NULL) ||
       (time_ms  >= 1000) ||
-      (obs_lla  == NULL) ||
-      (response == NULL))
+      (obs_geo  == NULL) ||
+      (result   == NULL))
   {
     return -1;
   }
 
   double tdelta = difftime(*time + time_ms / 1000,
                            s->epoch + s->epoch_ms / 1000) / 60;
-  printf("tdelta = %lf\n", tdelta);
 
-  vec3 p, v;
+  vec3 posteme, velteme;
 
-  int retval = sat_propagate(s, tdelta, 10, 1.0e-12, &p, &v);
+  int retval = sat_propagate(s, tdelta, 10, 1.0e-12, &posteme, &velteme);
 
-  // Switching to ECEF system
-  vec3 pecef, vecef, obsecef;
+  if (retval != 0)
+  {
+    return retval;
+  }
 
-  teme2ecef(&p, &v, unix2jul(time, time_ms), &pecef, &vecef);
-  latlonalt2ecef(obs_lla, &obsecef);
+  strcpy(result->name, s->name);
 
-  printf("X: %lf\n", pecef.x);
-  printf("Y: %lf\n", pecef.y);
-  printf("Z: %lf\n", pecef.z);
-  printf("x: %lf\n", obsecef.x);
-  printf("y: %lf\n", obsecef.y);
-  printf("z: %lf\n", obsecef.z);
+  // Switching to ECEF common frame to fix to Earth
+  vec3 posecef, velecef, obsposecef, obsvelecef;
 
-  vec3 sat_lla;
-  ecef2latlonalt(&pecef, &sat_lla);
+  teme2ecef(&posteme, &velteme, unix2jul(time, time_ms), &posecef, &velecef);
 
-  strcpy(response->name, s->name);
-  response->latlonalt = sat_lla;
-  //response->velocity;
-  //response->azimuth;
-  //response->elevation;
-  //response->az_rate;
-  //response->el_rate;
-  response->range = ecef2range(&obsecef, &pecef);
-  //response->rng_rate;
-  //response->is_illum = 0;
+  result->latlonalt = ecef2geo(&posecef);
+  result->velocity = vec3_mag(&velecef); // TODO incorrect?
+
+  geo2ecef(obs_geo, &obsposecef, &obsvelecef); // TODO: geo2ecef gives unexpected resuts?
+
+  obsposecef.x = RE;
+  obsposecef.y = 0;
+  obsposecef.z = 0;
+
+  // Difference vector in ECEF frame
+  vec3 posdiffecef = vec3_add(1, &posecef, -1, &obsposecef);
+
+  result->range     = vec3_mag(&posdiffecef);
+  result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->range;
+  result->azimuth   = ecef2az(&obsposecef, &posdiffecef);
+  result->elevation = ecef2el(&obsposecef, &posdiffecef);
+
   return retval;
 }

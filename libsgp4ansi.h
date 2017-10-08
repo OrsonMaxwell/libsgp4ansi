@@ -103,19 +103,35 @@ typedef struct _sat
 } sat;
 
 /*
+ * Satellite classical orbital elements
+ */
+typedef struct _coe
+{
+  double p;       // semilatus rectum, km
+  double a;       // semimajor axis, km
+  double ecc;     // eccentricity
+  double incl;    // inclination                    [0; pi)  rad
+  double omega;   // longitude of ascending node    [0; 2pi) rad
+  double argp;    // argument of perigee            [0; 2pi) rad
+  double nu;      // true anomaly                   [0; 2pi) rad
+  double m;       // mean anomaly                   [0; 2pi) rad
+  double arglat;  // argument of latitude      (ci) [0; 2pi) rad
+  double truelon; // true longitude            (ce) [0; 2pi) rad
+  double lonper;  // longitude of periapsis    (ee) [0; 2pi) rad
+} coe;
+
+/*
  * Satellite observational data at given time from a given location
  */
 typedef struct _obs
 {
   char   name[25];  // Satellite name, 24 chars + \0
   vec3   latlonalt; // Satellite projected geodetic coordinates
-  double velocity;  // Ground velocity
-  double azimuth;   // Azimuth from north
+  double velocity;  // Satellite velocity
+  double range;     // Distance from observer, km
+  double rng_rate;  // Distance change rate, km/s
+  double azimuth;   // Azimuth of observation
   double elevation; // Elevation over horizon
-  double az_rate;   // Instantaneous azimuth rate
-  double el_rate;   // Instantaneous elevation rate
-  double range;     // Direct range, km
-  double rng_rate;  // Range rate, km/s
   bool   is_illum;  // Is the satellite illuminated by the Sun?
 } obs;
 
@@ -148,15 +164,15 @@ sat_observe
   const time_t* time,
         double  time_ms,
   const vec3*   obs_lla,
-        obs*    response
+        obs*    result
 );
 
 // Get classical orbital elements from TEME vectors
-extern int
+extern coe
 teme2coe
 (
-  vec3*, vec3*, double*, double*, double*, double*, double*, double*, double*,
-  double*, double*, double*, double*
+  const vec3* posteme,
+  const vec3* velteme
 );
 
 #endif /* LIBSGP4ANSI_H_ */

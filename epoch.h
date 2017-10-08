@@ -16,14 +16,27 @@
 
 // Convert year and fractional day to unix time
 int
-fractday2unix(unsigned int, double, time_t*, float*);
+fractday2unix
+(
+  unsigned int year,
+  double       days,
+  time_t*      unix,
+  float*       ms
+);
 
 // Convert unix time to Julian date
 double
-unix2jul(const time_t*, float);
+unix2jul
+(
+  const time_t* time,
+        float   ms
+);
 
 // Convert Julian date to Greenwich Sidereal Time
 double
-jul2gst(double);
+jul2gst
+(
+  double julian
+);
 
 #endif /* EPOCH_H_ */

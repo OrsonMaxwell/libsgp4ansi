@@ -12,10 +12,6 @@
 #ifndef VECTOR_H_
 #define VECTOR_H_
 
-// ************************************************************************* //
-//                                 FUNCTIONS                                 //
-// ************************************************************************* //
-
 // Find magnitude of a 3D vector
 double
 vec3_mag
@@ -24,22 +20,20 @@ vec3_mag
 );
 
 // Copy a 3D vector
-void
+vec3
 vec3_copy
 (
-  const vec3* from,
-        vec3* to
+  const vec3* from
 );
 
 // Add two 3D vectors with coefficients
-void
+vec3
 vec3_add
 (
         double c1,
   const vec3*  vect1,
         double c2,
-  const vec3*  vect2,
-        vec3*  result
+  const vec3*  vect2
 );
 
 // Dot product of two 3D vectors
@@ -51,12 +45,11 @@ vec3_dot
 );
 
 // Crossing of two 3D vectors
-void
+vec3
 vec3_cross
 (
   const vec3* vect1,
-  const vec3* vect2,
-        vec3* result
+  const vec3* vect2
 );
 
 // Planar angle between two 3D vectors
