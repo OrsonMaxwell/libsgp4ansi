@@ -148,6 +148,29 @@ sat_load_tle
   sat* s
 );
 
+// Initialize SGP4/SDP4 orbit model from NORAD parametres
+extern int
+sat_load_params
+(
+  const char         name[25],
+        char         sec_class,
+  const char         int_designator[9],
+        unsigned int epochyr,
+        double       epochdays,
+        double       mean_motion_dt2,
+        double       mean_motion_ddt6,
+        double       Bstar,
+        double       inclination,
+        double       right_asc_node,
+        double       eccentricity,
+        double       argument_perigee,
+        double       mean_anomaly,
+        double       mean_motion,
+        unsigned int norad_number,
+        unsigned int orbit_number,
+        sat*         s
+);
+
 // Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
 extern int
 sat_init(sat*);

@@ -92,5 +92,6 @@
 #define RPSID     1.00273790934          // Earth rotations per sidereal day
 #define ZNS       1.19459e-5
 #define ZNL       1.5835218e-4
+#define AU        1.495978707e11         // Astronomical unit, km
 
 #endif /* CONST_H_ */

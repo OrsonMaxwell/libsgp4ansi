@@ -213,6 +213,67 @@ sat_load_tle
 }
 
 /*
+ * Initialize SGP4/SDP4 orbit model from a raw NORAD TLE parametres
+ *
+ * Inputs:  tlestr1 - TLE line 1
+ *          tlestr2 - TLE line 2
+ * Outputs: sat     - orbit struct pointer with full orbital data
+ * Returns: 0       - Success
+ *         -1       - Failure to read TLE lines
+ *
+ * Calls: orbit_init
+ */
+int
+sat_load_params
+(
+  const char         name[25],
+        char         sec_class,
+  const char         int_designator[9],
+        unsigned int epochyr,
+        double       epochdays,
+        double       mean_motion_dt2,
+        double       mean_motion_ddt6,
+        double       Bstar,
+        double       inclination,
+        double       right_asc_node,
+        double       eccentricity,
+        double       argument_perigee,
+        double       mean_anomaly,
+        double       mean_motion,
+        unsigned int norad_number,
+        unsigned int orbit_number,
+        sat*         s
+)
+{
+  strcpy(s->name, name);
+  s->sec_class = sec_class;
+  strcpy(s->int_designator, int_designator);
+
+  struct tm epoch_tm, prop_tm;
+
+  if (fractday2unix(epochyr, epochdays, &s->epoch, &s->epoch_ms) != 0)
+  {
+    return -1;
+  }
+
+  s->julian_epoch = unix2jul(&s->epoch, s->epoch_ms);
+
+  // Converting from TLE to SGP4 units (minutes, radians and kilometres)
+  s->mean_motion_dt2  = mean_motion_dt2  / (RPD2RADPM * 1440);
+  s->mean_motion_ddt6 = mean_motion_ddt6 / (RPD2RADPM * 1440 * 1440);
+  s->Bstar            = Bstar;
+  s->inclination      = inclination      * DEG2RAD;
+  s->right_asc_node   = right_asc_node   * DEG2RAD;
+  s->argument_perigee = argument_perigee * DEG2RAD;
+  s->mean_anomaly     = mean_anomaly     * DEG2RAD;
+  s->mean_motion      = mean_motion      / RPD2RADPM;
+  s->norad_number     = norad_number;
+  s->orbit_number     = orbit_number;
+
+  return sat_init(s);
+}
+
+/*
  * Expand SGP4/SDP4 orbit elements from a sat record containing NORAD TLE data
  *
  * Inputs:  s - sat struct pointer to a record containing NORAD TLE data
@@ -1587,13 +1648,21 @@ sat_observe
 
   geo2ecef(obs_geo, &obsposecef, &obsvelecef);
 
-  // Difference vector in ECEF frame
+  // Observer to satellite vector in ECEF frame
   vec3 posdiffecef  = vec3_add(1, &posecef, -1, &obsposecef);
 
   result->range     = vec3_mag(&posdiffecef);
   result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->range;
   result->azimuth   = ecef2az(&obsposecef, &posdiffecef);
   result->elevation = ecef2el(&obsposecef, &posdiffecef);
-
+/*
+  vec3 sp = solar_position(unix2jul(time, time_ms));
+  vec3 spd = vec3_add(1, &posecef, -1, &obsposecef);
+  printf("--> %lf\n", sp.x);
+  printf("--> %lf\n", sp.y);
+  printf("--> %lf\n", sp.z);
+  printf("--> %lf\n", ecef2az(&obsposecef, &spd));
+  printf("--> %lf\n", ecef2el(&obsposecef, &spd));
+*/
   return retval;
 }
