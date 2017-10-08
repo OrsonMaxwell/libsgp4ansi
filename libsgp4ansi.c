@@ -1594,7 +1594,10 @@ sat_observe
   teme2ecef(&posteme, &velteme, unix2jul(time, time_ms), &posecef, &velecef);
 
   result->latlonalt = ecef2geo(&posecef);
-  result->velocity = vec3_mag(&velecef); // TODO incorrect by 300m/s?
+
+  // Vis-viva equation
+  result->velocity = sqrt(GM * (2 / (RE + result->latlonalt.alt)
+                                - 1 / (RE * s->aodp)));
 
   geo2ecef(obs_geo, &obsposecef, &obsvelecef);
 

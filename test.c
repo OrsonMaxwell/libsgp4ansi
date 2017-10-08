@@ -58,16 +58,16 @@ main (int argc, char** argv)
     timestamp = time(0);
 
     sat_observe(&s, &timestamp, time_ms, &observer_geo, &o);
-    printf("Name:        %s\n", o.name);
-    printf("Lat:   %11.3lf deg\n", o.latlonalt.lat * RAD2DEG);
-    printf("Lon:   %11.3lf deg\n", o.latlonalt.lon * RAD2DEG);
-    printf("Alt:   %11.3lf km\n", o.latlonalt.alt);
-    printf("Vel:   %11.3lf km/s\n", o.velocity);
-    printf("Az:    %11.3lf deg\n", o.azimuth * RAD2DEG);
-    printf("El     %11.3lf deg\n", o.elevation * RAD2DEG);
-    printf("Range: %11.3lf km\n", o.range);
-    printf("RRate: %11.3lf km/s\n", o.rng_rate);
-    printf("Illum: %7d\n", o.is_illum);
+    printf("Name:         %s\n", o.name);
+    printf("Lat:    %11.3lf deg\n", o.latlonalt.lat * RAD2DEG);
+    printf("Lon:    %11.3lf deg\n", o.latlonalt.lon * RAD2DEG);
+    printf("Alt:    %11.3lf km\n", o.latlonalt.alt);
+    printf("Vel:    %11.3lf km/s\n", o.velocity);
+    printf("Az:     %11.3lf deg\n", o.azimuth * RAD2DEG);
+    printf("El      %11.3lf deg\n", o.elevation * RAD2DEG);
+    printf("Range:  %11.3lf km\n", o.range);
+    printf("RRate:  %11.3lf km/s\n", o.rng_rate);
+    printf("Illum:  %7d\n", o.is_illum);
 
     Sleep(1000);
     }
