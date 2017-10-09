@@ -1678,47 +1678,7 @@ sat_passes
   const vec3*   obs_geo
 )
 {
-  obs          o;
-  char         time_str[70];
-  unsigned int passes  = 0;
-  unsigned int tstep   = 1;
-  double       prev_el = -90 * DEG2RAD;
 
-  time_t       offset  = 0;
-
-  // Find phase
-  for (time_t t = *start_time; t <= *stop_time; t += tstep)
-  {
-    sat_observe(s, &t, 0, obs_geo, &o);
-
-    if ((o.elevation > 0) && (prev_el <= 0))
-    {
-      offset = tstep;
-      break;
-    }
-    prev_el = o.elevation;
-  }
-  printf("Offset: %ld\n", offset);
-
-  tstep = (unsigned int)floor(s->period * 30); // Set time step to half period
-  printf("Tstep:  %ld\n", (unsigned long int)tstep);
-
-  tstep = 1;
-
-  // Find phase
-  for (time_t t = *start_time + offset; t <= *stop_time; t += tstep)
-  {
-    sat_observe(s, &t, 0, obs_geo, &o);
-
-    if ((o.elevation > 0) && (prev_el <= 0))
-    {
-//          strftime(time_str, sizeof time_str, "%Y-%m-%d %H:%M:%S", gmtime(&tstep));
-//          printf("%s %s\t%8.3lf\n", time_str, o.name, o.azimuth  * RAD2DEG);
-      passes++;
-    }
-    prev_el = o.elevation;
-  }
-  printf("%u\n", passes);
 
   return 0;
 }
