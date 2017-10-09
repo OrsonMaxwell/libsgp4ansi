@@ -79,7 +79,7 @@ main (int argc, char** argv)
     printf("Illum:  %7d\n", o.is_illum);
 
 #ifdef __unix__
-    usleep(1000000)
+    usleep(1000000);
 #elif defined(_WIN32) || defined(WIN32)
     Sleep(1000);
 #endif
