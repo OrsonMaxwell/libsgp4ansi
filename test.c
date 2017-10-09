@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 #include <windows.h>
 
 #include "libsgp4ansi.h"
@@ -14,8 +15,11 @@ main (int argc, char** argv)
   if ((argv[1][0] != 'c')
       && (argv[1][0] != 'v')
       && (argv[1][0] != 't')
-      && (argv[1][0] != 'o'))
-    return 0;
+      && (argv[1][0] != 'o')
+      && (argv[1][0] != 'p'))
+  {
+    return 1;
+  }
 
   char tlestr0[130];
   char tlestr1[130];
@@ -35,16 +39,16 @@ main (int argc, char** argv)
   if (argv[1][0] == 'o')
   {
     sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   17280.56108796  .00005789  00000-0  94707-4 0  9990",
-                 "2 25544  51.6423 198.1265 0004404 356.4312 352.0195 15.54101270 79222",
+                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
+                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
                  &s);
     struct tm t = {
       .tm_year  = 117,
-      .tm_mon   = 7,
-      .tm_mday  = 29,
-      .tm_hour  = 15,
-      .tm_min   = 1,
-      .tm_sec   = 57,
+      .tm_mon   = 9,
+      .tm_mday  = 9,
+      .tm_hour  = 16,
+      .tm_min   = 37,
+      .tm_sec   = 4,
       .tm_isdst = 0
     };
     double time_ms = 0;
@@ -53,9 +57,9 @@ main (int argc, char** argv)
     vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
     obs    o = {0};
 
-    while (true)
-    {
-    timestamp = time(0);
+//    while (true)
+//    {
+//    timestamp = time(0);
 
     sat_observe(&s, &timestamp, time_ms, &observer_geo, &o);
     printf("Name:         %s\n", o.name);
@@ -69,10 +73,37 @@ main (int argc, char** argv)
     printf("RRate:  %11.3lf km/s\n", o.rng_rate);
     printf("Illum:  %7d\n", o.is_illum);
 
-    Sleep(1000);
-    }
+//    Sleep(1000);
+//    }
     return 0;
   }
+
+  if (argv[1][0] == 'p')
+    {
+      sat_load_tle("ISS (ZARYA)",
+                   "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
+                   "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
+                   &s);
+
+      vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+      obs    o = {0};
+
+      struct tm t = {
+        .tm_year  = 117,
+        .tm_mon   = 9,
+        .tm_mday  = 9,
+        .tm_hour  = 16,
+        .tm_min   = 37,
+        .tm_sec   = 4,
+        .tm_isdst = 0
+      };
+      time_t start = mktime(&t) - TIMEZONE - 1440 * 60; // day before epoch
+      time_t stop  = mktime(&t) - TIMEZONE + 8640 * 60; // week ahead of start
+
+      sat_passes(&s, &start, &stop, &observer_geo);
+
+      return 0;
+    }
 
   if (argv[1][0] == 't')
   {

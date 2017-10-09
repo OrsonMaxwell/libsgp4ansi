@@ -139,7 +139,7 @@ typedef struct _obs
 // ************************************************************************* //
 
 // Initialize SGP4/SDP4 orbit model from raw NORAD TLE lines
-extern int
+int
 sat_load_tle
 (
   const char* tlestr0,
@@ -149,14 +149,14 @@ sat_load_tle
 );
 
 // Initialize SGP4/SDP4 orbit model from NORAD parametres
-extern int
+int
 sat_load_params
 (
   const char         name[25],
         char         sec_class,
   const char         int_designator[9],
-        unsigned int epochyr,
-        double       epochdays,
+        time_t       epoch,
+        float        epoch_ms,
         double       mean_motion_dt2,
         double       mean_motion_ddt6,
         double       Bstar,
@@ -172,30 +172,48 @@ sat_load_params
 );
 
 // Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
-extern int
+int
 sat_init(sat*);
 
-// Get position and velocity vectors in the TEME frame at given time since epoch
-extern int
-sat_propagate(sat*, double, unsigned int, double, vec3*, vec3*);
-
-// Get observational data about the satellite from ground station
-extern int
-sat_observe
-(
-        sat*    s,
-  const time_t* time,
-        double  time_ms,
-  const vec3*   obs_lla,
-        obs*    result
-);
-
-// Get classical orbital elements from TEME vectors
+// Get classical orbital elements from TEME vectors TODO: make a wrapper
 extern coe
 teme2coe
 (
   const vec3* posteme,
   const vec3* velteme
+);
+
+// Get position and velocity vectors in the TEME frame at given time since epoch
+int
+sat_propagate
+(
+    sat*         s,
+    double       tdelta,
+    unsigned int maxiter,
+    double       tolerance,
+    vec3*        p,
+    vec3*        v
+);
+
+// Get observational data about the satellite from ground station
+int
+sat_observe
+(
+        sat*    s,
+  const time_t* time,
+        double  time_ms,
+  const vec3*   obs_geo,
+        obs*    result
+);
+
+// Find satellite passes over ground station inside given timeframe
+int
+sat_passes
+(
+        sat*    s,
+  const time_t* start_time,
+  const time_t* stop_time,
+  const vec3*   obs_geo
 );
 
 #endif /* LIBSGP4ANSI_H_ */

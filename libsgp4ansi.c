@@ -229,8 +229,8 @@ sat_load_params
   const char         name[25],
         char         sec_class,
   const char         int_designator[9],
-        unsigned int epochyr,
-        double       epochdays,
+        time_t       epoch,
+        float        epoch_ms,
         double       mean_motion_dt2,
         double       mean_motion_ddt6,
         double       Bstar,
@@ -246,16 +246,11 @@ sat_load_params
 )
 {
   strcpy(s->name, name);
-  s->sec_class = sec_class;
+  s->sec_class    = sec_class;
   strcpy(s->int_designator, int_designator);
 
-  struct tm epoch_tm, prop_tm;
-
-  if (fractday2unix(epochyr, epochdays, &s->epoch, &s->epoch_ms) != 0)
-  {
-    return -1;
-  }
-
+  s->epoch        = epoch;
+  s->epoch_ms     = epoch_ms;
   s->julian_epoch = unix2jul(&s->epoch, s->epoch_ms);
 
   // Converting from TLE to SGP4 units (minutes, radians and kilometres)
@@ -1672,4 +1667,58 @@ sat_observe
   result->elevation = ecef2el(&obsposecef, &posdiffecef);
 
   return retval;
+}
+
+int
+sat_passes
+(
+        sat*    s,
+  const time_t* start_time,
+  const time_t* stop_time,
+  const vec3*   obs_geo
+)
+{
+  obs          o;
+  char         time_str[70];
+  unsigned int passes  = 0;
+  unsigned int tstep   = 1;
+  double       prev_el = -90 * DEG2RAD;
+
+  time_t       offset  = 0;
+
+  // Find phase
+  for (time_t t = *start_time; t <= *stop_time; t += tstep)
+  {
+    sat_observe(s, &t, 0, obs_geo, &o);
+
+    if ((o.elevation > 0) && (prev_el <= 0))
+    {
+      offset = tstep;
+      break;
+    }
+    prev_el = o.elevation;
+  }
+  printf("Offset: %ld\n", offset);
+
+  tstep = (unsigned int)floor(s->period * 30); // Set time step to half period
+  printf("Tstep:  %ld\n", (unsigned long int)tstep);
+
+  tstep = 1;
+
+  // Find phase
+  for (time_t t = *start_time + offset; t <= *stop_time; t += tstep)
+  {
+    sat_observe(s, &t, 0, obs_geo, &o);
+
+    if ((o.elevation > 0) && (prev_el <= 0))
+    {
+//          strftime(time_str, sizeof time_str, "%Y-%m-%d %H:%M:%S", gmtime(&tstep));
+//          printf("%s %s\t%8.3lf\n", time_str, o.name, o.azimuth  * RAD2DEG);
+      passes++;
+    }
+    prev_el = o.elevation;
+  }
+  printf("%u\n", passes);
+
+  return 0;
 }
