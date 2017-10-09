@@ -3,7 +3,12 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+
+#ifdef __unix__
+// Skip
+#elif defined(_WIN32) || defined(WIN32)
 #include <windows.h>
+#endif
 
 #include "libsgp4ansi.h"
 
@@ -57,9 +62,9 @@ main (int argc, char** argv)
     vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
     obs    o = {0};
 
-//    while (true)
-//    {
-//    timestamp = time(0);
+    while (true)
+    {
+    timestamp = time(0);
 
     sat_observe(&s, &timestamp, time_ms, &observer_geo, &o);
     printf("Name:         %s\n", o.name);
@@ -73,17 +78,27 @@ main (int argc, char** argv)
     printf("RRate:  %11.3lf km/s\n", o.rng_rate);
     printf("Illum:  %7d\n", o.is_illum);
 
-//    Sleep(1000);
-//    }
+#ifdef __unix__
+    usleep(1000000)
+#elif defined(_WIN32) || defined(WIN32)
+    Sleep(1000);
+#endif
+
+    }
     return 0;
   }
 
   if (argv[1][0] == 'p')
     {
-      sat_load_tle("ISS (ZARYA)",
-                   "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
-                   "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
-                   &s);
+//      sat_load_tle("ISS (ZARYA)",
+//                   "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
+//                   "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
+//                   &s);
+
+       sat_load_tle("JUGNU",
+                 "1 37839U 11058B   17281.88493397  .00000316  00000-0  27005-4 0  9993",
+                 "2 37839  19.9607 121.0705 0018917 356.6865 128.9420 14.12595841309799",
+                 &s);
 
       vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
       obs    o = {0};
