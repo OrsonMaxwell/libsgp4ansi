@@ -97,10 +97,19 @@ main (int argc, char** argv)
         .tm_sec   = 4,
         .tm_isdst = 0
       };
-      time_t start = mktime(&t) - TIMEZONE - 1440 * 60; // day before epoch
-      time_t stop  = mktime(&t) - TIMEZONE + 8640 * 60; // week ahead of start
+      time_t start_time = mktime(&t) - TIMEZONE - 1440 * 60; // day before epoch
+      time_t stop_time  = mktime(&t) - TIMEZONE + 8640 * 60; // week ahead of start
 
-      sat_passes(&s, &start, &stop, &observer_geo);
+      unsigned int tstep   = 60;
+
+      outfile = fopen("elevations.out", "w");
+
+      for (time_t t = start_time; t <= stop_time; t += tstep)
+      {
+        sat_observe(&s, &t, 0, &observer_geo, &o);
+        fprintf(outfile, "%ld,%8.3lf\n", (t - start_time) / 60, o.elevation * RAD2DEG);
+      }
+      fclose(outfile);
 
       return 0;
     }
