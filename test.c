@@ -5,7 +5,7 @@
 #include <math.h>
 
 #ifdef __unix__
-// Skip
+#include <unistd.h>
 #elif defined(_WIN32) || defined(WIN32)
 #include <windows.h>
 #endif
