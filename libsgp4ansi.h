@@ -173,7 +173,10 @@ sat_load_params
 
 // Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
 int
-sat_init(sat*);
+sat_init
+(
+  sat* s
+);
 
 // Get classical orbital elements from TEME vectors TODO: make a wrapper
 extern coe
@@ -187,12 +190,12 @@ teme2coe
 int
 sat_propagate
 (
-    sat*         s,
-    double       tdelta,
-    unsigned int maxiter,
-    double       tolerance,
-    vec3*        p,
-    vec3*        v
+  sat*         s,
+  double       tdelta,
+  unsigned int maxiter,
+  double       tolerance,
+  vec3*        p,
+  vec3*        v
 );
 
 // Get observational data about the satellite from ground station
@@ -213,7 +216,8 @@ sat_passes
         sat*    s,
   const time_t* start_time,
   const time_t* stop_time,
-  const vec3*   obs_geo
+  const vec3*   obs_geo,
+        char    nyquist_period
 );
 
 #endif /* LIBSGP4ANSI_H_ */

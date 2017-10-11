@@ -278,7 +278,10 @@ sat_load_params
  *         -2 - Inclination out of range [0, pi]
  */
 int
-sat_init(sat* s)
+sat_init
+(
+  sat* s
+)
 {
 #ifdef MATH_TRACE
   printf("---------------------------------------- i1\n");
@@ -1676,6 +1679,17 @@ sat_observe
   result->azimuth   = ecef2az(&obsposecef, &posdiffecef);
   result->elevation = ecef2el(&obsposecef, &posdiffecef);
 
+  printf("Name:         %s\n", result->name);
+  printf("Lat:    %11.3lf deg\n", result->latlonalt.lat * RAD2DEG);
+  printf("Lon:    %11.3lf deg\n", result->latlonalt.lon * RAD2DEG);
+  printf("Alt:    %11.3lf km\n", result->latlonalt.alt);
+  printf("Vel:    %11.3lf km/s\n", result->velocity);
+  printf("Az:     %11.3lf deg\n", result->azimuth * RAD2DEG);
+  printf("El      %11.3lf deg\n", result->elevation * RAD2DEG);
+  printf("Range:  %11.3lf km\n", result->range);
+  printf("RRate:  %11.3lf km/s\n", result->rng_rate);
+  printf("Illum:  %7d\n", result->is_illum);
+
   return retval;
 }
 
@@ -1685,10 +1699,37 @@ sat_passes
         sat*    s,
   const time_t* start_time,
   const time_t* stop_time,
-  const vec3*   obs_geo
+  const vec3*   obs_geo,
+        char    nyquist_period
 )
 {
 
 
+
+  obs          o     = {0};
+  unsigned int count = 0;
+
+  FILE* outfile      = fopen("elevations.out", "w");
+
+  double horizon     = 0 * DEG2RAD;
+  double prev_el     = -90;
+
+  for (time_t t = *start_time; t <= *stop_time; t += nyquist_period)
+  {
+    sat_observe(s, &t, 0, obs_geo, &o);
+
+    fprintf(outfile, "%ld,%8.3lf\n", (t - *start_time) / 60, o.elevation * RAD2DEG);
+
+    if ((prev_el > horizon) && (o.elevation <= horizon))
+    {
+      count++;
+    }
+
+    prev_el = o.elevation;
+  }
+
+  fclose(outfile);
+
+  printf("Passes: %ld", count);
   return 0;
 }

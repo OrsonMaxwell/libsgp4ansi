@@ -91,23 +91,20 @@ main (int argc, char** argv)
   if (argv[1][0] == 'p')
     {
       sat_load_tle("ISS (ZARYA)",
-                   "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
-                   "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
-                   &s);
+                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
+                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
+                 &s);
 
-//       sat_load_tle("JUGNU",
-//                 "1 37839U 11058B   17281.88493397  .00000316  00000-0  27005-4 0  9993",
-//                 "2 37839  19.9607 121.0705 0018917 356.6865 128.9420 14.12595841309799",
-//                 &s);
+  //       sat_load_tle("JUGNU",
+  //                 "1 37839U 11058B   17281.88493397  .00000316  00000-0  27005-4 0  9993",
+  //                 "2 37839  19.9607 121.0705 0018917 356.6865 128.9420 14.12595841309799",
+  //                 &s);
 
 
-//    sat_load_tle("???",
-//                 "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
-//                 "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
-//                 &s);
-
-      vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
-      obs    o = {0};
+  //    sat_load_tle("???",
+  //                 "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+  //                 "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
+  //                 &s);
 
       struct tm t = {
         .tm_year  = 117,
@@ -118,34 +115,12 @@ main (int argc, char** argv)
         .tm_sec   = 4,
         .tm_isdst = 0
       };
-      time_t start_time = mktime(&t) - TIMEZONE;
-      time_t stop_time  = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
 
-      unsigned int tstep   = 30;
-      unsigned int count   = 0;
+      vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+      time_t start_time    = mktime(&t) - TIMEZONE;
+      time_t stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
 
-      outfile = fopen("elevations.out", "w");
-
-      double horizon = 0 * DEG2RAD;
-      double prev_el = -90;
-
-      for (time_t t = start_time; t <= stop_time; t += tstep)
-      {
-        sat_observe(&s, &t, 0, &observer_geo, &o);
-
-        fprintf(outfile, "%ld,%8.3lf\n", (t - start_time) / 60, o.elevation * RAD2DEG);
-
-        if ((prev_el > horizon) && (o.elevation <= horizon))
-        {
-          count++;
-        }
-
-        prev_el = o.elevation;
-      }
-
-      fclose(outfile);
-
-      printf("Passes: %ld", count);
+      sat_passes(&s, &start_time, &stop_time, &observer_geo, 30);
 
       return 0;
     }
