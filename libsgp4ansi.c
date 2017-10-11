@@ -1634,15 +1634,6 @@ sat_observe
     return -1;
   }
 
-  printf("s->period = %lf\n", s->period);
-  printf("*time = %ld\n", *time);
-  printf("time_ms = %f\n", time_ms);
-  printf("obs_geo.lat = %lf\n", obs_geo->lat);
-  printf("obs_geo.lon = %lf\n", obs_geo->lon);
-  printf("obs_geo.alt = %lf\n", obs_geo->alt);
-  printf("result = %#08x\n", result);
-
-
   double tdelta = difftime(*time + time_ms / 1000,
                            s->epoch + s->epoch_ms / 1000) / 60;
 
@@ -1676,16 +1667,6 @@ sat_observe
   result->elevation = ecef2el(&obsposecef, &posdiffecef);
 
   result->is_illum  = false;
-
-  printf("Lat:    %11.3lf deg\n", result->latlonalt.lat * RAD2DEG);
-  printf("Lon:    %11.3lf deg\n", result->latlonalt.lon * RAD2DEG);
-  printf("Alt:    %11.3lf km\n", result->latlonalt.alt);
-  printf("Vel:    %11.3lf km/s\n", result->velocity);
-  printf("Az:     %11.3lf deg\n", result->azimuth * RAD2DEG);
-  printf("El      %11.3lf deg\n", result->elevation * RAD2DEG);
-  printf("Range:  %11.3lf km\n", result->range);
-  printf("RRate:  %11.3lf km/s\n", result->rng_rate);
-  printf("Illum:  %7d\n", result->is_illum);
 
   return retval;
 }
