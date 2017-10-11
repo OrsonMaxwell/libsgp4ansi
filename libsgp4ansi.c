@@ -1634,7 +1634,6 @@ sat_observe
     return -1;
   }
 
-  printf("s->name = %s\n", s->name);
   printf("s->period = %lf\n", s->period);
   printf("*time = %ld\n", *time);
   printf("time_ms = %f\n", time_ms);
@@ -1655,9 +1654,6 @@ sat_observe
   {
     return retval;
   }
-
-  strcpy(result->name, s->name);
-
   // Switching to ECEF common frame to fix to Earth
   vec3 posecef, velecef, obsposecef, obsvelecef;
 
@@ -1679,7 +1675,8 @@ sat_observe
   result->azimuth   = ecef2az(&obsposecef, &posdiffecef);
   result->elevation = ecef2el(&obsposecef, &posdiffecef);
 
-  printf("Name:         %s\n", result->name);
+  result->is_illum  = false;
+
   printf("Lat:    %11.3lf deg\n", result->latlonalt.lat * RAD2DEG);
   printf("Lon:    %11.3lf deg\n", result->latlonalt.lon * RAD2DEG);
   printf("Alt:    %11.3lf km\n", result->latlonalt.alt);

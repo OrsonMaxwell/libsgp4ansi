@@ -67,7 +67,6 @@ main (int argc, char** argv)
     timestamp = time(0);
 
     sat_observe(&s, &timestamp, time_ms, &observer_geo, &o);
-    printf("Name:         %s\n", o.name);
     printf("Lat:    %11.3lf deg\n", o.latlonalt.lat * RAD2DEG);
     printf("Lon:    %11.3lf deg\n", o.latlonalt.lon * RAD2DEG);
     printf("Alt:    %11.3lf km\n", o.latlonalt.alt);

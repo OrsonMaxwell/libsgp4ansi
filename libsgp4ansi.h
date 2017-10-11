@@ -124,7 +124,6 @@ typedef struct _coe
  */
 typedef struct _obs
 {
-  char   name[25];  // Satellite name, 24 chars + \0
   vec3   latlonalt; // Satellite projected geodetic coordinates
   double velocity;  // Satellite velocity
   double range;     // Distance from observer, km
