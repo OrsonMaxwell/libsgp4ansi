@@ -1617,7 +1617,7 @@ sat_observe
 (
         sat*    s,
   const time_t* time,
-        double  time_ms,
+        float   time_ms,
   const vec3*   obs_geo,
         obs*    result
 )
@@ -1630,6 +1630,16 @@ sat_observe
   {
     return -1;
   }
+
+  printf("s->name = %s\n", s->name);
+  printf("s->period = %lf\n", s->period);
+  printf("*time = %ld\n", *time);
+  printf("time_ms = %f\n", time_ms);
+  printf("obs_geo.lat = %lf\n", obs_geo->lat);
+  printf("obs_geo.lon = %lf\n", obs_geo->lon);
+  printf("obs_geo.alt = %lf\n", obs_geo->alt);
+  printf("result = %#08x\n", result);
+
 
   double tdelta = difftime(*time + time_ms / 1000,
                            s->epoch + s->epoch_ms / 1000) / 60;

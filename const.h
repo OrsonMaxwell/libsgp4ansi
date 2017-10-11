@@ -89,7 +89,8 @@
 #define VKMPS     (RE * XKE / 60)        // Earth surface velocity, km/s
 #define J3DIVJ2   (J3 / J2)
 #define RPTIM     4.37526908801129966e-3 // Earth angular velocity, rad/min
-#define RPSID     1.00273790934          // Earth rotations per sidereal day
+                                         // Legacy value of OMEGAE * 60
+#define RPSID     (RPTIM * 1440 / TAU)   // Earth rotations per sidereal day
 #define ZNS       1.19459e-5
 #define ZNL       1.5835218e-4
 #define AU        1.495978707e11         // Astronomical unit, km

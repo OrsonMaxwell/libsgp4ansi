@@ -10,9 +10,12 @@ import datetime
 # Configuration ###############################################################
 
 dry_run = False
+elev_only = False
 if (len(sys.argv) > 1):
   if (sys.argv[1] == 'd'):
     dry_run = True
+  elif (sys.argv[1] == 'e'):
+    elev_only = True
 
 aiaa_binary = 'aiaa'
 ansi_binary = 'ansi'
@@ -31,6 +34,60 @@ aiaa_out_filename = 'i72.out'
 ansi_out_filename = 'ansi.out'
 
 sat_re = re.compile(r'([0-9]{1,5})\ \(([0-9. e+]+)\)')
+
+# Elevations for 'p' satellite ################################################
+
+if elev_only:
+  print('Running libsgp4ansi in elevations generation mode...')
+  start = datetime.datetime.now()
+  print(subprocess.Popen([os.path.join(os.getcwd(), ansi_binary), 'p'], stdout=subprocess.PIPE).communicate()[0].decode())
+  stop = datetime.datetime.now()
+  tdiff_ansip = stop - start
+
+  el_x = []
+  el_y = []
+  # el_a = []
+
+  with open('elevations.out') as f:
+    elevations_data = f.readlines()
+
+  for line in elevations_data:
+    el_x.append(int(line.split(',')[0]))
+    el_y.append(float(line.split(',')[1]))
+    # el_a.append(float(line.split(',')[2]))
+    
+  fig, ax = plt.subplots(1, 1)
+  fig.canvas.set_window_title('Elevation') 
+
+  xmin = 0
+  xmax = el_x[len(el_x) - 1]
+  xticksmin = range(xmin, xmax + 1, 1440)
+  xticksmaj = range(xmin, xmax + 1, 360)
+
+  yticksmin = [-75, -60, -45, -30, -15, 15, 30, 45, 60, 75]
+  yticksmaj = [0]
+
+  ax.plot(el_x, el_y, c='b', marker='', ls='-', lw=0.5)
+  # ax.plot(el_x, el_a, c='r', marker='', ls='-', lw=0.5)
+    
+  ax.set_xlim(xmin, xmax)
+  ax.set_ylim(-90, 90)
+  ax.set_xticks(xticksmin, True);
+  ax.set_xticks(xticksmaj, False);
+  ax.grid(which='major', axis='x', ls='dashed', alpha=0.7)
+  ax.grid(which='minor', axis='x', ls='dotted', alpha=0.3)
+  ax.set_yticks(yticksmin, True);
+  ax.set_yticks(yticksmaj, False);
+  ax.grid(which='major', axis='y', ls='-', alpha=1)
+  ax.grid(which='minor', axis='y', ls='dotted', alpha=0.5)
+  ax.set_title('Elevation of test satellite-observer pair')
+  ax.set_xlabel('Time, min')
+  ax.set_ylabel('Elevation, deg')
+  fig.set_tight_layout({'pad':0.0, 'w_pad':0.1, 'h_pad':0.1})
+
+  plt.show()
+  
+  exit(0)
 
 # Generate output #############################################################
 
@@ -63,12 +120,6 @@ if (not dry_run):
   print(subprocess.Popen([os.path.join(os.getcwd(), ansi_binary), 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
   stop = datetime.datetime.now()
   tdiff_ansic = stop - start
-  
-  print('Running libsgp4ansi in elevations generation mode...')
-  start = datetime.datetime.now()
-  print(subprocess.Popen([os.path.join(os.getcwd(), ansi_binary), 'p'], stdout=subprocess.PIPE).communicate()[0].decode())
-  stop = datetime.datetime.now()
-  tdiff_ansip = stop - start
 
 # Load generated data #########################################################
 
@@ -206,18 +257,6 @@ for sat in list(aiaa_ver_sats.keys()):
   verif_points[sat] = maxdelta * 1000 # Convert to meters
   verif_annot.append(sat)
 
-# Get data for verification plots #############################################
-
-el_x = []
-el_y = []
-
-with open('elevations.out') as f:
-  elevations_data = f.readlines()
-
-for line in elevations_data:
-  el_x.append(int(line.split(',')[0]))
-  el_y.append(float(line.split(',')[1]))
-  
 # Plotting everything #########################################################
 
 print('Plotting data - please wait...')
@@ -457,36 +496,5 @@ axp.grid(which='minor', axis='x', ls='dotted', alpha=0.3)
 axp.set_xlabel('Time from epoch, min')
 axp.set_ylabel('Position difference, m')
 fig.set_tight_layout({'pad':0.0, 'w_pad':0.1, 'h_pad':0.1}) 
-
-# Elevations for 'p' satellite ################################################
-
-fig, ax = plt.subplots(1, 1)
-fig.canvas.set_window_title('Elevation') 
-
-xmin = 0
-xmax = el_x[len(el_x) - 1]
-xticksmin = range(xmin, xmax + 1, 1440)
-xticksmaj = range(xmin, xmax + 1, 360)
-
-yticksmin = [-75, -60, -45, -30, -15, 15, 30, 45, 60, 75]
-yticksmaj = [0]
-
-for sat in list(aiaa_sats.keys()):
-  ax.plot(el_x, el_y, c='b', marker='', ls='-', lw=0.5)
-  
-ax.set_xlim(xmin, xmax)
-ax.set_ylim(-90, 90)
-ax.set_xticks(xticksmin, True);
-ax.set_xticks(xticksmaj, False);
-ax.grid(which='major', axis='x', ls='dashed', alpha=0.7)
-ax.grid(which='minor', axis='x', ls='dotted', alpha=0.3)
-ax.set_yticks(yticksmin, True);
-ax.set_yticks(yticksmaj, False);
-ax.grid(which='major', axis='y', ls='-', alpha=1)
-ax.grid(which='minor', axis='y', ls='dotted', alpha=0.5)
-ax.set_title('Elevation of test satellite-observer pair')
-ax.set_xlabel('Time, min')
-ax.set_ylabel('Elevation, deg')
-fig.set_tight_layout({'pad':0.0, 'w_pad':0.1, 'h_pad':0.1})
 
 plt.show()

@@ -201,7 +201,7 @@ sat_observe
 (
         sat*    s,
   const time_t* time,
-        double  time_ms,
+        float   time_ms,
   const vec3*   obs_geo,
         obs*    result
 );

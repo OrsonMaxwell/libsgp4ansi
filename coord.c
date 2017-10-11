@@ -261,7 +261,9 @@ teme2coe
     }
   }
   else
+  {
     e.lonper = NAN;
+  }
 
   // Find true longitude - circular equatorial
   if  ((magr > tolerance) && (orbit_type == -2))
