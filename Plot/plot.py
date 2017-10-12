@@ -61,8 +61,8 @@ if elev_only:
 
   xmin = 0
   xmax = el_x[len(el_x) - 1]
-  xticksmin = range(xmin, xmax + 1, 1440)
-  xticksmaj = range(xmin, xmax + 1, 360)
+  xticksmin = range(xmin, xmax + 1, 1440 * 60)
+  xticksmaj = range(xmin, xmax + 1, 360 * 60)
 
   yticksmin = [-75, -60, -45, -30, -15, 15, 30, 45, 60, 75]
   yticksmaj = [0]

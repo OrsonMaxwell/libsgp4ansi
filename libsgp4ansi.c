@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -34,8 +35,25 @@ const char libsgp4ansi_version[] = VERSION;
 // ************************************************************************* //
 
 // Trim leading and trailing whitespaces from a string
-size_t
-str_trim(const char*, size_t, char*);
+static size_t
+str_trim
+(
+  const char*  str,
+        size_t len,
+        char*  out
+);
+
+// Recursively zero in on an AOS or LOS event down to 1 sec resolution
+time_t
+find_aos_los
+(
+        sat*         s,
+  const vec3*        obs_geo,
+  const time_t       start_time,
+        unsigned int delta_t,
+        double       horizon,
+        bool         is_aos
+);
 
 // ************************************************************************* //
 //                             PRIVATE FUNCTIONS                             //
@@ -50,11 +68,12 @@ str_trim(const char*, size_t, char*);
  * Returns: Any   - Length of resulting string
  *         -1     - Failure to read TLE lines
  */
-size_t str_trim
+size_t
+str_trim
 (
-  const char* str,
-  size_t len,
-  char* out
+  const char*  str,
+        size_t len,
+        char*  out
 )
 {
   if(len == 0)
@@ -195,7 +214,7 @@ sat_load_tle
     return -1;
   }
 
-  s->julian_epoch = unix2jul(&s->epoch, s->epoch_ms);
+  s->julian_epoch = unix2jul(s->epoch, s->epoch_ms);
 
   s->mean_motion_ddt6 = nddot * pow(10, nexp);
   s->Bstar = Bstar * pow(10, Bexp);
@@ -251,7 +270,7 @@ sat_load_params
 
   s->epoch        = epoch;
   s->epoch_ms     = epoch_ms;
-  s->julian_epoch = unix2jul(&s->epoch, s->epoch_ms);
+  s->julian_epoch = unix2jul(s->epoch, s->epoch_ms);
 
   // Converting from TLE to SGP4 units (minutes, radians and kilometres)
   s->mean_motion_dt2  = mean_motion_dt2  / (RPD2RADPM * 1440);
@@ -1619,14 +1638,13 @@ int
 sat_observe
 (
         sat*    s,
-  const time_t* time,
+        time_t  time,
         float   time_ms,
   const vec3*   obs_geo,
         obs*    result
 )
 {
   if ((s        == NULL) ||
-      (time     == NULL) ||
       (time_ms  >= 1000) ||
       (obs_geo  == NULL) ||
       (result   == NULL))
@@ -1634,7 +1652,7 @@ sat_observe
     return -1;
   }
 
-  double tdelta = difftime(*time + time_ms / 1000,
+  double tdelta = difftime(time + time_ms / 1000,
                            s->epoch + s->epoch_ms / 1000) / 60;
 
   vec3 posteme, velteme;
@@ -1671,43 +1689,199 @@ sat_observe
   return retval;
 }
 
+/*
+ * Recursively zero in on an LOS event down to 1 sec resolution
+ *
+ * Inputs:  s          - sat struct pointer with initialized orbital data
+ *          obs_geo    - Geodetic coordinates of the ground station
+ *          start_time - Unix timestamp of start of prediction
+ *          stop_time  - Unix timestamp of stop of prediction
+ *          delta_t    - Time step
+ *          horizon    - Elevation of observer horizon, [0; pi/2] rad
+ *          is_aos     - Are we looking for AOS? (false for LOS)
+ * Outputs: None
+ * Returns: zero crossing unix time with second precision
+ */
 int
 sat_passes
 (
-        sat*    s,
-  const time_t* start_time,
-  const time_t* stop_time,
-  const vec3*   obs_geo,
-        char    nyquist_period
+        sat*         s,
+  const time_t*      start_time,
+  const time_t*      stop_time,
+  const vec3*        obs_geo,
+        unsigned int delta_t,
+        double       horizon
 )
 {
+  obs           o         = {0};
+  unsigned int  aos_count = 0;
+  unsigned int  los_count = 0;
+  double        prev_el   = -90;
 
+  unsigned int* AOS_t;
+  unsigned int* LOS_t;
 
+  unsigned int  max_samples = (unsigned int)ceil((*stop_time - *start_time)
+                                                  / delta_t);
 
-  obs          o     = {0};
-  unsigned int count = 0;
+  AOS_t = malloc(max_samples * sizeof(unsigned int));
+  LOS_t = malloc(max_samples * sizeof(unsigned int));
 
-  FILE* outfile      = fopen("elevations.out", "w");
-
-  double horizon     = 0 * DEG2RAD;
-  double prev_el     = -90;
-
-  for (time_t t = *start_time; t <= *stop_time; t += nyquist_period)
+  if ((AOS_t == NULL) && (LOS_t == NULL))
   {
-    sat_observe(s, &t, 0, obs_geo, &o);
+    return -1;
+  }
 
-    fprintf(outfile, "%ld,%8.3lf\n", (t - *start_time) / 60, o.elevation * RAD2DEG);
+  horizon = fmax(0, horizon);
 
-    if ((prev_el > horizon) && (o.elevation <= horizon))
+  // for plotting
+  FILE* outfile = fopen("elevations.out", "w");
+
+  // Find principle flares on coarse time pass and count them
+  for (time_t t = *start_time; t <= *stop_time; t += delta_t)
+  {
+    sat_observe(s, t, 0, obs_geo, &o);
+
+    // for plotting
+    fprintf(outfile, "%ld,%8.3lf\n", t - *start_time, o.elevation * RAD2DEG);
+
+    if (o.elevation > horizon)
     {
-      count++;
+      if (t == *start_time)
+      {
+        AOS_t[aos_count] = *start_time;
+        aos_count++;
+      }
+      else if (prev_el <= horizon)
+      {
+        AOS_t[aos_count] = find_aos_los(s, obs_geo, t - delta_t,
+                                        delta_t, horizon, true);
+        aos_count++;
+      }
+      else if (t + delta_t > *stop_time)
+      {
+        LOS_t[los_count] = *stop_time;
+        los_count++;
+      }
+    }
+    else if (prev_el > horizon)
+    {
+      LOS_t[los_count] = find_aos_los(s, obs_geo, t - delta_t,
+                                      delta_t, horizon, false);
+      los_count++;
     }
 
     prev_el = o.elevation;
   }
 
+  // for plotting
   fclose(outfile);
 
-  printf("Passes: %ld", count);
+  printf("AOS count: %ld\n", aos_count);
+  printf("LOS count: %ld\n", los_count);
+
+  for (unsigned int i = 0; i < aos_count; i++)
+  {
+    printf("AOS[%ld] = %ld\n", i, AOS_t[i] - *start_time);
+  }
+
+  for (unsigned int i = 0; i < los_count; i++)
+  {
+    printf("LOS[%ld] = %ld\n", i, LOS_t[i] - *start_time);
+  }
+
+  if (aos_count != los_count)
+  {
+    return -2;
+  }
+
+  double tca_el = 0;
+
+  printf("Flare count: %ld\n", aos_count);
+
+  // TODO: Do more optimal local maximum search
+  for (unsigned int i = 0; i < aos_count; i ++)
+  {
+    for (time_t t = AOS_t[i]; t <= LOS_t[i]; t += (LOS_t[i] - AOS_t[i]) / 13)
+    {
+      sat_observe(s, t, 0, obs_geo, &o);
+      tca_el = fmax(tca_el, o.elevation);
+    }
+    printf("TCA el coarse = %lf\n", tca_el * RAD2DEG);
+    tca_el = 0;
+  }
+
+//  For speed comparison
+  for (unsigned int i = 0; i < aos_count; i ++)
+  {
+    for (time_t t = AOS_t[i]; t <= LOS_t[i]; t++)
+    {
+      sat_observe(s, t, 0, obs_geo, &o);
+      tca_el = fmax(tca_el, o.elevation);
+    }
+    printf("TCA el = %lf\n", tca_el * RAD2DEG);
+    tca_el = 0;
+  }
+
+  free(AOS_t);
+  free(LOS_t);
+
   return 0;
+}
+
+/*
+ * Recursively zero in on an AOS or anLOS event down to 1 sec resolution
+ * TODO: Is binary search optimal?
+ *
+ * Inputs:  s          - sat struct pointer with initialized orbital data
+ *          obs_geo    - Geodetic coordinates of the ground station
+ *          start_time - Unix timestamp of observation
+ *          delta_t    - Time step
+ *          horizon    - Elevation of observer horizon, [0; pi/2] rad
+ *          is_aos     - Are we looking for AOS? (false for LOS)
+ * Outputs: None
+ * Returns: zero crossing unix time with second precision
+ */
+time_t
+find_aos_los
+(
+        sat*         s,
+  const vec3*        obs_geo,
+  const time_t       start_time,
+        unsigned int delta_t,
+        double       horizon,
+        bool         is_aos
+)
+{
+  obs    o = {0};
+  double diff;
+
+  unsigned int half_dt = ceil(delta_t / 2.0);
+
+  if (delta_t > 1)
+  {
+    sat_observe(s, start_time + half_dt, 0, obs_geo, &o);
+
+    if (is_aos == true)
+    {
+      diff = o.elevation - horizon;
+    }
+    else
+    {
+      diff = horizon - o.elevation;
+    }
+
+    if (diff > 0)
+    {
+      return find_aos_los(s, obs_geo, start_time,
+                          half_dt, horizon, is_aos);
+    }
+    else
+    {
+      return find_aos_los(s, obs_geo, start_time + half_dt,
+                          half_dt, horizon, is_aos);
+    }
+  }
+
+  return start_time;
 }

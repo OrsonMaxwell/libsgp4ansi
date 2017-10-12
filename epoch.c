@@ -98,12 +98,12 @@ fractday2unix
 double
 unix2jul
 (
-  const time_t* time,
-        float   ms
+  time_t time,
+  float  ms
 )
 {
   struct tm* t;
-  t = gmtime(time);
+  t = gmtime(&time);
 
   return 367 * (t->tm_year + 1900)
   - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 10) / 12))) * 0.25)

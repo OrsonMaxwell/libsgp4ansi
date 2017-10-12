@@ -28,8 +28,8 @@ fractday2unix
 double
 unix2jul
 (
-  const time_t* time,
-        float   ms
+  time_t time,
+  float  ms
 );
 
 // Convert Julian date to Greenwich Sidereal Time

@@ -202,7 +202,7 @@ int
 sat_observe
 (
         sat*    s,
-  const time_t* time,
+        time_t  time,
         float   time_ms,
   const vec3*   obs_geo,
         obs*    result
@@ -212,11 +212,12 @@ sat_observe
 int
 sat_passes
 (
-        sat*    s,
-  const time_t* start_time,
-  const time_t* stop_time,
-  const vec3*   obs_geo,
-        char    nyquist_period
+        sat*         s,
+  const time_t*      start_time,
+  const time_t*      stop_time,
+  const vec3*        obs_geo,
+        unsigned int delta_t,
+        double       horizon
 );
 
 #endif /* LIBSGP4ANSI_H_ */

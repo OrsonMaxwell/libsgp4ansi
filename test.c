@@ -66,7 +66,7 @@ main (int argc, char** argv)
     {
     timestamp = time(0);
 
-    sat_observe(&s, &timestamp, time_ms, &observer_geo, &o);
+    sat_observe(&s, timestamp, time_ms, &observer_geo, &o);
     printf("Lat:    %11.3lf deg\n", o.latlonalt.lat * RAD2DEG);
     printf("Lon:    %11.3lf deg\n", o.latlonalt.lon * RAD2DEG);
     printf("Alt:    %11.3lf km\n", o.latlonalt.alt);
@@ -89,21 +89,26 @@ main (int argc, char** argv)
 
   if (argv[1][0] == 'p')
     {
-      sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
-                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
-                 &s);
+//      sat_load_tle("ISS (ZARYA)",
+//                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
+//                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
+//                 &s);
 
-  //       sat_load_tle("JUGNU",
-  //                 "1 37839U 11058B   17281.88493397  .00000316  00000-0  27005-4 0  9993",
-  //                 "2 37839  19.9607 121.0705 0018917 356.6865 128.9420 14.12595841309799",
-  //                 &s);
+//         sat_load_tle("JUGNU",
+//                   "1 37839U 11058B   17281.88493397  .00000316  00000-0  27005-4 0  9993",
+//                   "2 37839  19.9607 121.0705 0018917 356.6865 128.9420 14.12595841309799",
+//                   &s);
 
 
-  //    sat_load_tle("???",
-  //                 "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
-  //                 "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
-  //                 &s);
+      sat_load_tle("???",
+                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
+                   &s);
+
+//      sat_load_tle("FENGYUN 2E",
+//                 "1 33463U 08066A   17281.80233449 -.00000213  00000-0  00000+0 0  9997",
+//                 "2 33463   2.3909  67.6760 0005346 217.9202 107.6646  1.00271179 32268",
+//                 &s);
 
       struct tm t = {
         .tm_year  = 117,
@@ -119,7 +124,8 @@ main (int argc, char** argv)
       time_t start_time    = mktime(&t) - TIMEZONE;
       time_t stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
 
-      sat_passes(&s, &start_time, &stop_time, &observer_geo, 30);
+
+      sat_passes(&s, &start_time, &stop_time, &observer_geo, 32, 0 * DEG2RAD);
 
       return 0;
     }
