@@ -1,12 +1,14 @@
 /*
- * transform.h - Coordinate transformation routines for libsgp4ansi.
+ * coord.h - Coordinate transformation routines for libsgp4ansi.
  *
  * References:
  * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
  * https://celestrak.com/publications/AIAA/2006-6753/
  * IERS Bulletin - A (Vol. XXVIII No. 030)
+ * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
+ * Astronomical Algorithms, Jean Meeus
  *
- * Copyright © 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright ï¿½ 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #ifndef COORD_H_
@@ -47,28 +49,28 @@ ecef2geo
 );
 
 // Transform geodetic latitude, longitude, and altitude to ECEF position vector
-void
+vec3
 geo2ecef
 (
-  const vec3* latlonalt,
-        vec3* posecef,
-        vec3* velecef
+  const vec3* latlonalt
 );
 
-// Find elevation from ECEF vectors
-double
-ecef2el
+// Find azimuth, elevation and range from ECEF vectors
+vec3
+ecef2azelrng
 (
-  const vec3*  op,
-  const vec3*  dp
+  const vec3* op,
+  const vec3* dp
 );
 
-// Find azimuth from ECEF vectors
-double
-ecef2az
+// Convert equatorial vector to az-el-rng vector from ground st-n at given time
+vec3
+eq2azelrng
 (
-  const vec3*  op,
-  const vec3*  dp
+  const vec3*  radecrv,
+  const vec3*  obs_geo,
+        time_t time,
+        float  time_ms
 );
 
 #endif /* COORD_H_ */

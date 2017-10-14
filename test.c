@@ -12,6 +12,10 @@
 
 #include "libsgp4ansi.h"
 
+#include "solar.h" // TODO: Remove
+#include "epoch.h" // TODO: Remove
+#include "coord.h" // TODO: Remove
+
 int
 main (int argc, char** argv)
 {
@@ -44,38 +48,50 @@ main (int argc, char** argv)
   if (argv[1][0] == 'o')
   {
     sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
-                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
+                 "1 25544U 98067A   17276.21606951  .00004423  00000-0  74225-4 0  9990",
+                 "2 25544  51.6398 219.7869 0004167 337.1762 166.2321 15.54050189 78557",
                  &s);
     struct tm t = {
       .tm_year  = 117,
       .tm_mon   = 9,
-      .tm_mday  = 9,
-      .tm_hour  = 16,
-      .tm_min   = 37,
-      .tm_sec   = 4,
+      .tm_mday  = 14,
+      .tm_hour  = 9,
+      .tm_min   = 20,
+      .tm_sec   = 0,
       .tm_isdst = 0
     };
     double time_ms = 0;
 
-    time_t timestamp = mktime(&t) - TIMEZONE;
-    vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+    time_t time = mktime(&t) - TIMEZONE;
+    vec3   obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
     obs    o = {0};
 
     while (true)
     {
-    timestamp = time(0);
+    //timestamp = time(0);
 
-    sat_observe(&s, timestamp, time_ms, &observer_geo, &o);
-    printf("Lat:    %11.3lf deg\n", o.latlonalt.lat * RAD2DEG);
-    printf("Lon:    %11.3lf deg\n", o.latlonalt.lon * RAD2DEG);
-    printf("Alt:    %11.3lf km\n", o.latlonalt.alt);
+    sat_observe(&s, time, time_ms, &obs_geo, &o);
+    printf("Lat:    %11.3lf deg\n",  o.latlonalt.lat * RAD2DEG);
+    printf("Lon:    %11.3lf deg\n",  o.latlonalt.lon * RAD2DEG);
+    printf("Alt:    %11.3lf km\n",   o.latlonalt.alt);
     printf("Vel:    %11.3lf km/s\n", o.velocity);
-    printf("Az:     %11.3lf deg\n", o.azimuth * RAD2DEG);
-    printf("El      %11.3lf deg\n", o.elevation * RAD2DEG);
-    printf("Range:  %11.3lf km\n", o.range);
+    printf("Az:     %11.3lf deg\n",  o.azelrng.az * RAD2DEG);
+    printf("El      %11.3lf deg\n",  o.azelrng.el * RAD2DEG);
+    printf("Range:  %11.3lf km\n",   o.azelrng.rng);
     printf("RRate:  %11.3lf km/s\n", o.rng_rate);
-    printf("Illum:  %7d\n", o.is_illum);
+    printf("Illum:  %7d\n",          o.is_illum);
+
+    vec3 solar, solar_azelrng;
+    solar = solar_pos(time, time_ms);
+    solar_azelrng = eq2azelrng(&solar, &obs_geo, time, time_ms);
+    printf("-==== The Sun ====-\n");
+    printf("RA:     %11.3lf deg\n", solar.ra * RAD2DEG);
+    printf("Dec:    %11.3lf deg\n", solar.dec * RAD2DEG);
+    printf("R:      %11.3lf au\n", solar.rv);
+    printf("Az:     %11.3lf deg\n", solar_azelrng.az * RAD2DEG);
+    printf("El:     %11.3lf deg\n", solar_azelrng.el * RAD2DEG);
+    printf("Range:  %11.3lf km\n", solar_azelrng.rv);
+    printf("-=================-\n");
 
 #ifdef __unix__
     usleep(1000000);
@@ -89,10 +105,10 @@ main (int argc, char** argv)
 
   if (argv[1][0] == 'p')
     {
-//      sat_load_tle("ISS (ZARYA)",
-//                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
-//                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
-//                 &s);
+      sat_load_tle("ISS (ZARYA)",
+                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
+                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
+                 &s);
 
 //         sat_load_tle("JUGNU",
 //                   "1 37839U 11058B   17281.88493397  .00000316  00000-0  27005-4 0  9993",
@@ -100,10 +116,10 @@ main (int argc, char** argv)
 //                   &s);
 
 
-      sat_load_tle("???",
-                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
-                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
-                   &s);
+//      sat_load_tle("???",
+//                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+//                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
+//                   &s);
 
 //      sat_load_tle("FENGYUN 2E",
 //                 "1 33463U 08066A   17281.80233449 -.00000213  00000-0  00000+0 0  9997",

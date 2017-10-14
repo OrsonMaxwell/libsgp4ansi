@@ -1,12 +1,14 @@
 /*
- * transform.h - Time format routines for libsgp4ansi.
+ * epoch.c - Time routines for libsgp4ansi.
  *
  * References:
  * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
  * https://celestrak.com/publications/AIAA/2006-6753/
  * IERS Bulletin - A (Vol. XXVIII No. 030)
+ * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
+ * Astronomical Algorithms, Jean Meeus
  *
- * Copyright © 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright ï¿½ 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #include <time.h>
@@ -121,20 +123,20 @@ unix2jul
 double
 jul2gst
 (
-  double julian
+  double julian_date
 )
 {
-  double result, tempUT1;
+  double gst, UT1;
 
-  tempUT1 = (julian - JAN1_2000_1200H) / 36525.0;
-  result = -6.2e-6* tempUT1 * tempUT1 * tempUT1 + 0.093104 * tempUT1 * tempUT1 +
-      (876600.0*3600 + 8640184.812866) * tempUT1 + 67310.54841;
+  UT1 = (julian_date - J2000) / 36525.0;
+  gst = -6.2e-6 * UT1 * UT1 * UT1 + 0.093104 * UT1 * UT1 +
+      (876600.0 * 3600 + 8640184.812866) * UT1 + 67310.54841;
 
-  result = fmod(result * DEG2RAD / 240.0, TAU);
+  gst = fmod(gst * DEG2RAD / 240.0, TAU);
 
   // Check quadrants
-  if (result < 0.0)
-    result += TAU;
+  if (gst < 0.0)
+    gst += TAU;
 
-  return result;
+  return gst;
 }

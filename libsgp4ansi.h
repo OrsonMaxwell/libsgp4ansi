@@ -5,8 +5,10 @@
  * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
  * https://celestrak.com/publications/AIAA/2006-6753/
  * IERS Bulletin - A (Vol. XXVIII No. 030)
+ * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
+ * Astronomical Algorithms, Jean Meeus
  *
- * Copyright © 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright ï¿½ 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #ifndef LIBSGP4ANSI_H_
@@ -32,13 +34,13 @@ extern const char libsgp4ansi_version[];
 typedef struct _vec3
 {
   union {
-    double a, i, l, u, x, lat;
+    double a, i, l, u, x, lat, az, ra;
   };
   union {
-    double b, j, m, v, y, lon;
+    double b, j, m, v, y, lon, el, dec;
   };
   union {
-    double c, k, n, w, z, alt;
+    double c, k, n, w, z, alt, rng, rv;
   };
 } vec3;
 
@@ -125,13 +127,27 @@ typedef struct _coe
 typedef struct _obs
 {
   vec3   latlonalt; // Satellite projected geodetic coordinates
-  double velocity;  // Satellite velocity
-  double range;     // Distance from observer, km
+  vec3   azelrng;   // Azimuth-Elevation-Range vector
+  double velocity;  // Satellite velocity, km/s
   double rng_rate;  // Distance change rate, km/s
-  double azimuth;   // Azimuth of observation
-  double elevation; // Elevation over horizon
   bool   is_illum;  // Is the satellite illuminated by the Sun?
 } obs;
+
+/*
+ * Satellite pass data at given time from a given location
+ */
+typedef struct _pass
+{
+  time_t aos_t;     // Acquisition of signal unix time
+  double aos_az;    // Acquisition of signal azimuth
+  time_t tca_t;     // Time if closest approach unix time
+  double tca_az;    // Time if closest approach azimuth
+  double tca_el;    // Time if closest approach elevation
+  time_t los_t;     // Loss of signal unix time
+  double los_az;    // Loss of signal azimuth
+  time_t flare_t;   // Unix time of illumination
+  time_t eclipse_t; // Unix time of (penumbral) eclipse
+} pass;
 
 // ************************************************************************* //
 //                                    API                                    //

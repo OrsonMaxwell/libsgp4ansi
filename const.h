@@ -1,7 +1,14 @@
 /*
  * const.h - precomputed mathematical and physical constants for libsgp4ansi.
  *
- * Copyright © 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * References:
+ * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
+ * https://celestrak.com/publications/AIAA/2006-6753/
+ * IERS Bulletin - A (Vol. XXVIII No. 030)
+ * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
+ * Astronomical Algorithms, Jean Meeus
+ *
+ * Copyright ï¿½ 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #ifndef CONST_H_
@@ -11,8 +18,8 @@
 //                                    TIME                                   //
 // ************************************************************************* //
 
-#define DEC31_1949_0000H 2433281.5     // Dec 31 1949 0000h UTC Julian date
-#define JAN1_2000_1200H  2451545.0     // Jan  1 2000 1200h UTC Julian date
+#define B1950 2433281.5 // Dec 31 1949 0000h UTC Julian date
+#define J2000 2451545.0 // Jan  1 2000 1200h UTC Julian date
 
 #ifdef __unix__
 #define TIMEZONE __timezone
@@ -93,6 +100,6 @@
 #define RPSID     (RPTIM * 1440 / TAU)   // Earth rotations per sidereal day
 #define ZNS       1.19459e-5
 #define ZNL       1.5835218e-4
-#define AU        1.495978707e11         // Astronomical unit, km
+#define AU        149597870.7            // Astronomical unit, km
 
 #endif /* CONST_H_ */

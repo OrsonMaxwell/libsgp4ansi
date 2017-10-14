@@ -5,6 +5,8 @@
  * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
  * https://celestrak.com/publications/AIAA/2006-6753/
  * IERS Bulletin - A (Vol. XXVIII No. 030)
+ * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
+ * Astronomical Algorithms, Jean Meeus
  *
  * Copyright � 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
@@ -23,6 +25,7 @@
 #include "const.h"
 #include "coord.h"
 #include "vector.h"
+#include "solar.h"
 
 // ************************************************************************* //
 //                                VERSION                                    //
@@ -495,7 +498,7 @@ sat_init
     s->pgho   = 0;
     s->pho    = 0;
 
-    double day    = s->julian_epoch + 18261.5 - DEC31_1949_0000H;
+    double day    = s->julian_epoch + 18261.5 - B1950;
     double xnodce = fmod(4.5236020 - 9.2422029e-4 * day, TAU);
     double stem   = sin(xnodce);
     double ctem   = cos(xnodce);
@@ -1674,34 +1677,20 @@ sat_observe
   result->velocity  = sqrt(GM * (2 / (RE + result->latlonalt.alt)
                                - 1 / (RE * s->aodp)));
 
-  geo2ecef(obs_geo, &obsposecef, &obsvelecef);
+  obsposecef = geo2ecef(obs_geo);
 
   // Observer to satellite vector in ECEF frame
   vec3 posdiffecef  = vec3_add(1, &posecef, -1, &obsposecef);
 
-  result->range     = vec3_mag(&posdiffecef);
-  result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->range;
-  result->azimuth   = ecef2az(&obsposecef, &posdiffecef);
-  result->elevation = ecef2el(&obsposecef, &posdiffecef);
+  result->azelrng   = ecef2azelrng(&obsposecef, &posdiffecef);
+  result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->azelrng.rng;
 
+  // TODO: Implementation pending
   result->is_illum  = false;
 
   return retval;
 }
 
-/*
- * Recursively zero in on an LOS event down to 1 sec resolution
- *
- * Inputs:  s          - sat struct pointer with initialized orbital data
- *          obs_geo    - Geodetic coordinates of the ground station
- *          start_time - Unix timestamp of start of prediction
- *          stop_time  - Unix timestamp of stop of prediction
- *          delta_t    - Time step
- *          horizon    - Elevation of observer horizon, [0; pi/2] rad
- *          is_aos     - Are we looking for AOS? (false for LOS)
- * Outputs: None
- * Returns: zero crossing unix time with second precision
- */
 int
 sat_passes
 (
@@ -1713,15 +1702,16 @@ sat_passes
         double       horizon
 )
 {
-  obs           o         = {0};
-  unsigned int  aos_count = 0;
-  unsigned int  los_count = 0;
-  double        prev_el   = -90;
+  obs           o            = {0};
+  unsigned int  aos_count    = 0;
+  unsigned int  los_count    = 0;
+  double        prev_el      = -TAU;
+  double        prev_prev_el = -TAU;
 
   unsigned int* AOS_t;
   unsigned int* LOS_t;
 
-  unsigned int  max_samples = (unsigned int)ceil((*stop_time - *start_time)
+  unsigned int  max_samples  = (unsigned int)ceil((*stop_time - *start_time)
                                                   / delta_t);
 
   AOS_t = malloc(max_samples * sizeof(unsigned int));
@@ -1743,9 +1733,9 @@ sat_passes
     sat_observe(s, t, 0, obs_geo, &o);
 
     // for plotting
-    fprintf(outfile, "%ld,%8.3lf\n", t - *start_time, o.elevation * RAD2DEG);
+    fprintf(outfile, "%ld,%8.3lf\n", t - *start_time, o.azelrng.el * RAD2DEG);
 
-    if (o.elevation > horizon)
+    if (o.azelrng.el > horizon)
     {
       if (t == *start_time)
       {
@@ -1771,7 +1761,7 @@ sat_passes
       los_count++;
     }
 
-    prev_el = o.elevation;
+    prev_el = o.azelrng.el;
   }
 
   // for plotting
@@ -1805,7 +1795,7 @@ sat_passes
     for (time_t t = AOS_t[i]; t <= LOS_t[i]; t += (LOS_t[i] - AOS_t[i]) / 13)
     {
       sat_observe(s, t, 0, obs_geo, &o);
-      tca_el = fmax(tca_el, o.elevation);
+      tca_el = fmax(tca_el, o.azelrng.el);
     }
     printf("TCA el coarse = %lf\n", tca_el * RAD2DEG);
     tca_el = 0;
@@ -1817,7 +1807,7 @@ sat_passes
     for (time_t t = AOS_t[i]; t <= LOS_t[i]; t++)
     {
       sat_observe(s, t, 0, obs_geo, &o);
-      tca_el = fmax(tca_el, o.elevation);
+      tca_el = fmax(tca_el, o.azelrng.el);
     }
     printf("TCA el = %lf\n", tca_el * RAD2DEG);
     tca_el = 0;
@@ -1830,8 +1820,7 @@ sat_passes
 }
 
 /*
- * Recursively zero in on an AOS or anLOS event down to 1 sec resolution
- * TODO: Is binary search optimal?
+ * Recursively zero in on an AOS or an LOS event down to 1 sec resolution
  *
  * Inputs:  s          - sat struct pointer with initialized orbital data
  *          obs_geo    - Geodetic coordinates of the ground station
@@ -1864,11 +1853,11 @@ find_aos_los
 
     if (is_aos == true)
     {
-      diff = o.elevation - horizon;
+      diff = o.azelrng.el - horizon;
     }
     else
     {
-      diff = horizon - o.elevation;
+      diff = horizon - o.azelrng.el;
     }
 
     if (diff > 0)

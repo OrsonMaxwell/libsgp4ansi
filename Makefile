@@ -42,8 +42,8 @@ ref_test:
 library: ${OUTPUTDIR}/${LIB_NAME}
 	@echo "${CURDIR}/${OUTPUTDIR}/${LIB_NAME} done"
 
-${OUTPUTDIR}/${LIB_NAME}: libsgp4ansi.o epoch.o coord.o vector.o
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared libsgp4ansi.o epoch.o coord.o vector.o -o ${OUTPUTDIR}/${LIB_NAME} ${LIBS}
+${OUTPUTDIR}/${LIB_NAME}: libsgp4ansi.o epoch.o coord.o vector.o solar.o
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared libsgp4ansi.o epoch.o coord.o vector.o solar.o -o ${OUTPUTDIR}/${LIB_NAME} ${LIBS}
 
 libsgp4ansi.o: libsgp4ansi.c libsgp4ansi.h const.h
 	${GCC} ${CCFLAGS} ${LIBFLAGS} -c libsgp4ansi.c ${LIBS}
@@ -57,11 +57,15 @@ coord.o: coord.c coord.h const.h
 vector.o: vector.c vector.h
 	${GCC} ${CCFLAGS} ${LIBFLAGS} -c vector.c ${LIBS}
 
+solar.o: solar.c solar.h
+	${GCC} ${CCFLAGS} ${LIBFLAGS} -c solar.c ${LIBS}
+
 lib_clean:
 	rm -f libsgp4ansi.o
 	rm -f epoch.o
 	rm -f coord.o
 	rm -f vector.o
+	rm -f solar.o
 	rm -f ${LIB_NAME}
 	rm -f ${OUTPUTDIR}/${LIB_NAME}
 

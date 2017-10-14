@@ -1,12 +1,14 @@
 /*
- * vectors.c - Vector math routines for libsgp4ansi.
+ * vector.c - Vector math routines for libsgp4ansi.
  *
  * References:
  * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
  * https://celestrak.com/publications/AIAA/2006-6753/
  * IERS Bulletin - A (Vol. XXVIII No. 030)
+ * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
+ * Astronomical Algorithms, Jean Meeus
  *
- * Copyright © 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright ï¿½ 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #include <math.h>

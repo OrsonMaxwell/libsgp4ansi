@@ -1,12 +1,14 @@
 /*
- * transform.c - Coordinate transformation routines for libsgp4ansi.
+ * coord.c - Coordinate transformation routines for libsgp4ansi.
  *
  * References:
  * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
  * https://celestrak.com/publications/AIAA/2006-6753/
  * IERS Bulletin - A (Vol. XXVIII No. 030)
+ * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
+ * Astronomical Algorithms, Jean Meeus
  *
- * Copyright © 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright ï¿½ 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #include <math.h>
@@ -21,7 +23,7 @@
  * Solve Kepler's equation for known true anomaly
  *
  * Inputs:  ecc - Eccentricity
- *          nu  - True anomaly, (-2pi; 2pi) rad
+ *          nu  - True anomaly, [-2pi; 2pi) rad
  * Returns: mean anomaly
  */
 double
@@ -465,38 +467,33 @@ ecef2geo
 /*
  * Transform geodetic latitude, longitude, and altitude to ECEF position vector
  *
- * Inputs:  latlonalt - Geodetic latitude, longitude and altitude vector
- * Outputs: posecef   - Position vector in ECEF frame, km
- *          velecef   - Velocity vector in ECEF frame, km/s
- * Returns: None
+ * Inputs:  geo  - Geodetic latitude, longitude and altitude vector
+ * Outputs: None
+ * Returns: ecef - Position vector in ECEF frame, km
  */
-void
+vec3
 geo2ecef
 (
-    const vec3* latlonalt,
-          vec3* posecef,
-          vec3* velecef
+    const vec3* geo
 )
 {
+  vec3 ecef;
+
   // Geocentric latitude
-  double gclat = atan(pow(1 - FLATT, 2) * tan(latlonalt->lat));
+  double gclat = atan(pow(1 - FLATT, 2) * tan(geo->lat));
 
   // Radius of Earth at surface point
   double rsurf = sqrt(pow(RE, 2) / ((1 / pow(1.0 - FLATT, 2) - 1) *
                  pow(sin(gclat), 2) + 1));
 
   // ECEF position vector
-  posecef->x = rsurf * cos(gclat) * cos(latlonalt->lon)
-             + latlonalt->alt * cos(latlonalt->lat) * cos(latlonalt->lon);
-  posecef->y = rsurf * cos(gclat) * sin(latlonalt->lon)
-             + latlonalt->alt * cos(latlonalt->lat) * sin(latlonalt->lon);
-  posecef->z = rsurf * sin(gclat) + latlonalt->alt * sin (latlonalt->lat);
+  ecef.x = rsurf * cos(gclat) * cos(geo->lon)
+             + geo->alt * cos(geo->lat) * cos(geo->lon);
+  ecef.y = rsurf * cos(gclat) * sin(geo->lon)
+             + geo->alt * cos(geo->lat) * sin(geo->lon);
+  ecef.z = rsurf * sin(gclat) + geo->alt * sin (geo->lat);
 
-  // ECEF velocity vector
-  double factor = TAU * RPSID / 86400;
-  velecef->x = -factor * posecef->y;
-  velecef->y = factor * posecef->x;
-  velecef->z = 0;
+  return ecef;
 }
 
 /*
@@ -553,4 +550,94 @@ ecef2az
     return TAU - (az - PIDIV2);
   }
   return PIDIV2 - az;
+}
+
+/*
+ * Find azimuth, elevation and range from ECEF vectors
+ *
+ * Inputs:  op - Observer position vector in ECEF frame
+ *          dp - Observer to satellite position vector in ECEF frame
+ * Outputs: None
+ * Returns: Azimuth, elevation, range vector (rad, rad, km)
+ */
+vec3
+ecef2azelrng
+(
+  const vec3* op,
+  const vec3* dp
+)
+{
+  vec3 azelrng;
+
+  // Find azimuth
+  double cosaz = (-op->z * op->x * dp->x - op->z * op->y * dp->y
+               + (pow(op->x, 2) + pow(op->y, 2)) * dp->z)
+          / sqrt((pow(op->x, 2) + pow(op->y, 2))
+               * (pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
+               * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+
+  double sinaz = (-op->y * dp->x + op->x * dp->y)
+         / sqrt((pow(op->x, 2) + pow(op->y, 2))
+              * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+
+  azelrng.az = PIDIV2 - atan2(cosaz, sinaz);
+  if (azelrng.az < 0)
+  {
+    azelrng.az += TAU;
+  }
+
+  // Find elevation
+  double cosel = (op->x * dp->x + op->y * dp->y + op->z * dp->z)
+               / sqrt((pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
+                    * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+
+  azelrng.el = PIDIV2 - acos(cosel);
+
+  // Find range
+  azelrng.rng = vec3_mag(dp);
+
+  return azelrng;
+}
+
+/*
+ * Convert equatorial vector to az-el-rng vector from ground st-n at given time
+ *
+ * Inputs:  radecrv - Equatorial coordinates vector
+ *          obs_geo - Geodetic coordinates of the ground station
+ *          time    - Unix time
+ *          time_ms - Millisecond portion if the time
+ * Outputs: None
+ * Returns: Azimuth, elevation, range vector
+ */
+vec3
+eq2azelrng
+(
+  const vec3*  radecrv,
+  const vec3*  obs_geo,
+        time_t time,
+        float  time_ms
+)
+{
+  vec3 azelrng;
+
+  double ThetaLST = jul2gst(unix2jul(time, time_ms)) + obs_geo->lon;
+
+  // Equation 4-11 (Define Siderial Time LHA)
+  double LHA = fmod(ThetaLST - radecrv->ra, TAU);
+
+  // Equation 4-12 (Elevation Deg)
+  azelrng.el = asin(sin(obs_geo->lat) * sin(radecrv->dec) + cos(obs_geo->lat) * cos(radecrv->dec) * cos(LHA));
+
+  // Equation 4-13 / 4-14 (Adaptation) (Azimuth Deg)
+  azelrng.az = fmod(atan2(-sin(LHA)*cos(radecrv->dec)/cos(azelrng.el),
+          (sin(radecrv->dec)-sin(azelrng.el)*sin(obs_geo->lat))/(cos(azelrng.el)*cos(obs_geo->lat))), TAU);
+
+  if (azelrng.az < 0)
+  {
+    azelrng.az += TAU;
+  }
+
+  azelrng.rng = radecrv->rv * AU;
+
+  return azelrng;
 }
