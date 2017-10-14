@@ -1716,12 +1716,17 @@ sat_passes // TODO: Return array of _pass structs
 
   unsigned int* AOS_t;
   unsigned int* LOS_t;
+  unsigned int* TCA_t;
+  unsigned int* TCA_el;
 
+  // TODO: Important heuristic! Needs testing!
   unsigned int  max_samples  = (unsigned int)ceil((*stop_time - *start_time)
-                                                  / delta_t);
+                               / delta_t) / s->period * 2 + 1;
 
-  AOS_t = malloc(max_samples * sizeof(unsigned int));
-  LOS_t = malloc(max_samples * sizeof(unsigned int));
+  AOS_t  = malloc(max_samples * sizeof(unsigned int));
+  LOS_t  = malloc(max_samples * sizeof(unsigned int));
+  TCA_t  = malloc(max_samples * sizeof(unsigned int));
+  TCA_el = malloc(max_samples * sizeof(unsigned int));
 
   if ((AOS_t == NULL) || (LOS_t == NULL))
   {
@@ -1737,6 +1742,12 @@ sat_passes // TODO: Return array of _pass structs
   for (time_t t = *start_time; t <= *stop_time; t += delta_t)
   {
     sat_observe(s, t, 0, obs_geo, &o);
+
+    if  ((aos_count >= max_samples - 1) || (los_count >= max_samples - 1))
+    {
+      printf("Out of memory!!! %ld", max_samples);
+      return -1;
+    }
 
     // for plotting
     fprintf(outfile, "%ld,%8.3lf\n", t - *start_time, o.azelrng.el * RAD2DEG);
@@ -1767,6 +1778,14 @@ sat_passes // TODO: Return array of _pass structs
       los_count++;
     }
 
+    // Local maximum candidates
+    if ((prev_el > horizon)
+        && (prev_el >= prev_prev_el)
+        && (prev_el > o.azelrng.el))
+    {
+      TCA_t[aos_count - 1] = t;
+    }
+
     prev_prev_el = prev_el;
     prev_el      = o.azelrng.el;
   }
@@ -1787,6 +1806,11 @@ sat_passes // TODO: Return array of _pass structs
     printf("LOS[%ld] = %ld\n", i, LOS_t[i] - *start_time);
   }
 
+  for (unsigned int i = 0; i < aos_count; i++)
+  {
+    printf("TCA[%ld] = %ld\n", i, TCA_t[i] - *start_time);
+  }
+
   if (aos_count != los_count)
   {
     return -2;
@@ -1797,28 +1821,28 @@ sat_passes // TODO: Return array of _pass structs
   printf("Flare count: %ld\n", aos_count);
 
   // TODO: Do more optimal local maximum search
-  for (unsigned int i = 0; i < aos_count; i ++)
-  {
-    for (time_t t = AOS_t[i]; t <= LOS_t[i]; t += (LOS_t[i] - AOS_t[i]) / 13)
-    {
-      sat_observe(s, t, 0, obs_geo, &o);
-      tca_el = fmax(tca_el, o.azelrng.el);
-    }
-    printf("TCA el coarse = %lf\n", tca_el * RAD2DEG);
-    tca_el = 0;
-  }
+//  for (unsigned int i = 0; i < aos_count; i ++)
+//  {
+//    for (time_t t = AOS_t[i]; t <= LOS_t[i]; t += (LOS_t[i] - AOS_t[i]) / 13)
+//    {
+//      sat_observe(s, t, 0, obs_geo, &o);
+//      tca_el = fmax(tca_el, o.azelrng.el);
+//    }
+//    printf("TCA el coarse = %lf\n", tca_el * RAD2DEG);
+//    tca_el = 0;
+//  }
 
 //  For speed comparison
-  for (unsigned int i = 0; i < aos_count; i ++)
-  {
-    for (time_t t = AOS_t[i]; t <= LOS_t[i]; t++)
-    {
-      sat_observe(s, t, 0, obs_geo, &o);
-      tca_el = fmax(tca_el, o.azelrng.el);
-    }
-    printf("TCA el = %lf\n", tca_el * RAD2DEG);
-    tca_el = 0;
-  }
+//  for (unsigned int i = 0; i < aos_count; i ++)
+//  {
+//    for (time_t t = AOS_t[i]; t <= LOS_t[i]; t++)
+//    {
+//      sat_observe(s, t, 0, obs_geo, &o);
+//      tca_el = fmax(tca_el, o.azelrng.el);
+//    }
+//    printf("TCA el = %lf\n", tca_el * RAD2DEG);
+//    tca_el = 0;
+//  }
 
   free(AOS_t);
   free(LOS_t);
