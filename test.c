@@ -93,6 +93,18 @@ main (int argc, char** argv)
     printf("Range:  %11.3lf km\n", solar_azelrng.rv);
     printf("-=================-\n");
 
+    vec3 lunar, lunar_azelrng;
+    lunar = lunar_pos(time, time_ms);
+    lunar_azelrng = eq2azelrng(&lunar, &obs_geo, time, time_ms);
+    printf("-==== The Moon ====-\n");
+    printf("RA:     %11.3lf deg\n", lunar.ra * RAD2DEG);
+    printf("Dec:    %11.3lf deg\n", lunar.dec * RAD2DEG);
+    printf("R:      %11.3lf au\n", lunar.rv);
+    printf("Az:     %11.3lf deg\n", lunar_azelrng.az * RAD2DEG);
+    printf("El:     %11.3lf deg\n", lunar_azelrng.el * RAD2DEG);
+    printf("Range:  %11.3lf km\n", lunar_azelrng.rv);
+    printf("-==================-\n");
+
 #ifdef __unix__
     usleep(1000000);
 #elif defined(_WIN32) || defined(WIN32)
@@ -105,10 +117,10 @@ main (int argc, char** argv)
 
   if (argv[1][0] == 'p')
     {
-      sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
-                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
-                 &s);
+//      sat_load_tle("ISS (ZARYA)",
+//                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
+//                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
+//                 &s);
 
 //         sat_load_tle("JUGNU",
 //                   "1 37839U 11058B   17281.88493397  .00000316  00000-0  27005-4 0  9993",
@@ -116,10 +128,10 @@ main (int argc, char** argv)
 //                   &s);
 
 
-//      sat_load_tle("???",
-//                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
-//                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
-//                   &s);
+      sat_load_tle("???",
+                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
+                   &s);
 
 //      sat_load_tle("FENGYUN 2E",
 //                 "1 33463U 08066A   17281.80233449 -.00000213  00000-0  00000+0 0  9997",

@@ -215,7 +215,7 @@ teme2coe
   if (orbit_type > 0)
   {
     e.nu = vec3_angle(&ebar, posteme);
-    if ( rdotv < 0)
+    if (rdotv < 0)
     {
       e.nu= TAU - e.nu;
     }

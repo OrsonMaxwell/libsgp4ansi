@@ -34,8 +34,8 @@ solar_pos
 
   // Julian century
   double T  = (unix2jul(time, time_ms) - J2000) / 36525;
-  double T2 = T * T;
-  double T3 = T * T * T;
+  double T2 = T  * T;
+  double T3 = T2 * T;
 
   // Geometric mean longitude
   double Lo = 280.46645 + 36000.76983 * T + 0.0003032 * T2;
@@ -93,7 +93,7 @@ solar_pos
  * Returns: azelrng - Equatorial coordinates vector (rad, rad, au)
  */
 vec3
-solar_pos
+lunar_pos
 (
   time_t time,
   float  time_ms
@@ -103,9 +103,74 @@ solar_pos
 
   // Julian century
   double T  = (unix2jul(time, time_ms) - J2000) / 36525;
-  double T2 = T * T;
-  double T3 = T * T * T;
+  double T2 = T  * T;
+  double T3 = T2 * T;
+  double T4 = T3 * T;
 
+  // Mean longitude of the Moon
+  double Ldot = 218.3164591 + 481267.88134236 * T - 0.0013268 * T2
+              + T3 / 538841 - T4 / 65194000;
+
+  // Mean elongation of the Moon
+  double D = 297.8502042 + 445267.1115168 * T - 0.00163 * T2 + T3 / 545868
+           - T4 / 113065000;
+
+  // Mean anomaly of the Sun
+  double M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T2 - T3 / 24490000;
+
+  // Mean nomaly of the Moon
+  double Mdot = 134.9634114 + 477198.8676313 * T + 0.008997 * T2 + T2 / 69699
+              - T4 / 14712000;
+
+  // Argument of latitude of the Moon
+  double F = 93.2720993 + 483202.0175273 * T - 0.0034029 * T2 - T3 / 3526000
+           + T4 / 863310000;
+
+  // Aux arguments
+  double A1 = 119.75 + 131.849    * T;
+  double A2 = 53.09  + 479264.29  * T;
+  double A3 = 313.45 + 481266.484 * T;
+
+  // Eccentricity correction coefficient
+  double E = 1 - 0.002516 * T - 0.0000074 * T2;
+
+  // TODO: Crapton of table terms here
+  double Sigmal = 0;
+  double Sigmar = 0;
+  double Sigmab = 0;
+
+  // Right ascension, declination and range
+  double lambda = Ldot + Sigmal / 1000000;
+  double beta   = Sigmab / 1000000;
+  double Delta  = 385000.56 + Sigmar / 1000;
+
+  // Mean equatorial parallax
+  double pi = asin(RE / Delta);
+
+  // Nutation in longitude
+  double dpsi = 0.00461;
+
+  // Apparent longitude
+  double alambda = lambda + dpsi;
+
+  // Nutation and abberation correction factor
+  double Omega = 125.04 - 1934.136 * T;
+
+  // Mean oliquity of the ecliptic
+  double epsilono = 23.43929 - 0.01300417 * T - 1.638889e-7 * T2
+                  + 5.036111e-7 * T3;
+
+  // True obliquity of the ecliptic
+  double epsilon = epsilono + 0.00256 * cos(Omega * DEG2RAD);
+
+  // Apparent right ascension, declination and radius vector
+  azelrng.ra  = atan2(sin(alambda * DEG2RAD) * cos(epsilon * DEG2RAD)
+                    - tan(beta * DEG2RAD) * sin(epsilon * DEG2RAD),
+                      cos(alambda * DEG2RAD));
+  azelrng.dec = sin(beta * DEG2RAD) * cos(epsilon * DEG2RAD)
+              + cos(beta * DEG2RAD) * sin(epsilon * DEG2RAD)
+              * sin(alambda * DEG2RAD);
+  azelrng.rv  = Delta / AU;
 
   return azelrng;
 }

@@ -31,7 +31,7 @@
 //                                VERSION                                    //
 // ************************************************************************* //
 
-const char libsgp4ansi_version[] = VERSION;
+const char libsgp4ansi_version[] = LIBSGP4ANSI_VERSION;
 
 // ************************************************************************* //
 //                            PRIVATE PROTOTYPES                             //
@@ -56,6 +56,16 @@ find_aos_los
         unsigned int delta_t,
         double       horizon,
         bool         is_aos
+);
+
+// Find local maximum of elevation in a given time period to 1s resolution
+time_t
+find_lmax
+(
+        sat*         s,
+  const vec3*        obs_geo,
+  const time_t       start_time,
+        unsigned int delta_t
 );
 
 // ************************************************************************* //
@@ -1688,7 +1698,7 @@ sat_observe
 }
 
 int
-sat_passes
+sat_passes // TODO: Return array of _pass structs
 (
         sat*         s,
   const time_t*      start_time,
@@ -1713,7 +1723,7 @@ sat_passes
   AOS_t = malloc(max_samples * sizeof(unsigned int));
   LOS_t = malloc(max_samples * sizeof(unsigned int));
 
-  if ((AOS_t == NULL) && (LOS_t == NULL))
+  if ((AOS_t == NULL) || (LOS_t == NULL))
   {
     return -1;
   }
@@ -1723,7 +1733,7 @@ sat_passes
   // for plotting
   FILE* outfile = fopen("elevations.out", "w");
 
-  // Find principle flares on coarse time pass and count them
+  // Find principle zeroes and local maxima on a coarse time pass
   for (time_t t = *start_time; t <= *stop_time; t += delta_t)
   {
     sat_observe(s, t, 0, obs_geo, &o);
@@ -1757,7 +1767,8 @@ sat_passes
       los_count++;
     }
 
-    prev_el = o.azelrng.el;
+    prev_prev_el = prev_el;
+    prev_el      = o.azelrng.el;
   }
 
   // for plotting
@@ -1869,4 +1880,17 @@ find_aos_los
   }
 
   return start_time;
+}
+
+// Find max elevation in a given time period down to 1 sec resolution
+time_t
+find_lmax
+(
+        sat*         s,
+  const vec3*        obs_geo,
+  const time_t       start_time,
+        unsigned int delta_t
+)
+{
+  return 0;
 }
