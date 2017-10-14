@@ -226,7 +226,7 @@ sat_observe
 
 // Find satellite passes over ground station inside given timeframe
 int
-sat_passes
+sat_find_passes
 (
         sat*         s,
   const time_t*      start_time,

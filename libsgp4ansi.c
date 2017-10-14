@@ -1698,7 +1698,7 @@ sat_observe
 }
 
 int
-sat_passes // TODO: Return array of _pass structs
+sat_find_passes // TODO: Return array of _pass structs
 (
         sat*         s,
   const time_t*      start_time,

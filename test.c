@@ -153,7 +153,7 @@ main (int argc, char** argv)
       time_t stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
 
 
-      sat_passes(&s, &start_time, &stop_time, &observer_geo, 32, 0 * DEG2RAD);
+      sat_find_passes(&s, &start_time, &stop_time, &observer_geo, 32, 0 * DEG2RAD);
 
       return 0;
     }
