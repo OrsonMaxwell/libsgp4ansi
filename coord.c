@@ -24,7 +24,7 @@
  *
  * Inputs:  ecc - Eccentricity
  *          nu  - True anomaly, [-2pi; 2pi) rad
- * Returns: mean anomaly
+ * Returns: m   - mean anomaly
  */
 double
 kepler_newton
@@ -96,7 +96,7 @@ kepler_newton
  * Inputs:  posteme - Position vector in TEME frame, km
  *          velteme - Velocity vector in TEME frame, km/s
  * Outputs: None
- * Returns: coe     - Success - struct containint the elements
+ * Returns: e       - Success - struct containint the elements
  *          NULL    - Decayed satellite
  */
 coe
@@ -158,20 +158,17 @@ teme2coe
 
   // Determine type of orbit
   // Elliptical, parabolic, hyperbolic inclined
-  //strcpy(orbit_type, "ei");
   orbit_type = 1;
   if (e.ecc < tolerance)
   {
     // Circular equatorial
     if ((e.incl < tolerance) || (fabs(e.incl - PI) < tolerance))
     {
-      //strcpy(orbit_type,"ce");
       orbit_type = -2;
     }
     else
     {
       // Circular inclined
-      //strcpy(orbit_type,"ci");
       orbit_type = -1;
     }
   }
@@ -180,8 +177,6 @@ teme2coe
     // Elliptical, parabolic, hyperbolic equatorial
     if ((e.incl < tolerance) || (fabs(e.incl - PI) < tolerance))
     {
-      //strcpy(orbit_type,"ee");
-      orbit_type = 2;
     }
   }
 
@@ -393,9 +388,9 @@ teme2ecef
 /*
  * Transform ECEF position to geodetic latitude, longitude, and altitude
  *
- * Inputs:  posecef   - Position vector in TEME frame, km
+ * Inputs:  posecef - Position vector in TEME frame, km
  * Outputs: None
- * Returns: geodetic coordinates vector
+ * Returns: geo     - Geodetic coordinates vector
  */
 vec3
 ecef2geo
@@ -497,68 +492,12 @@ geo2ecef
 }
 
 /*
- * Find elevation from ECEF vectors
- *
- * Inputs:  op - Observer position vector in ECEF frame
- *          dp - Observer to satellite position vector in ECEF frame
- * Outputs: None
- * Returns: elevation angle, [-pi/2; pi/2] rad
- */
-double
-ecef2el
-(
-  const vec3*  op,
-  const vec3*  dp
-)
-{
-  // Cosine of elevation
-  double cosel = (op->x * dp->x + op->y * dp->y + op->z * dp->z)
-               / sqrt((pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
-                    * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
-
-  return PIDIV2 - acos(cosel);
-}
-
-/*
- * Find azimuth from ECEF vectors
- *
- * Inputs:  op - Observer position vector in ECEF frame
- *          dp - Observer to satellite position vector in ECEF frame
- * Outputs: None
- * Returns: azimuth angle, [0; 2pi] rad
- */
-double
-ecef2az
-(
-  const vec3*  op,
-  const vec3*  dp
-)
-{
-  double cosaz = (-op->z * op->x * dp->x - op->z * op->y * dp->y
-               + (pow(op->x, 2) + pow(op->y, 2)) * dp->z)
-          / sqrt((pow(op->x, 2) + pow(op->y, 2))
-               * (pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
-               * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
-
-  double sinaz = (-op->y * dp->x + op->x * dp->y)
-         / sqrt((pow(op->x, 2) + pow(op->y, 2))
-              * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
-
-  double az = atan2(cosaz, sinaz);
-  if (az > PIDIV2)
-  {
-    return TAU - (az - PIDIV2);
-  }
-  return PIDIV2 - az;
-}
-
-/*
  * Find azimuth, elevation and range from ECEF vectors
  *
- * Inputs:  op - Observer position vector in ECEF frame
- *          dp - Observer to satellite position vector in ECEF frame
+ * Inputs:  op      - Observer position vector in ECEF frame
+ *          dp      - Observer to satellite position vector in ECEF frame
  * Outputs: None
- * Returns: Azimuth, elevation, range vector (rad, rad, km)
+ * Returns: azelrng - Azimuth, elevation, range vector (rad, rad, km)
  */
 vec3
 ecef2azelrng
@@ -607,7 +546,7 @@ ecef2azelrng
  *          time    - Unix time
  *          time_ms - Millisecond portion if the time
  * Outputs: None
- * Returns: Azimuth, elevation, range vector
+ * Returns: azelrng - Azimuth, elevation, range vector
  */
 vec3
 eq2azelrng

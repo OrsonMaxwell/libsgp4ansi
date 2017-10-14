@@ -21,26 +21,21 @@
 /*
  * Convert year and fractional day to unix time
  *
- * Inputs:  year   - Year
- *          days   - Decimal day since year start
- * Outputs: unix   - Unix time, s since 00:00 Jan, 1 1970
- *          ms     - Fractional part of seconds, ms
- * Returns: 0      - Success
- *         -1      - Invalid input
+ * Inputs:  year - Year
+ *          days - Decimal day since year start
+ * Outputs: ms   - Millisecond portion of time
+ * Returns: unix - Unix time, s since 00:00 Jan, 1 1970
  */
-int
+time_t
 fractday2unix
 (
   unsigned int year,
   double       days,
-  time_t*      unix,
-  float*       ms
+  float*       time_ms
 )
 {
-  if (days > ((year % 4 == 0) ? 366 : 365))
-  {
-    return -1;
-  }
+  unsigned int days_in_yr = (year % 4 == 0) ? 366 : 365;
+  days = (days > days_in_yr) ? (days_in_yr) : (days);
 
   struct tm res_tm;
 
@@ -75,7 +70,11 @@ fractday2unix
   res_tm.tm_min  = (int)floor(temp);
   sec            = (temp - res_tm.tm_min) * 60;
   res_tm.tm_sec  = (int)floor(sec);
-  *ms            = (sec - res_tm.tm_sec) * 1000;
+
+  if (time_ms != NULL)
+  {
+    *time_ms          = (sec - res_tm.tm_sec) * 1000;
+  }
 
   // Ignore DST
   res_tm.tm_isdst = 0;
@@ -86,38 +85,40 @@ fractday2unix
     return result;
   }
 
-  *unix = (time_t)result;
-  return 0;
+  return (time_t)result;
 }
 
 /*
  * Convert unix time to Julian date
  *
  * Inputs:  time - Timestamp in unix time
- *          ms   - Fracitonal second part, ms
+ *          ms   - Millisecond portion of time
  * Returns: Julian date on success
  */
 double
 unix2jul
 (
   time_t time,
-  float  ms
+  float  time_ms
 )
 {
   struct tm* t;
   t = gmtime(&time);
 
+  time_ms = fmin(time_ms, nextafter(1000, 0));
+
   return 367 * (t->tm_year + 1900)
   - floor((7 * ((t->tm_year + 1900) + floor((t->tm_mon + 10) / 12))) * 0.25)
   + floor(275 * (t->tm_mon + 1) / 9)
   + t->tm_mday + 1721013.5
-  + ((((double)t->tm_sec + ms / 1000) / 60 + t->tm_min) / 60 + t->tm_hour) / 24;
+  + ((((double)t->tm_sec + time_ms / 1000) / 60 + t->tm_min) / 60 + t->tm_hour)
+  / 24;
 }
 
 /*
  * Convert Julian date to Greenwich Siderial Time
  *
- * Inputs:  julian - Julian date
+ * Inputs:  julian_date - Julian date
  * Returns: GST time, rad
  */
 double

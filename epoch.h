@@ -17,13 +17,12 @@
 #include <time.h>
 
 // Convert year and fractional day to unix time
-int
+time_t
 fractday2unix
 (
   unsigned int year,
   double       days,
-  time_t*      unix,
-  float*       ms
+  float*       time_ms
 );
 
 // Convert unix time to Julian date

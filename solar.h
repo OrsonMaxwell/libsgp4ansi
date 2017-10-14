@@ -1,5 +1,5 @@
 /*
- * solar.h - Solar position routines for libsgp4ansi.
+ * solar.h - Solar system bodies position routines for libsgp4ansi.
  *
  * References:
  * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
@@ -17,6 +17,14 @@
 // Find (coarse) position of the Sun at given Julian time in equatorial frame
 vec3
 solar_pos
+(
+  time_t time,
+  float  time_ms
+);
+
+// Find (coarse) position of the Moon at given Julian time in equatorial frame
+vec3
+lunar_pos
 (
   time_t time,
   float  time_ms

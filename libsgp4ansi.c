@@ -212,15 +212,11 @@ sat_load_tle
     return -1;
   }
 
-  if (fractday2unix(epochyr, epochdays, &s->epoch, &s->epoch_ms) != 0)
-  {
-    return -1;
-  }
+  s->epoch             = fractday2unix(epochyr, epochdays, &s->epoch_ms);
+  s->julian_epoch      = unix2jul(s->epoch, s->epoch_ms);
 
-  s->julian_epoch = unix2jul(s->epoch, s->epoch_ms);
-
-  s->mean_motion_ddt6 = nddot * pow(10, nexp);
-  s->Bstar = Bstar * pow(10, Bexp);
+  s->mean_motion_ddt6  = nddot * pow(10, nexp);
+  s->Bstar             = Bstar * pow(10, Bexp);
 
   // Converting from TLE to SGP4 units (minutes, radians and kilometres)
   s->inclination      *= DEG2RAD;
