@@ -134,10 +134,76 @@ lunar_pos
   // Eccentricity correction coefficient
   double E = 1 - 0.002516 * T - 0.0000074 * T2;
 
-  // TODO: Crapton of table terms here
+  // Table periodic terms
   double Sigmal = 0;
   double Sigmar = 0;
   double Sigmab = 0;
+
+  Sigmal +=  6288774 * sin(Mdot);
+  Sigmal +=  1274027 * sin(2 * D - Mdot);
+  Sigmal +=  658314  * sin(2 * D);
+  Sigmal +=  213618  * sin(2 * Mdot);
+  Sigmal += -185116  * sin(M);
+  Sigmal += -114332  * sin(F);
+  Sigmal +=  58793   * sin(2 * D - 2 * Mdot);
+  Sigmal +=  57066   * sin(2 * D - M - Mdot);
+  Sigmal +=  53322   * sin(2 * D + Mdot);
+  Sigmal +=  45758   * sin(2 * D - M);
+  Sigmal += -40923   * sin(M - Mdot);
+  Sigmal += -34720   * sin(D);
+  Sigmal += -30383   * sin(M + Mdot);
+  Sigmal +=  15327   * sin(2 * D - 2 * F);
+  Sigmal += -12528   * sin(Mdot + 2 * F);
+  Sigmal +=  10980   * sin(Mdot - 2 * F);
+  Sigmal +=  10675   * sin(4 * D - Mdot);
+  Sigmal +=  10034   * sin(3 * Mdot);
+  Sigmal +=  8548    * sin(4 * D - 2 * Mdot);
+  Sigmal += -7888    * sin(2 * D + M - Mdot);
+  Sigmal += -6766    * sin(2 * D + M);
+  Sigmal += -5163    * sin(D - Mdot);
+  Sigmal +=  4987    * sin(D + M);
+  Sigmal +=  4036    * sin(2 * D - M + Mdot);
+  Sigmal +=  3994    * sin(2 * D + 2 * Mdot);
+  Sigmal +=  3861    * sin(4 * D);
+  Sigmal +=  3665    * sin(2 * D - 3 * Mdot);
+  Sigmal += -2689    * sin(M + 2 * Mdot);
+  Sigmal += -2602    * sin(2 * D - Mdot + 2 * F);
+  Sigmal +=  2390    * sin(2 * D - M - 2 * Mdot);
+  Sigmal += -2348    * sin(D + Mdot);
+  Sigmal +=  2236    * sin(2 * D - 2 * M);
+  Sigmal += -2120    * sin(M + 2 * Mdot);
+  Sigmal += -2069    * sin(2 * M);
+  Sigmal +=  2048    * sin(2 * D - 2 * M - Mdot);
+  Sigmal += -1773    * sin(2 * D + Mdot - 2 * F);
+  Sigmal += -1595    * sin(2 * D + 2 * F);
+  Sigmal +=  1215    * sin(4 * D - M - Mdot);
+  Sigmal += -1110    * sin(2 * Mdot + 2 * F);
+  Sigmal += -892     * sin(3 * D - Mdot);
+  Sigmal += -810     * sin(2 * D + M + Mdot);
+  Sigmal +=  759     * sin(4 * D - M - 2 * Mdot);
+  Sigmal += -713     * sin(2 * M - Mdot);
+  Sigmal += -700     * sin(2 * D + 2 * M - Mdot);
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+//  Sigmal +=  1     * sin();
+
 
   // Right ascension, declination and range
   double lambda = Ldot + Sigmal / 1000000;
