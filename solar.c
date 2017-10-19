@@ -12,6 +12,7 @@
  */
 
 #include <math.h>
+#include <stdio.h> // TODO: Remove
 
 #include "libsgp4ansi.h"
 #include "epoch.h"
@@ -102,7 +103,8 @@ lunar_pos
   vec3 azelrng;
 
   // Julian century
-  double T  = (unix2jul(time, time_ms) - J2000) / 36525;
+  //double T  = (unix2jul(time, time_ms) - J2000) / 36525;
+  double T  = (2448724.5 - J2000) / 36525;// TODO: Test
   double T2 = T  * T;
   double T3 = T2 * T;
   double T4 = T3 * T;
@@ -110,26 +112,34 @@ lunar_pos
   // Mean longitude of the Moon
   double Ldot = 218.3164591 + 481267.88134236 * T - 0.0013268 * T2
               + T3 / 538841 - T4 / 65194000;
+  Ldot *= DEG2RAD;
 
   // Mean elongation of the Moon
   double D = 297.8502042 + 445267.1115168 * T - 0.00163 * T2 + T3 / 545868
            - T4 / 113065000;
+  D *= DEG2RAD;
 
   // Mean anomaly of the Sun
   double M = 357.5291092 + 35999.0502909 * T - 0.0001536 * T2 - T3 / 24490000;
+  M *= DEG2RAD;
 
   // Mean nomaly of the Moon
   double Mdot = 134.9634114 + 477198.8676313 * T + 0.008997 * T2 + T2 / 69699
               - T4 / 14712000;
+  Mdot *= DEG2RAD;
 
   // Argument of latitude of the Moon
   double F = 93.2720993 + 483202.0175273 * T - 0.0034029 * T2 - T3 / 3526000
            + T4 / 863310000;
+  F *= DEG2RAD;
 
   // Aux arguments
   double A1 = 119.75 + 131.849    * T;
   double A2 = 53.09  + 479264.29  * T;
   double A3 = 313.45 + 481266.484 * T;
+  A1 *= DEG2RAD;
+  A2 *= DEG2RAD;
+  A3 *= DEG2RAD;
 
   // Eccentricity correction coefficient
   double E = 1 - 0.002516 * T - 0.0000074 * T2;
@@ -183,30 +193,144 @@ lunar_pos
   Sigmal +=  759     * sin(4 * D - M - 2 * Mdot);
   Sigmal += -713     * sin(2 * M - Mdot);
   Sigmal += -700     * sin(2 * D + 2 * M - Mdot);
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
-//  Sigmal +=  1     * sin();
+  Sigmal +=  691     * sin(2 * D + M - 2 * Mdot);
+  Sigmal +=  596     * sin(2 * D - M - 2 * F);
+  Sigmal +=  549     * sin(4 * D + Mdot);
+  Sigmal +=  537     * sin(4 * Mdot);
+  Sigmal +=  520     * sin(D - 2 * Mdot);
+  Sigmal += -487     * sin(D - 2 * Mdot);
+  Sigmal += -399     * sin(2 * D + M - 2 * F);
+  Sigmal += -381     * sin(2 * Mdot - 2 * F);
+  Sigmal +=  351     * sin(D + M + Mdot);
+  Sigmal += -340     * sin(3 * D - 2 * Mdot);
+  Sigmal +=  330     * sin(4 * D - 3 * Mdot);
+  Sigmal +=  327     * sin(2 * D -M + 2 * Mdot);
+  Sigmal += -323     * sin(2 * M + Mdot);
+  Sigmal +=  299     * sin(D + M - Mdot);
+  Sigmal +=  294     * sin(2 * D + 3 * Mdot);
+  Sigmal +=  0       * sin(2 * D - Mdot - 2 * F);
 
+  Sigmal += 3958 * sin(A1);
+  Sigmal += 1962 * sin(Ldot - F);
+  Sigmal += 318  * sin(A2);
+
+  Sigmar += -20905355 * cos(Mdot);
+  Sigmar += -3699111  * cos(2 * D - Mdot);
+  Sigmar += -2955968  * cos(2 * D);
+  Sigmar += -569925   * cos(2 * Mdot);
+  Sigmar +=  48888    * cos(M);
+  Sigmar += -3149     * cos(F);
+  Sigmar +=  246158   * cos(2 * D - 2 * Mdot);
+  Sigmar += -152138   * cos(2 * D - M - Mdot);
+  Sigmar += -170733   * cos(2 * D + Mdot);
+  Sigmar += -204586   * cos(2 * D - M);
+  Sigmar += -129620   * cos(M - Mdot);
+  Sigmar +=  108743   * cos(D);
+  Sigmar +=  104755   * cos(M + Mdot);
+  Sigmar +=  10321    * cos(2 * D - 2 * F);
+  Sigmar +=  79661    * cos(Mdot - 2 * F);
+  Sigmar += -34782    * cos(4 * D - Mdot);
+  Sigmar += -23210    * cos(3 * Mdot);
+  Sigmar += -21636    * cos(4 * D - 2 * Mdot);
+  Sigmar +=  24208    * cos(2 * D + M - Mdot);
+  Sigmar +=  30824    * cos(2 * D + M);
+  Sigmar += -8379     * cos(D - Mdot);
+  Sigmar += -16675    * cos(D + M);
+  Sigmar += -12831    * cos(2 * D - M + Mdot);
+  Sigmar += -10445    * cos(2 * D + 2 * Mdot);
+  Sigmar += -11650    * cos(4 * D);
+  Sigmar +=  14403    * cos(2 * D - 3 * Mdot);
+  Sigmar += -7003     * cos(M + 2 * Mdot);
+  Sigmar +=  10056    * cos(2 * D - M - 2 * Mdot);
+  Sigmar +=  6322     * cos(D + Mdot);
+  Sigmar += -9884     * cos(2 * D - 2 * M);
+  Sigmar +=  5751     * cos(M + 2 * Mdot);
+  Sigmar += -4950     * cos(2 * D - 2 * M - Mdot);
+  Sigmar +=  4130     * cos(2 * D + Mdot - 2 * F);
+  Sigmar += -3958     * cos(4 * D - M - Mdot);
+  Sigmar +=  3258     * cos(3 * D - Mdot);
+  Sigmar +=  2616     * cos(2 * D + M + Mdot);
+  Sigmar += -1897     * cos(4 * D - M - 2 * Mdot);
+  Sigmar += -2117     * cos(2 * M - Mdot);
+  Sigmar +=  2354     * cos(2 * D + 2 * M - Mdot);
+  Sigmar += -1423     * cos(4 * D + Mdot);
+  Sigmar += -1117     * cos(4 * Mdot);
+  Sigmar += -1571     * cos(D - 2 * Mdot);
+  Sigmar += -1739     * cos(D - 2 * Mdot);
+  Sigmar += -4421     * cos(2 * Mdot - 2 * F);
+  Sigmar +=  1165     * cos(2 * M + Mdot);
+  Sigmar +=  8752     * cos(2 * D - Mdot - 2 * F);
+
+  Sigmab +=  5128122 * sin(F);
+  Sigmab +=  280602  * sin(Mdot + F);
+  Sigmab +=  277693  * sin(Mdot - F);
+  Sigmab +=  173237  * sin(2 * D - F);
+  Sigmab +=  55413   * sin(2 * D - Mdot + F);
+  Sigmab +=  46271   * sin(2 * D - Mdot - F);
+  Sigmab +=  32573   * sin(2 * D + F);
+  Sigmab +=  17198   * sin(2 * Mdot + F);
+  Sigmab +=  9266    * sin(2 * D + Mdot - F);
+  Sigmab +=  8822    * sin(2 * Mdot - F);
+  Sigmab +=  8216    * sin(2 * D - M - F);
+  Sigmab +=  4326    * sin(2 * D - 2 * Mdot - F);
+  Sigmab +=  4200    * sin(2 * D + Mdot +F);
+  Sigmab += -3359    * sin(2 * D + M - F);
+  Sigmab +=  2463    * sin(2 * D - M - Mdot + F);
+  Sigmab +=  2211    * sin(2 * D - M + F);
+  Sigmab +=  2065    * sin(2 * D - M - Mdot - F);
+  Sigmab += -1870    * sin(M - Mdot - F);
+  Sigmab +=  1828    * sin(4 * D - Mdot - F);
+  Sigmab += -1794    * sin(M + F);
+  Sigmab += -1749    * sin(3 * F);
+  Sigmab += -1565    * sin(M - Mdot + F);
+  Sigmab += -1491    * sin(D + F);
+  Sigmab += -1475    * sin(M + Mdot + F);
+  Sigmab += -1410    * sin(M + Mdot - F);
+  Sigmab += -1344    * sin(M - F);
+  Sigmab += -1335    * sin(D - F);
+  Sigmab +=  1107    * sin(3 * Mdot + F);
+  Sigmab +=  1021    * sin(4 * D - F);
+  Sigmab +=  833     * sin(4 * D - Mdot + F);
+  Sigmab +=  777     * sin(Mdot - 3 * F);
+  Sigmab +=  671     * sin(4 * D - 2 * Mdot + F);
+  Sigmab +=  607     * sin(2 * D - 3 * F);
+  Sigmab +=  596     * sin(2 * D + 2 * Mdot - F);
+  Sigmab +=  491     * sin(2 * D - M + Mdot - F);
+  Sigmab += -451     * sin(2 * D - 2 * Mdot + F);
+  Sigmab +=  439     * sin(3 * Mdot - F);
+  Sigmab +=  422     * sin(2 * D + 2 * Mdot + F);
+  Sigmab +=  421     * sin(2 * D - 3 * Mdot - F);
+  Sigmab += -366     * sin(2 * D + M - Mdot + F);
+  Sigmab += -351     * sin(2 * D + M + F);
+  Sigmab +=  331     * sin(4 * D + F);
+  Sigmab +=  315     * sin(2 * D - M + Mdot + F);
+  Sigmab +=  302     * sin(2 * D - 2 * M - F);
+  Sigmab += -283     * sin(Mdot + 3 * F);
+  Sigmab += -229     * sin(2 * D + M + Mdot - F);
+  Sigmab +=  223     * sin(D + M - F);
+  Sigmab +=  223     * sin(D + M + F);
+  Sigmab += -220     * sin(M - 2 * Mdot - F);
+  Sigmab += -220     * sin(2 * D + M - Mdot - F);
+  Sigmab += -185     * sin(D + Mdot + F);
+  Sigmab +=  181     * sin(2 * D - M - 2 * Mdot - F);
+  Sigmab += -177     * sin(M + 2 * Mdot + F);
+  Sigmab +=  176     * sin(4 * D - 2 * Mdot - F);
+  Sigmab +=  166     * sin(4 * D - M - Mdot - F);
+  Sigmab += -164     * sin(D + Mdot - F);
+  Sigmab +=  121     * sin(4 * D + Mdot - F);
+  Sigmab += -119     * sin(D - Mdot - F);
+  Sigmab +=  115     * sin(4 * D - M - F);
+  Sigmab +=  107     * sin(2 * D - 2 * M + F);
+
+  Sigmab += -2235 * sin(Ldot);
+  Sigmab +=  382  * sin(A3);
+  Sigmab +=  175  * sin(A1 - F);
+  Sigmab +=  175  * sin(A1 + F);
+  Sigmab +=  127  * sin(Ldot - Mdot);
+  Sigmab += -115  * sin(Ldot + Mdot);
 
   // Right ascension, declination and range
-  double lambda = Ldot + Sigmal / 1000000;
+  double lambda = Ldot * RAD2DEG + Sigmal / 1000000;
   double beta   = Sigmab / 1000000;
   double Delta  = 385000.56 + Sigmar / 1000;
 
@@ -237,6 +361,24 @@ lunar_pos
               + cos(beta * DEG2RAD) * sin(epsilon * DEG2RAD)
               * sin(alambda * DEG2RAD);
   azelrng.rv  = Delta / AU;
+
+  printf("T      %30.16lf\n", T);
+  printf("Ldot   %30.16lf\n", fmod(Ldot, 360) + 360);
+  printf("D      %30.16lf\n", fmod(D, 360) + 360);
+  printf("M      %30.16lf\n", fmod(M, 360) + 360);
+  printf("Mdot   %30.16lf\n", fmod(Mdot, 360) + 360);
+  printf("F      %30.16lf\n", fmod(F, 360) + 360);
+  printf("A1     %30.16lf\n", fmod(A1, 360));
+  printf("A2     %30.16lf\n", fmod(A2, 360) + 360);
+  printf("A3     %30.16lf\n", fmod(A3, 360) + 360);
+  printf("E      %30.16lf\n", fmod(E, 360));
+  printf("El     %30.16lf\n", Sigmal);
+  printf("Er     %30.16lf\n", Sigmar);
+  printf("Eb     %30.16lf\n", Sigmab);
+  printf("epsiln %30.16lf\n", fmod(epsilon, 360));
+  printf("lambda %30.16lf\n", fmod(alambda, 360));
+  printf("alpha  %30.16lf\n", fmod(azelrng.ra, 360));
+  printf("delta  %30.16lf\n", fmod(azelrng.dec, 360));
 
   return azelrng;
 }

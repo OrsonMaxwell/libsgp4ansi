@@ -1816,9 +1816,8 @@ sat_find_passes // TODO: Return array of _pass structs
     return -2;
   }
 
-  double tca_el = 0;
+//  double tca_el = 0;
 
-  printf("Flare count: %ld\n", aos_count);
 
   // TODO: Do more optimal local maximum search
 //  for (unsigned int i = 0; i < aos_count; i ++)
