@@ -154,7 +154,7 @@ lunar_pos
   Sigmal +=  658314  * sin(2 * D);
   Sigmal +=  213618  * sin(2 * Mdot);
   Sigmal += -185116  * sin(M);
-  Sigmal += -114332  * sin(F);
+  Sigmal += -114332  * sin(2 * F);
   Sigmal +=  58793   * sin(2 * D - 2 * Mdot);
   Sigmal +=  57066   * sin(2 * D - M - Mdot);
   Sigmal +=  53322   * sin(2 * D + Mdot);
@@ -176,7 +176,7 @@ lunar_pos
   Sigmal +=  3994    * sin(2 * D + 2 * Mdot);
   Sigmal +=  3861    * sin(4 * D);
   Sigmal +=  3665    * sin(2 * D - 3 * Mdot);
-  Sigmal += -2689    * sin(M + 2 * Mdot);
+  Sigmal += -2689    * sin(M - 2 * Mdot);
   Sigmal += -2602    * sin(2 * D - Mdot + 2 * F);
   Sigmal +=  2390    * sin(2 * D - M - 2 * Mdot);
   Sigmal += -2348    * sin(D + Mdot);
@@ -197,29 +197,29 @@ lunar_pos
   Sigmal +=  596     * sin(2 * D - M - 2 * F);
   Sigmal +=  549     * sin(4 * D + Mdot);
   Sigmal +=  537     * sin(4 * Mdot);
-  Sigmal +=  520     * sin(D - 2 * Mdot);
+  Sigmal +=  520     * sin(4 * D - M);
   Sigmal += -487     * sin(D - 2 * Mdot);
   Sigmal += -399     * sin(2 * D + M - 2 * F);
   Sigmal += -381     * sin(2 * Mdot - 2 * F);
   Sigmal +=  351     * sin(D + M + Mdot);
   Sigmal += -340     * sin(3 * D - 2 * Mdot);
   Sigmal +=  330     * sin(4 * D - 3 * Mdot);
-  Sigmal +=  327     * sin(2 * D -M + 2 * Mdot);
+  Sigmal +=  327     * sin(2 * D - M + 2 * Mdot);
   Sigmal += -323     * sin(2 * M + Mdot);
   Sigmal +=  299     * sin(D + M - Mdot);
   Sigmal +=  294     * sin(2 * D + 3 * Mdot);
-  Sigmal +=  0       * sin(2 * D - Mdot - 2 * F);
 
   Sigmal += 3958 * sin(A1);
   Sigmal += 1962 * sin(Ldot - F);
   Sigmal += 318  * sin(A2);
+  // TODO: Still +32 difference
 
   Sigmar += -20905355 * cos(Mdot);
   Sigmar += -3699111  * cos(2 * D - Mdot);
   Sigmar += -2955968  * cos(2 * D);
   Sigmar += -569925   * cos(2 * Mdot);
   Sigmar +=  48888    * cos(M);
-  Sigmar += -3149     * cos(F);
+  Sigmar += -3149     * cos(2 * F);
   Sigmar +=  246158   * cos(2 * D - 2 * Mdot);
   Sigmar += -152138   * cos(2 * D - M - Mdot);
   Sigmar += -170733   * cos(2 * D + Mdot);
@@ -240,7 +240,7 @@ lunar_pos
   Sigmar += -10445    * cos(2 * D + 2 * Mdot);
   Sigmar += -11650    * cos(4 * D);
   Sigmar +=  14403    * cos(2 * D - 3 * Mdot);
-  Sigmar += -7003     * cos(M + 2 * Mdot);
+  Sigmar += -7003     * cos(M - 2 * Mdot);
   Sigmar +=  10056    * cos(2 * D - M - 2 * Mdot);
   Sigmar +=  6322     * cos(D + Mdot);
   Sigmar += -9884     * cos(2 * D - 2 * M);
@@ -255,11 +255,12 @@ lunar_pos
   Sigmar +=  2354     * cos(2 * D + 2 * M - Mdot);
   Sigmar += -1423     * cos(4 * D + Mdot);
   Sigmar += -1117     * cos(4 * Mdot);
-  Sigmar += -1571     * cos(D - 2 * Mdot);
+  Sigmar += -1571     * cos(4 * D - M);
   Sigmar += -1739     * cos(D - 2 * Mdot);
   Sigmar += -4421     * cos(2 * Mdot - 2 * F);
   Sigmar +=  1165     * cos(2 * M + Mdot);
   Sigmar +=  8752     * cos(2 * D - Mdot - 2 * F);
+  // TODO: Still +44 difference
 
   Sigmab +=  5128122 * sin(F);
   Sigmab +=  280602  * sin(Mdot + F);
@@ -317,7 +318,7 @@ lunar_pos
   Sigmab +=  176     * sin(4 * D - 2 * Mdot - F);
   Sigmab +=  166     * sin(4 * D - M - Mdot - F);
   Sigmab += -164     * sin(D + Mdot - F);
-  Sigmab +=  121     * sin(4 * D + Mdot - F);
+  Sigmab +=  132     * sin(4 * D + Mdot - F);
   Sigmab += -119     * sin(D - Mdot - F);
   Sigmab +=  115     * sin(4 * D - M - F);
   Sigmab +=  107     * sin(2 * D - 2 * M + F);
@@ -328,6 +329,7 @@ lunar_pos
   Sigmab +=  175  * sin(A1 + F);
   Sigmab +=  127  * sin(Ldot - Mdot);
   Sigmab += -115  * sin(Ldot + Mdot);
+  // TODO: Still -2 difference
 
   // Right ascension, declination and range
   double lambda = Ldot * RAD2DEG + Sigmal / 1000000;
@@ -363,22 +365,23 @@ lunar_pos
   azelrng.rv  = Delta / AU;
 
   printf("T      %30.16lf\n", T);
-  printf("Ldot   %30.16lf\n", fmod(Ldot, 360) + 360);
-  printf("D      %30.16lf\n", fmod(D, 360) + 360);
-  printf("M      %30.16lf\n", fmod(M, 360) + 360);
-  printf("Mdot   %30.16lf\n", fmod(Mdot, 360) + 360);
-  printf("F      %30.16lf\n", fmod(F, 360) + 360);
-  printf("A1     %30.16lf\n", fmod(A1, 360));
-  printf("A2     %30.16lf\n", fmod(A2, 360) + 360);
-  printf("A3     %30.16lf\n", fmod(A3, 360) + 360);
-  printf("E      %30.16lf\n", fmod(E, 360));
+  printf("Ldot   %30.16lf\n", RAD2DEG * (fmod(Ldot, TAU) + TAU));
+  printf("D      %30.16lf\n", RAD2DEG * (fmod(D, TAU) + TAU));
+  printf("M      %30.16lf\n", RAD2DEG * (fmod(M, TAU) + TAU));
+  printf("Mdot   %30.16lf\n", RAD2DEG * (fmod(Mdot, TAU) + TAU));
+  printf("F      %30.16lf\n", RAD2DEG * (fmod(F, TAU) + TAU));
+  printf("A1     %30.16lf\n", RAD2DEG * (fmod(A1, TAU)));
+  printf("A2     %30.16lf\n", RAD2DEG * (fmod(A2, TAU) + TAU));
+  printf("A3     %30.16lf\n", RAD2DEG * (fmod(A3, TAU) + TAU));
+  printf("E      %30.16lf\n", E);
   printf("El     %30.16lf\n", Sigmal);
   printf("Er     %30.16lf\n", Sigmar);
   printf("Eb     %30.16lf\n", Sigmab);
-  printf("epsiln %30.16lf\n", fmod(epsilon, 360));
-  printf("lambda %30.16lf\n", fmod(alambda, 360));
-  printf("alpha  %30.16lf\n", fmod(azelrng.ra, 360));
-  printf("delta  %30.16lf\n", fmod(azelrng.dec, 360));
+  printf("epsiln %30.16lf\n", epsilon);
+  printf("lambda %30.16lf\n", fmod(lambda, 360) + 360);
+  printf("almbda %30.16lf\n", fmod(alambda, 360) + 360);
+  printf("alpha  %30.16lf\n", RAD2DEG * fmod(azelrng.ra, TAU));
+  printf("delta  %30.16lf\n", RAD2DEG * fmod(azelrng.dec, TAU));
 
   return azelrng;
 }
