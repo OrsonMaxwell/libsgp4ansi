@@ -41,6 +41,7 @@
 #define RPD2RADPM   (1440.0 / (2.0 * PI))  // Revolutions per day
                                            // to radians per minute coefficient
 #define TWOTHIRD    (2.0 / 3.0)
+#define GOLDENR     1.61803398874989484820 // The Golden Ratio
 
 // ************************************************************************* //
 //                               GEODETIC DATUM                              //

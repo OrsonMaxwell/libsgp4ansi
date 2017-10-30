@@ -40,7 +40,7 @@ typedef struct _vec3
     double b, j, m, v, y, lon, el, dec;
   };
   union {
-    double c, k, n, w, z, alt, rng, rv;
+    double c, k, n, w, z, alt, rng, rv, t;
   };
 } vec3;
 

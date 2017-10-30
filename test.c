@@ -62,15 +62,15 @@ main (int argc, char** argv)
     };
     double time_ms = 0;
 
-    time_t time = mktime(&t) - TIMEZONE;
+    time_t timestamp = mktime(&t) - TIMEZONE;
     vec3   obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
     obs    o = {0};
 
     while (true)
     {
-    //timestamp = time(0);
+    timestamp = time(0);
 
-    sat_observe(&s, time, time_ms, &obs_geo, &o);
+    sat_observe(&s, timestamp, time_ms, &obs_geo, &o);
     printf("Lat:    %11.3lf deg\n",  o.latlonalt.lat * RAD2DEG);
     printf("Lon:    %11.3lf deg\n",  o.latlonalt.lon * RAD2DEG);
     printf("Alt:    %11.3lf km\n",   o.latlonalt.alt);
@@ -82,28 +82,27 @@ main (int argc, char** argv)
     printf("Illum:  %7d\n",          o.is_illum);
 
     vec3 solar, solar_azelrng;
-    solar = solar_pos(time, time_ms);
-    solar_azelrng = eq2azelrng(&solar, &obs_geo, time, time_ms);
-    printf("-==== The Sun ====-\n");
+    solar = solar_pos(timestamp, time_ms);
+    solar_azelrng = eq2azelrng(&solar, &obs_geo, timestamp, time_ms);
+    printf("-----==== The Sun ====-----\n");
     printf("RA:     %11.3lf deg\n", solar.ra * RAD2DEG);
     printf("Dec:    %11.3lf deg\n", solar.dec * RAD2DEG);
     printf("R:      %11.3lf au\n", solar.rv);
     printf("Az:     %11.3lf deg\n", solar_azelrng.az * RAD2DEG);
     printf("El:     %11.3lf deg\n", solar_azelrng.el * RAD2DEG);
     printf("Range:  %11.3lf km\n", solar_azelrng.rv);
-    printf("-=================-\n");
 
     vec3 lunar, lunar_azelrng;
-    lunar = lunar_pos(time, time_ms);
-    lunar_azelrng = eq2azelrng(&lunar, &obs_geo, time, time_ms);
-    printf("-==== The Moon ====-\n");
+    lunar = lunar_pos(timestamp, time_ms);
+    lunar_azelrng = eq2azelrng(&lunar, &obs_geo, timestamp, time_ms);
+    printf("-----==== The Moon ====-----\n");
     printf("RA:     %11.3lf deg\n", lunar.ra * RAD2DEG);
     printf("Dec:    %11.3lf deg\n", lunar.dec * RAD2DEG);
     printf("R:      %11.3lf au\n", lunar.rv);
     printf("Az:     %11.3lf deg\n", lunar_azelrng.az * RAD2DEG);
     printf("El:     %11.3lf deg\n", lunar_azelrng.el * RAD2DEG);
     printf("Range:  %11.3lf km\n", lunar_azelrng.rv);
-    printf("-==================-\n");
+    printf("-----==================-----\n");
 
 #ifdef __unix__
     usleep(1000000);
@@ -117,10 +116,10 @@ main (int argc, char** argv)
 
   if (argv[1][0] == 'p')
     {
-//      sat_load_tle("ISS (ZARYA)",
-//                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
-//                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
-//                 &s);
+      sat_load_tle("ISS (ZARYA)",
+                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
+                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
+                 &s);
 
 //         sat_load_tle("JUGNU",
 //                   "1 37839U 11058B   17281.88493397  .00000316  00000-0  27005-4 0  9993",
@@ -128,10 +127,10 @@ main (int argc, char** argv)
 //                   &s);
 
 
-      sat_load_tle("???",
-                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
-                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
-                   &s);
+//      sat_load_tle("???",
+//                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+//                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
+//                   &s);
 
 //      sat_load_tle("FENGYUN 2E",
 //                 "1 33463U 08066A   17281.80233449 -.00000213  00000-0  00000+0 0  9997",

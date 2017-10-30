@@ -34,6 +34,15 @@
 const char libsgp4ansi_version[] = LIBSGP4ANSI_VERSION;
 
 // ************************************************************************* //
+//                             PRIVATE TYPES                                 //
+// ************************************************************************* //
+
+/*
+ * Used for find_zero()
+ */
+enum dir {AOS, LOS};
+
+// ************************************************************************* //
 //                            PRIVATE PROTOTYPES                             //
 // ************************************************************************* //
 
@@ -48,19 +57,19 @@ str_trim
 
 // Recursively zero in on an AOS or LOS event down to 1 sec resolution
 time_t
-find_aos_los
+find_zero
 (
         sat*         s,
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t,
         double       horizon,
-        bool         is_aos
+  enum  dir          direction
 );
 
 // Find local maximum of elevation in a given time period to 1s resolution
-time_t
-find_lmax
+vec3
+find_tca
 (
         sat*         s,
   const vec3*        obs_geo,
@@ -1713,25 +1722,24 @@ sat_find_passes // TODO: Return array of _pass structs
   unsigned int  los_count    = 0;
   double        prev_el      = -TAU;
   double        prev_prev_el = -TAU;
+  vec3          tca_vec      = {0};
 
-  unsigned int* AOS_t;
-  unsigned int* LOS_t;
-  unsigned int* TCA_t;
-  unsigned int* TCA_el;
+//  unsigned int* AOS_t;
+//  unsigned int* LOS_t;
+//  unsigned int* TCA_t;
+//  unsigned int* TCA_el;
 
-  // TODO: Important heuristic! Needs testing!
+  pass* passes;
+
+  // TODO: Important heuristic! Needs testing and improvement!
   unsigned int  max_samples  = (unsigned int)ceil((*stop_time - *start_time)
                                / delta_t) / s->period * 2 + 1;
 
-  AOS_t  = malloc(max_samples * sizeof(unsigned int));
-  LOS_t  = malloc(max_samples * sizeof(unsigned int));
-  TCA_t  = malloc(max_samples * sizeof(unsigned int));
-  TCA_el = malloc(max_samples * sizeof(unsigned int));
-
-  if ((AOS_t == NULL) || (LOS_t == NULL))
-  {
-    return -1;
-  }
+//  AOS_t  = malloc(max_samples * sizeof(unsigned int));
+//  LOS_t  = malloc(max_samples * sizeof(unsigned int));
+//  TCA_t  = malloc(max_samples * sizeof(unsigned int));
+//  TCA_el = malloc(max_samples * sizeof(unsigned int));
+  passes = malloc(max_samples * sizeof(pass));
 
   horizon = fmax(0, horizon);
 
@@ -1756,25 +1764,25 @@ sat_find_passes // TODO: Return array of _pass structs
     {
       if (t == *start_time)
       {
-        AOS_t[aos_count] = *start_time;
+        passes[aos_count].aos_t = *start_time;
         aos_count++;
       }
       else if (prev_el <= horizon)
       {
-        AOS_t[aos_count] = find_aos_los(s, obs_geo, t - delta_t,
-                                        delta_t, horizon, true);
+        passes[aos_count].aos_t = find_zero(s, obs_geo, t - delta_t,
+                                        delta_t, horizon, AOS);
         aos_count++;
       }
       else if (t + delta_t > *stop_time)
       {
-        LOS_t[los_count] = *stop_time;
+        passes[los_count].los_t = *stop_time;
         los_count++;
       }
     }
     else if (prev_el > horizon)
     {
-      LOS_t[los_count] = find_aos_los(s, obs_geo, t - delta_t,
-                                      delta_t, horizon, false);
+      passes[los_count].los_t = find_zero(s, obs_geo, t - delta_t,
+                                      delta_t, horizon, LOS);
       los_count++;
     }
 
@@ -1783,7 +1791,8 @@ sat_find_passes // TODO: Return array of _pass structs
         && (prev_el >= prev_prev_el)
         && (prev_el > o.azelrng.el))
     {
-      TCA_t[aos_count - 1] = t;
+      tca_vec = find_tca(s, obs_geo, t - delta_t * 2, delta_t * 2);
+      passes[aos_count - 1].tca_t = tca_vec.t;
     }
 
     prev_prev_el = prev_el;
@@ -1798,17 +1807,17 @@ sat_find_passes // TODO: Return array of _pass structs
 
   for (unsigned int i = 0; i < aos_count; i++)
   {
-    printf("AOS[%ld] = %ld\n", i, AOS_t[i] - *start_time);
+    printf("AOS[%ld] = %ld\n", i, passes[i].aos_t - *start_time);
   }
 
   for (unsigned int i = 0; i < los_count; i++)
   {
-    printf("LOS[%ld] = %ld\n", i, LOS_t[i] - *start_time);
+    printf("LOS[%ld] = %ld\n", i, passes[i].los_t - *start_time);
   }
 
   for (unsigned int i = 0; i < aos_count; i++)
   {
-    printf("TCA[%ld] = %ld\n", i, TCA_t[i] - *start_time);
+    printf("TCA[%ld] = %ld\n", i, passes[i].tca_t - *start_time);
   }
 
   if (aos_count != los_count)
@@ -1843,33 +1852,33 @@ sat_find_passes // TODO: Return array of _pass structs
 //    tca_el = 0;
 //  }
 
-  free(AOS_t);
-  free(LOS_t);
+  free(passes);
 
   return 0;
 }
 
 /*
  * Recursively zero in on an AOS or an LOS event down to 1 sec resolution
+ * using binary section search
  *
  * Inputs:  s          - sat struct pointer with initialized orbital data
  *          obs_geo    - Geodetic coordinates of the ground station
  *          start_time - Unix timestamp of observation
  *          delta_t    - Time step
  *          horizon    - Elevation of observer horizon, [0; pi/2] rad
- *          is_aos     - Are we looking for AOS? (false for LOS)
+ *          direction  - Are we looking for AOS or for LOS?
  * Outputs: None
  * Returns: zero crossing unix time with second precision
  */
 time_t
-find_aos_los
+find_zero
 (
         sat*         s,
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t,
         double       horizon,
-        bool         is_aos
+  enum  dir          direction
 )
 {
   obs    o = {0};
@@ -1881,33 +1890,33 @@ find_aos_los
   {
     sat_observe(s, start_time + half_dt, 0, obs_geo, &o);
 
-    if (is_aos == true)
+    if (direction == AOS)
     {
       diff = o.azelrng.el - horizon;
     }
-    else
+    else // direction == LOS
     {
       diff = horizon - o.azelrng.el;
     }
 
     if (diff > 0)
     {
-      return find_aos_los(s, obs_geo, start_time,
-                          half_dt, horizon, is_aos);
+      return find_zero(s, obs_geo, start_time,
+                       half_dt, horizon, direction);
     }
     else
     {
-      return find_aos_los(s, obs_geo, start_time + half_dt,
-                          half_dt, horizon, is_aos);
+      return find_zero(s, obs_geo, start_time + half_dt,
+                      half_dt, horizon, direction);
     }
   }
 
   return start_time;
 }
 
-// Find max elevation in a given time period down to 1 sec resolution
-time_t
-find_lmax
+// Find max elevation time an angle in a given period down to 1s resolution
+vec3
+find_tca
 (
         sat*         s,
   const vec3*        obs_geo,
@@ -1915,5 +1924,14 @@ find_lmax
         unsigned int delta_t
 )
 {
-  return 0;
+  vec3  result = {0};
+  obs   o      = {0};
+
+  sat_observe(s, start_time + delta_t, 0, obs_geo, &o);
+  result.az = o.azelrng.az;
+  result.el = o.azelrng.el;
+  result.t  = start_time + delta_t;
+
+  // TODO: GSS implementation here.
+  return result;
 }
