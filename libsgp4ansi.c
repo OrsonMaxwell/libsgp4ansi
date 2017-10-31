@@ -1707,46 +1707,31 @@ sat_observe
 }
 
 int
-sat_find_passes // TODO: Return array of pass objects
+sat_find_passes
 (
         sat*         s,
   const time_t*      start_time,
   const time_t*      stop_time,
   const vec3*        obs_geo,
         unsigned int delta_t,
-        double       horizon
+        double       horizon,
+        pass*        passes
 )
 {
   obs           o            = {0};
-  unsigned int  aos_count    = 0;
-  unsigned int  los_count    = 0;
+  obs           o_tca        = {0};
+  unsigned int  pass_count   = 0;
   double        prev_el      = -TAU;
   double        prev_prev_el = -TAU;
-  vec3          tca_vec      = {0};
-
-  pass* passes;
-
-  // TODO: Important heuristic! Needs testing and improvement!
-  unsigned int  max_samples  = (unsigned int)ceil((*stop_time - *start_time)
-                               / delta_t) / s->period * 2 + 1;
-
-  passes = malloc(max_samples * sizeof(pass));
-
-  horizon = fmax(0, horizon);
+  time_t        new_lmax_t   = 0;
 
   // for plotting
   FILE* outfile = fopen("elevations.out", "w");
 
-  // Find principle zeroes and local maxima on a coarse time pass
+  // Find principle zeroes and local maxima on a coarse time step pass
   for (time_t t = *start_time; t <= *stop_time; t += delta_t)
   {
     sat_observe(s, t, 0, obs_geo, &o);
-
-    if  ((aos_count >= max_samples - 1) || (los_count >= max_samples - 1))
-    {
-      printf("Out of memory!!! %ld", max_samples);
-      return -1;
-    }
 
     // for plotting
     fprintf(outfile, "%ld,%8.3lf\n", t - *start_time, o.azelrng.el * RAD2DEG);
@@ -1755,26 +1740,32 @@ sat_find_passes // TODO: Return array of pass objects
     {
       if (t == *start_time)
       {
-        passes[aos_count].aos_t = *start_time;
-        aos_count++;
+        passes[pass_count].aos_t = *start_time;
+        passes[pass_count].aos_az = o.azelrng.az;
+
+        // Count passes by AOS events
+        pass_count++;
       }
       else if (prev_el <= horizon)
       {
-        passes[aos_count].aos_t = find_zero(s, obs_geo, t - delta_t,
+        passes[pass_count].aos_t = find_zero(s, obs_geo, t - delta_t,
                                         delta_t, horizon, AOS);
-        aos_count++;
+        passes[pass_count].aos_az = o.azelrng.az;
+
+        // Count passes by AOS events
+        pass_count++;
       }
       else if (t + delta_t > *stop_time)
       {
-        passes[los_count].los_t = *stop_time;
-        los_count++;
+        passes[pass_count - 1].los_t = *stop_time;
+        passes[pass_count - 1].los_az = o.azelrng.az;
       }
     }
     else if (prev_el > horizon)
     {
-      passes[los_count].los_t = find_zero(s, obs_geo, t - delta_t,
+      passes[pass_count - 1].los_t = find_zero(s, obs_geo, t - delta_t,
                                       delta_t, horizon, LOS);
-      los_count++;
+      passes[pass_count - 1].los_az = o.azelrng.az;
     }
 
     // Local maximum candidates
@@ -1782,16 +1773,25 @@ sat_find_passes // TODO: Return array of pass objects
         && (prev_el >= prev_prev_el)
         && (prev_el > o.azelrng.el))
     {
-      // If TCA was before start_time, but LOS is after - this does not
-      // qualify for unimodality and therefore for GSS algo
-      if (t - delta_t * 2 < *start_time)
+      // Special case where TCA was befor start_time, and LOS after
+      // This case breaks unimodality of the elevation function in the time
+      // interval passed to find_tca() which in turn is incompatible with GSS.
+      if(t <= *start_time + delta_t * 2)
       {
-        passes[aos_count - 1].tca_t = *start_time;
+        new_lmax_t = *start_time;
       }
       else
       {
-        passes[aos_count - 1].tca_t = find_tca(s, obs_geo, t - delta_t * 2,
-                                               delta_t * 2);
+        new_lmax_t = find_tca(s, obs_geo, t - delta_t * 2, delta_t * 2);
+      }
+
+      sat_observe(s, new_lmax_t, 0, obs_geo, &o_tca);
+
+      if (o_tca.azelrng.el > passes[pass_count - 1].tca_el)
+      {
+        passes[pass_count - 1].tca_el = o_tca.azelrng.el;
+        passes[pass_count - 1].tca_t = new_lmax_t;
+        passes[pass_count - 1].tca_az = o_tca.azelrng.az;
       }
     }
 
@@ -1801,31 +1801,6 @@ sat_find_passes // TODO: Return array of pass objects
 
   // for plotting
   fclose(outfile);
-
-  printf("AOS count: %ld\n", aos_count);
-  printf("LOS count: %ld\n", los_count);
-
-  for (unsigned int i = 0; i < aos_count; i++)
-  {
-    printf("AOS[%ld] = %ld\n", i, passes[i].aos_t - *start_time);
-  }
-
-  for (unsigned int i = 0; i < los_count; i++)
-  {
-    printf("LOS[%ld] = %ld\n", i, passes[i].los_t - *start_time);
-  }
-
-  for (unsigned int i = 0; i < aos_count; i++)
-  {
-    printf("TCA[%ld] = %ld\n", i, passes[i].tca_t - *start_time);
-  }
-
-  if (aos_count != los_count)
-  {
-    return -2;
-  }
-
-  free(passes);
 
   return 0;
 }
@@ -1896,7 +1871,7 @@ find_zero
  *          start_time - Unix timestamp of observation
  *          delta_t    - Time step
  * Outputs: None
- * Returns: maximum elevation unix time with second precision
+ * Returns: Maximum elevation unix time with second precision
  */
 time_t
 find_tca
@@ -1920,6 +1895,7 @@ find_tca
   {
     sat_observe(s, c, 0, obs_geo, &o_c);
     sat_observe(s, d, 0, obs_geo, &o_d);
+
     if (o_c.azelrng.el > o_d.azelrng.el)
     {
       b = d;

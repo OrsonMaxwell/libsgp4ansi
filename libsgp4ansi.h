@@ -233,7 +233,8 @@ sat_find_passes
   const time_t*      stop_time,
   const vec3*        obs_geo,
         unsigned int delta_t,
-        double       horizon
+        double       horizon,
+        pass*        passes
 );
 
 #endif /* LIBSGP4ANSI_H_ */

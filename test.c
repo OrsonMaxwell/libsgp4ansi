@@ -150,9 +150,42 @@ main (int argc, char** argv)
       vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
       time_t start_time    = mktime(&t) - TIMEZONE;
       time_t stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
+      pass*  passes;
+      char   buff[70];
+
+      unsigned int delta_t = 60;
+      double       horizon = 2 * DEG2RAD;
+
+      // Important heuristic!
+      unsigned int  max_passes  = (unsigned int)ceil((stop_time - start_time)
+                                   / delta_t) / s.period * 2 + 1;
+
+      passes = calloc(max_passes, sizeof(pass));
+
+      sat_find_passes(&s, &start_time, &stop_time, &observer_geo, delta_t,
+                      horizon, passes);
 
 
-      sat_find_passes(&s, &start_time, &stop_time, &observer_geo, 60, 0 * DEG2RAD);
+      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&start_time));
+      printf("------------------------\n");
+      printf("Running pass prediction\nFrom %s\n", buff);
+      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&stop_time));
+      printf("To   %s\n", buff);
+      printf("------------------------\n");
+
+      unsigned int i = 0;
+      while ((i < max_passes) && (passes[i].tca_el > horizon))
+      {
+        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].aos_t));
+        printf("\nAOS: [%s] AZ: %6.2lf\n", buff, passes[i].aos_az * RAD2DEG);
+        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].tca_t));
+        printf("TCA: [%s] AZ: %6.2lf EL: %6.2lf\n", buff, passes[i].tca_az * RAD2DEG, passes[i].tca_el * RAD2DEG);
+        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].los_t));
+        printf("LOS: [%s] AZ: %6.2lf\n", buff, passes[i].los_az * RAD2DEG);
+
+        i++;
+      }
+      free(passes);
 
       return 0;
     }
