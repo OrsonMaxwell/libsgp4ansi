@@ -68,7 +68,7 @@ find_zero
 );
 
 // Find local maximum of elevation in a given time period to 1s resolution
-vec3
+time_t
 find_tca
 (
         sat*         s,
@@ -1707,7 +1707,7 @@ sat_observe
 }
 
 int
-sat_find_passes // TODO: Return array of _pass structs
+sat_find_passes // TODO: Return array of pass objects
 (
         sat*         s,
   const time_t*      start_time,
@@ -1724,21 +1724,12 @@ sat_find_passes // TODO: Return array of _pass structs
   double        prev_prev_el = -TAU;
   vec3          tca_vec      = {0};
 
-//  unsigned int* AOS_t;
-//  unsigned int* LOS_t;
-//  unsigned int* TCA_t;
-//  unsigned int* TCA_el;
-
   pass* passes;
 
   // TODO: Important heuristic! Needs testing and improvement!
   unsigned int  max_samples  = (unsigned int)ceil((*stop_time - *start_time)
                                / delta_t) / s->period * 2 + 1;
 
-//  AOS_t  = malloc(max_samples * sizeof(unsigned int));
-//  LOS_t  = malloc(max_samples * sizeof(unsigned int));
-//  TCA_t  = malloc(max_samples * sizeof(unsigned int));
-//  TCA_el = malloc(max_samples * sizeof(unsigned int));
   passes = malloc(max_samples * sizeof(pass));
 
   horizon = fmax(0, horizon);
@@ -1791,8 +1782,17 @@ sat_find_passes // TODO: Return array of _pass structs
         && (prev_el >= prev_prev_el)
         && (prev_el > o.azelrng.el))
     {
-      tca_vec = find_tca(s, obs_geo, t - delta_t * 2, delta_t * 2);
-      passes[aos_count - 1].tca_t = tca_vec.t;
+      // If TCA was before start_time, but LOS is after - this does not
+      // qualify for unimodality and therefore for GSS algo
+      if (t - delta_t * 2 < *start_time)
+      {
+        passes[aos_count - 1].tca_t = *start_time;
+      }
+      else
+      {
+        passes[aos_count - 1].tca_t = find_tca(s, obs_geo, t - delta_t * 2,
+                                               delta_t * 2);
+      }
     }
 
     prev_prev_el = prev_el;
@@ -1825,41 +1825,14 @@ sat_find_passes // TODO: Return array of _pass structs
     return -2;
   }
 
-//  double tca_el = 0;
-
-
-  // TODO: Do more optimal local maximum search
-//  for (unsigned int i = 0; i < aos_count; i ++)
-//  {
-//    for (time_t t = AOS_t[i]; t <= LOS_t[i]; t += (LOS_t[i] - AOS_t[i]) / 13)
-//    {
-//      sat_observe(s, t, 0, obs_geo, &o);
-//      tca_el = fmax(tca_el, o.azelrng.el);
-//    }
-//    printf("TCA el coarse = %lf\n", tca_el * RAD2DEG);
-//    tca_el = 0;
-//  }
-
-//  For speed comparison
-//  for (unsigned int i = 0; i < aos_count; i ++)
-//  {
-//    for (time_t t = AOS_t[i]; t <= LOS_t[i]; t++)
-//    {
-//      sat_observe(s, t, 0, obs_geo, &o);
-//      tca_el = fmax(tca_el, o.azelrng.el);
-//    }
-//    printf("TCA el = %lf\n", tca_el * RAD2DEG);
-//    tca_el = 0;
-//  }
-
   free(passes);
 
   return 0;
 }
 
 /*
- * Recursively zero in on an AOS or an LOS event down to 1 sec resolution
- * using binary section search
+ * Zero in on an AOS or an LOS event down to 1 sec resolution
+ * using recursive binary section search
  *
  * Inputs:  s          - sat struct pointer with initialized orbital data
  *          obs_geo    - Geodetic coordinates of the ground station
@@ -1914,8 +1887,18 @@ find_zero
   return start_time;
 }
 
-// Find max elevation time an angle in a given period down to 1s resolution
-vec3
+/*
+ * Find max elevation time an angle in a given period down to 1s resolution
+ * using iterative golden section search
+ *
+ * Inputs:  s          - sat struct pointer with initialized orbital data
+ *          obs_geo    - Geodetic coordinates of the ground station
+ *          start_time - Unix timestamp of observation
+ *          delta_t    - Time step
+ * Outputs: None
+ * Returns: maximum elevation unix time with second precision
+ */
+time_t
 find_tca
 (
         sat*         s,
@@ -1924,14 +1907,31 @@ find_tca
         unsigned int delta_t
 )
 {
-  vec3  result = {0};
-  obs   o      = {0};
+  obs    o_c     = {0};
+  obs    o_d     = {0};
 
-  sat_observe(s, start_time + delta_t, 0, obs_geo, &o);
-  result.az = o.azelrng.az;
-  result.el = o.azelrng.el;
-  result.t  = start_time + delta_t;
+  // Iterative golden section search
+  unsigned int  a = start_time;
+  unsigned int  b = start_time + delta_t;
+  unsigned int  c = b - (b - a) / GOLDENR;
+  unsigned int  d = a + (b - a) / GOLDENR;
 
-  // TODO: GSS implementation here.
-  return result;
+  while (abs(c - d) > 1)
+  {
+    sat_observe(s, c, 0, obs_geo, &o_c);
+    sat_observe(s, d, 0, obs_geo, &o_d);
+    if (o_c.azelrng.el > o_d.azelrng.el)
+    {
+      b = d;
+    }
+    else
+    {
+      a = c;
+    }
+
+    c = b - (b - a) / GOLDENR;
+    d = a + (b - a) / GOLDENR;
+  }
+
+  return (b + a) / 2;
 }
