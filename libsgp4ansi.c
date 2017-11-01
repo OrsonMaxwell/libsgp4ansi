@@ -40,7 +40,7 @@ const char libsgp4ansi_version[] = LIBSGP4ANSI_VERSION;
 /*
  * Used for find_zero()
  */
-enum dir {AOS, LOS};
+enum dir {AOS, LOS, FLARE, ECLIPSE};
 
 // ************************************************************************* //
 //                            PRIVATE PROTOTYPES                             //
@@ -75,6 +75,16 @@ find_tca
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t
+);
+
+time_t
+find_flare
+(
+        sat*         s,
+  const vec3*        obs_geo,
+  const time_t       start_time,
+        unsigned int delta_t,
+        enum  dir          direction
 );
 
 // ************************************************************************* //
@@ -1761,6 +1771,7 @@ sat_find_passes
   double        prev_el      = -TAU;
   double        prev_prev_el = -TAU;
   time_t        new_lmax_t   = 0;
+  bool          prev_illum   = false;
 
   // for plotting
   FILE* outfile = fopen("elevations.out", "w");
@@ -1780,6 +1791,9 @@ sat_find_passes
         passes[pass_count].aos_t = *start_time;
         passes[pass_count].aos_az = o.azelrng.az;
 
+        // Eclipse time defaults to LOS (see below)
+        passes[pass_count].eclipse_t = 0;
+
         // Count passes by AOS events
         pass_count++;
       }
@@ -1789,20 +1803,48 @@ sat_find_passes
                                         delta_t, horizon, AOS);
         passes[pass_count].aos_az = o.azelrng.az;
 
+        // Flare time defaults to AOS if the satellite is already illuminated
+        if (o.is_illum == true)
+        {
+          passes[pass_count].flare_t = passes[pass_count].aos_t;
+        }
+
         // Count passes by AOS events
         pass_count++;
       }
       else if (t + delta_t > *stop_time)
       {
-        passes[pass_count - 1].los_t = *stop_time;
+        passes[pass_count - 1].los_t  = *stop_time;
         passes[pass_count - 1].los_az = o.azelrng.az;
       }
+
+      // Find flare start and end time
+      if ((o.is_illum == true)
+          && (prev_illum == false)
+          && (passes[pass_count - 1].flare_t != passes[pass_count - 1].aos_t))
+      {
+
+        passes[pass_count - 1].flare_t   = find_flare(s, obs_geo, t - delta_t,
+                                                      delta_t, FLARE);
+      }
+
+      if ((o.is_illum == false) && (prev_illum == true))
+      {
+        passes[pass_count - 1].eclipse_t = find_flare(s, obs_geo, t - delta_t,
+                                                      delta_t, ECLIPSE);
+      }
+      prev_illum   = o.is_illum;
     }
     else if (prev_el > horizon)
     {
       passes[pass_count - 1].los_t = find_zero(s, obs_geo, t - delta_t,
                                       delta_t, horizon, LOS);
       passes[pass_count - 1].los_az = o.azelrng.az;
+
+      if (passes[pass_count - 1].eclipse_t == 0)
+      {
+        passes[pass_count - 1].eclipse_t = passes[pass_count - 1].los_t;
+      }
     }
 
     // Local maximum candidates
@@ -1947,4 +1989,60 @@ find_tca
   }
 
   return (b + a) / 2;
+}
+
+/*
+ * Zero in on an AOS or an LOS event down to 1 sec resolution
+ * using recursive binary section search
+ *
+ * Inputs:  s          - sat struct pointer with initialized orbital data
+ *          obs_geo    - Geodetic coordinates of the ground station
+ *          start_time - Unix timestamp of observation
+ *          delta_t    - Time step
+ *          horizon    - Elevation of observer horizon, [0; pi/2] rad
+ *          direction  - Are we looking for AOS or for LOS?
+ * Outputs: None
+ * Returns: zero crossing unix time with second precision
+ */
+time_t
+find_flare
+(
+        sat*         s,
+  const vec3*        obs_geo,
+  const time_t       start_time,
+        unsigned int delta_t,
+  enum  dir          direction
+)
+{
+  obs    o = {0};
+  bool   diff = false;
+
+  unsigned int half_dt = ceil(delta_t / 2.0);
+
+  if (delta_t > 1)
+  {
+    sat_observe(s, start_time + half_dt, 0, obs_geo, &o);
+
+    if (direction == FLARE)
+    {
+      diff = o.is_illum;
+    }
+    else // direction == ECLIPSE
+    {
+      diff = !o.is_illum;
+    }
+
+    if (diff == true)
+    {
+      return find_flare(s, obs_geo, start_time,
+                       half_dt, direction);
+    }
+    else
+    {
+      return find_flare(s, obs_geo, start_time + half_dt,
+                      half_dt, direction);
+    }
+  }
+
+  return start_time;
 }

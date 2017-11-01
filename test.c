@@ -135,10 +135,10 @@ main (int argc, char** argv)
       struct tm t = {
         .tm_year  = 117,
         .tm_mon   = 9,
-        .tm_mday  = 9,
-        .tm_hour  = 16,
-        .tm_min   = 37,
-        .tm_sec   = 4,
+        .tm_mday  = 10,
+        .tm_hour  = 17,
+        .tm_min   = 0,
+        .tm_sec   = 0,
         .tm_isdst = 0
       };
 
@@ -155,6 +155,7 @@ main (int argc, char** argv)
       vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
       time_t start_time    = mktime(&t) - TIMEZONE;
       time_t stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
+      //time_t stop_time     = mktime(&t) - TIMEZONE + 3600;
       pass*  passes;
       char   buff[70];
 
@@ -182,11 +183,15 @@ main (int argc, char** argv)
       while ((i < max_passes) && (passes[i].tca_el > horizon))
       {
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].aos_t));
-        printf("\nAOS: [%s] AZ: %6.2lf\n", buff, passes[i].aos_az * RAD2DEG);
+        printf("\nAOS:     [%s] AZ: %6.2lf\n", buff, passes[i].aos_az * RAD2DEG);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].tca_t));
-        printf("TCA: [%s] AZ: %6.2lf EL: %6.2lf\n", buff, passes[i].tca_az * RAD2DEG, passes[i].tca_el * RAD2DEG);
+        printf("TCA:     [%s] AZ: %6.2lf EL: %6.2lf\n", buff, passes[i].tca_az * RAD2DEG, passes[i].tca_el * RAD2DEG);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].los_t));
-        printf("LOS: [%s] AZ: %6.2lf\n", buff, passes[i].los_az * RAD2DEG);
+        printf("LOS:     [%s] AZ: %6.2lf\n", buff, passes[i].los_az * RAD2DEG);
+        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].flare_t));
+        printf("FLARE:   [%s]\n", buff, passes[i].los_az * RAD2DEG);
+        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].eclipse_t));
+        printf("ECLIPSE: [%s]\n", buff, passes[i].los_az * RAD2DEG);
 
         i++;
       }
