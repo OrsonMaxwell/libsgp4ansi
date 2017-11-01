@@ -141,14 +141,15 @@ typedef struct _obs
 typedef struct _pass
 {
   time_t aos_t;     // Acquisition of signal unix time
-  double aos_az;    // Acquisition of signal azimuth
   time_t tca_t;     // Time if closest approach unix time
-  double tca_az;    // Time if closest approach azimuth
-  double tca_el;    // Time if closest approach elevation
   time_t los_t;     // Loss of signal unix time
-  double los_az;    // Loss of signal azimuth
   time_t flare_t;   // Unix time of illumination
   time_t eclipse_t; // Unix time of (penumbral) eclipse
+  vec3   aos;       // Acquisition of signal azimuth-elevation-range vector
+  vec3   tca;       // Time if closest approach azimuth-elevation-range vector
+  vec3   los;       // Loss of signal azimuth-elevation-range vector
+  vec3   flare;     // Illumination azimuth-elevation-range vector
+  vec3   eclipse;   // Umbral eclipse azimuth-elevation-range vector
 } pass;
 
 // ************************************************************************* //

@@ -1766,7 +1766,7 @@ sat_find_passes
 )
 {
   obs           o            = {0};
-  obs           o_tca        = {0};
+  obs           o_tmp        = {0};
   unsigned int  pass_count   = 0;
   double        prev_el      = -TAU;
   double        prev_prev_el = -TAU;
@@ -1788,8 +1788,9 @@ sat_find_passes
     {
       if (t == *start_time)
       {
-        passes[pass_count].aos_t = *start_time;
-        passes[pass_count].aos_az = o.azelrng.az;
+        passes[pass_count].aos_t  = *start_time;
+        passes[pass_count].aos    = o.azelrng;
+        passes[pass_count].aos.el = horizon;
 
         // Eclipse time defaults to LOS (see below)
         passes[pass_count].eclipse_t = 0;
@@ -1799,14 +1800,16 @@ sat_find_passes
       }
       else if (prev_el <= horizon)
       {
-        passes[pass_count].aos_t = find_zero(s, obs_geo, t - delta_t,
-                                        delta_t, horizon, AOS);
-        passes[pass_count].aos_az = o.azelrng.az;
+        passes[pass_count].aos_t  = find_zero(s, obs_geo, t - delta_t,
+                                              delta_t, horizon, AOS);
+        passes[pass_count].aos    = o.azelrng;
+        passes[pass_count].aos.el = horizon;
 
         // Flare time defaults to AOS if the satellite is already illuminated
         if (o.is_illum == true)
         {
           passes[pass_count].flare_t = passes[pass_count].aos_t;
+          passes[pass_count].flare   = passes[pass_count].aos;
         }
 
         // Count passes by AOS events
@@ -1815,7 +1818,8 @@ sat_find_passes
       else if (t + delta_t > *stop_time)
       {
         passes[pass_count - 1].los_t  = *stop_time;
-        passes[pass_count - 1].los_az = o.azelrng.az;
+        passes[pass_count - 1].los    = o.azelrng;
+        passes[pass_count - 1].los.el = horizon;
       }
 
       // Find flare start and end time
@@ -1824,14 +1828,18 @@ sat_find_passes
           && (passes[pass_count - 1].flare_t != passes[pass_count - 1].aos_t))
       {
 
-        passes[pass_count - 1].flare_t   = find_flare(s, obs_geo, t - delta_t,
-                                                      delta_t, FLARE);
+        passes[pass_count - 1].flare_t = find_flare(s, obs_geo, t - delta_t,
+                                                    delta_t, FLARE);
+        sat_observe(s, passes[pass_count - 1].flare_t, 0, obs_geo, &o_tmp);
+        passes[pass_count - 1].flare = o_tmp.azelrng;
       }
 
       if ((o.is_illum == false) && (prev_illum == true))
       {
         passes[pass_count - 1].eclipse_t = find_flare(s, obs_geo, t - delta_t,
                                                       delta_t, ECLIPSE);
+        sat_observe(s, passes[pass_count - 1].eclipse_t, 0, obs_geo, &o_tmp);
+        passes[pass_count - 1].eclipse   = o_tmp.azelrng;
       }
       prev_illum   = o.is_illum;
     }
@@ -1839,11 +1847,14 @@ sat_find_passes
     {
       passes[pass_count - 1].los_t = find_zero(s, obs_geo, t - delta_t,
                                       delta_t, horizon, LOS);
-      passes[pass_count - 1].los_az = o.azelrng.az;
+      passes[pass_count - 1].los    = o.azelrng;
+      passes[pass_count - 1].los.el = horizon;
 
       if (passes[pass_count - 1].eclipse_t == 0)
       {
         passes[pass_count - 1].eclipse_t = passes[pass_count - 1].los_t;
+        passes[pass_count - 1].eclipse   = passes[pass_count - 1].los;
+        passes[pass_count - 1].los.el    = horizon;
       }
     }
 
@@ -1864,13 +1875,12 @@ sat_find_passes
         new_lmax_t = find_tca(s, obs_geo, t - delta_t * 2, delta_t * 2);
       }
 
-      sat_observe(s, new_lmax_t, 0, obs_geo, &o_tca);
+      sat_observe(s, new_lmax_t, 0, obs_geo, &o_tmp);
 
-      if (o_tca.azelrng.el > passes[pass_count - 1].tca_el)
+      if (o_tmp.azelrng.el > passes[pass_count - 1].tca.el)
       {
-        passes[pass_count - 1].tca_el = o_tca.azelrng.el;
         passes[pass_count - 1].tca_t = new_lmax_t;
-        passes[pass_count - 1].tca_az = o_tca.azelrng.az;
+        passes[pass_count - 1].tca   = o_tmp.azelrng;
       }
     }
 
