@@ -1702,11 +1702,14 @@ sat_observe
   result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->azelrng.rng;
 
   // Find out if the satellite is illuminated by the Sun
-  vec3 sunposeq, sunposteme, sat2sun;
+  vec3 sunposeq, sunposteme, sun_azelrng, sat2sun;
 
-  // Calculate satellite to the Sun vector
+  // Calculate position of the Sun
   sunposeq   = solar_pos(timestamp, time_ms);
   sunposteme = eq2teme(&sunposeq);
+  result->sun_azelrng = eq2azelrng(&sunposeq, obs_geo, timestamp, time_ms);
+
+  // Calculate satellite to the Sun vector
   sat2sun    = vec3_add(1, &posteme, -1, &sunposteme);
 
   // Calculate Semi-diameters of the Sun and the Earth from satellite v.p.
@@ -1728,6 +1731,12 @@ sat_observe
   {
     result->is_illum  = true;
   }
+
+  // Calculate position of the Moon
+  vec3 moonposeq;
+
+  moonposeq = lunar_pos(timestamp, time_ms);
+  result->moon_azelrng = eq2azelrng(&moonposeq, obs_geo, timestamp, time_ms);
 
   return retval;
 }

@@ -126,11 +126,13 @@ typedef struct _coe
  */
 typedef struct _obs
 {
-  vec3   latlonalt; // Satellite projected geodetic coordinates
-  vec3   azelrng;   // Azimuth-Elevation-Range vector
-  double velocity;  // Satellite velocity, km/s
-  double rng_rate;  // Distance change rate, km/s
-  bool   is_illum;  // Is the satellite illuminated by the Sun?
+  vec3   latlonalt;    // Satellite projected geodetic coordinates
+  vec3   azelrng;      // Azimuth-Elevation-Range vector
+  double velocity;     // Satellite velocity, km/s
+  double rng_rate;     // Distance change rate, km/s
+  bool   is_illum;     // Is the satellite illuminated by the Sun?
+  vec3   sun_azelrng;  // Azimuth-Elevation-Range of The Sun
+  vec3   moon_azelrng; // Azimuth-Elevation-Range of The Moon
 } obs;
 
 /*

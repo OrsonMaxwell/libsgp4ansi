@@ -78,36 +78,26 @@ main (int argc, char** argv)
     timestamp = time(0);
 
     sat_observe(&s, timestamp, time_ms, &obs_geo, &o);
-    printf("Lat:    %11.3lf deg\n",  o.latlonalt.lat * RAD2DEG);
-    printf("Lon:    %11.3lf deg\n",  o.latlonalt.lon * RAD2DEG);
-    printf("Alt:    %11.3lf km\n",   o.latlonalt.alt);
-    printf("Vel:    %11.3lf km/s\n", o.velocity);
-    printf("Az:     %11.3lf deg\n",  o.azelrng.az * RAD2DEG);
-    printf("El      %11.3lf deg\n",  o.azelrng.el * RAD2DEG);
-    printf("Range:  %11.3lf km\n",   o.azelrng.rng);
-    printf("RRate:  %11.3lf km/s\n", o.rng_rate);
-    printf("Illum:  %7d\n",          o.is_illum);
+    printf("Lat:    %13.3lf deg\n",  o.latlonalt.lat * RAD2DEG);
+    printf("Lon:    %13.3lf deg\n",  o.latlonalt.lon * RAD2DEG);
+    printf("Alt:    %13.3lf km\n",   o.latlonalt.alt);
+    printf("Vel:    %13.3lf km/s\n", o.velocity);
+    printf("Az:     %13.3lf deg\n",  o.azelrng.az * RAD2DEG);
+    printf("El      %13.3lf deg\n",  o.azelrng.el * RAD2DEG);
+    printf("Range:  %13.3lf km\n",   o.azelrng.rng);
+    printf("RRate:  %13.3lf km/s\n", o.rng_rate);
+    printf("Illum:  %9d\n",          o.is_illum);
 
-    vec3 solar, solar_azelrng;
-    solar = solar_pos(timestamp, time_ms);
-    solar_azelrng = eq2azelrng(&solar, &obs_geo, timestamp, time_ms);
-    printf("-----==== The Sun ====-----\n");
-    printf("RA:     %11.3lf deg\n", solar.ra * RAD2DEG);
-    printf("Dec:    %11.3lf deg\n", solar.dec * RAD2DEG);
-    printf("Az:     %11.3lf deg\n", solar_azelrng.az * RAD2DEG);
-    printf("El:     %11.3lf deg\n", solar_azelrng.el * RAD2DEG);
-    printf("Range:  %11.3lf km\n", solar_azelrng.rv);
+    printf("-------------- The Sun --------------\n");
+    printf("Az:     %13.3lf deg\n", o.sun_azelrng.az * RAD2DEG);
+    printf("El:     %13.3lf deg\n", o.sun_azelrng.el * RAD2DEG);
+    printf("Range:  %13.3lf km\n", o.sun_azelrng.rng);
 
-    vec3 lunar, lunar_azelrng;
-    lunar = lunar_pos(timestamp, time_ms);
-    lunar_azelrng = eq2azelrng(&lunar, &obs_geo, timestamp, time_ms);
-    printf("-----==== The Moon ====-----\n");
-    printf("RA:     %11.3lf deg\n", lunar.ra * RAD2DEG);
-    printf("Dec:    %11.3lf deg\n", lunar.dec * RAD2DEG);
-    printf("Az:     %11.3lf deg\n", lunar_azelrng.az * RAD2DEG);
-    printf("El:     %11.3lf deg\n", lunar_azelrng.el * RAD2DEG);
-    printf("Range:  %11.3lf km\n", lunar_azelrng.rv);
-    printf("-----==================-----\n");
+    printf("-------------- The Moon -------------\n");
+    printf("Az:     %13.3lf deg\n", o.moon_azelrng.az * RAD2DEG);
+    printf("El:     %13.3lf deg\n", o.moon_azelrng.el * RAD2DEG);
+    printf("Range:  %13.3lf km\n", o.moon_azelrng.rng);
+    printf("-------------------------------------\n");
 
 #ifdef __unix__
     usleep(1000000);
