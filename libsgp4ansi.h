@@ -31,6 +31,18 @@ extern const char libsgp4ansi_version[];
 //                               CUSTOM TYPES                                //
 // ************************************************************************* //
 
+/*
+ * Enumerated skylight types for convenience
+ */
+typedef enum _skylight
+{
+  Nighttime,
+  Astronomical,
+  Nautical,
+  Civil,
+  Daytime
+} skylight;
+
 typedef struct _vec3
 {
   union {
@@ -140,16 +152,17 @@ typedef struct _obs
  */
 typedef struct _pass
 {
-  time_t aos_t;     // Acquisition of signal unix time
-  time_t tca_t;     // Time if closest approach unix time
-  time_t los_t;     // Loss of signal unix time
-  time_t flare_t;   // Unix time of illumination
-  time_t eclipse_t; // Unix time of (penumbral) eclipse
-  vec3   aos;       // Acquisition of signal azimuth-elevation-range vector
-  vec3   tca;       // Time if closest approach azimuth-elevation-range vector
-  vec3   los;       // Loss of signal azimuth-elevation-range vector
-  vec3   flare;     // Illumination azimuth-elevation-range vector
-  vec3   eclipse;   // Umbral eclipse azimuth-elevation-range vector
+  time_t   aos_t;     // Acquisition of signal unix time
+  time_t   tca_t;     // Time if closest approach unix time
+  time_t   los_t;     // Loss of signal unix time
+  time_t   flare_t;   // Unix time of illumination
+  time_t   eclipse_t; // Unix time of (penumbral) eclipse
+  vec3     aos;       // Acquisition of signal azimuth-elevation-range vector
+  vec3     tca;       // Time if closest approach azimuth-elevation-range vector
+  vec3     los;       // Loss of signal azimuth-elevation-range vector
+  vec3     flare;     // Illumination azimuth-elevation-range vector
+  vec3     eclipse;   // Umbral eclipse azimuth-elevation-range vector
+  skylight sky;       // Skylight type
 } pass;
 
 // ************************************************************************* //

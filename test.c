@@ -16,6 +16,30 @@
 #include "epoch.h" // TODO: Remove
 #include "coord.h" // TODO: Remove
 
+// Get fancy name for skylight type
+void
+skylight_name(char* string, skylight sky)
+{
+  switch (sky)
+  {
+    case Nighttime:
+      strcpy(string, "Night time");
+      break;
+    case Astronomical:
+      strcpy(string, "Astronomical twilight");
+      break;
+    case Nautical:
+      strcpy(string, "Nautical twilight");
+      break;
+    case Civil:
+      strcpy(string, "Civil twilight");
+      break;
+    default:
+      strcpy(string, "Daytime");
+      break;
+  }
+}
+
 int
 main (int argc, char** argv)
 {
@@ -171,31 +195,34 @@ main (int argc, char** argv)
       sat_find_passes(&s, &start_time, &stop_time, &observer_geo, delta_t,
                       horizon, passes);
 
-      printf("+------------------------------------------------------------------+\n");
-      printf("|                     Running pass prediction                      |\n");
-      printf("+-----------+------------------------------------------------------+\n");
+      printf("+--------------------------------------------------------------------+\n");
+      printf("|                      Running pass prediction                       |\n");
+      printf("+-----------+--------------------------------------------------------+\n");
+      printf("| Satellite | %-55s|\n", s.name);
       strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&start_time));
-      printf("| Start     | %-53s|\n", buff);
+      printf("| Start     | %-55s|\n", buff);
       strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&stop_time));
-      printf("| Stop      | %-53s|\n", buff);
-      printf("+-----------+---------------------+---------+---------+------------+\n");
-      printf("|   Event   |        Time         | Az, deg | El, deg |  Range, km |\n");
-      printf("+-----------+---------------------+---------+---------+------------+\n");
+      printf("| Stop      | %-55s|\n", buff);
+      printf("+-----------+-----------------------+---------+---------+------------+\n");
+      printf("|   Event   |         Time          | Az, deg | El, deg |  Range, km |\n");
+      printf("+-----------+-----------------------+---------+---------+------------+\n");
 
       unsigned int i = 0;
       while ((i < max_passes) && (passes[i].tca.el > horizon))
       {
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].aos_t));
-        printf("| AOS       | %-19s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].aos.az * RAD2DEG, passes[i].aos.el * RAD2DEG, passes[i].aos.rng);
+        printf("| AOS       | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].aos.az * RAD2DEG, passes[i].aos.el * RAD2DEG, passes[i].aos.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].tca_t));
-        printf("| TCA       | %-19s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].tca.az * RAD2DEG, passes[i].tca.el * RAD2DEG, passes[i].tca.rng);
+        printf("| TCA       | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].tca.az * RAD2DEG, passes[i].tca.el * RAD2DEG, passes[i].tca.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].los_t));
-        printf("| LOS       | %-19s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].los.az * RAD2DEG, passes[i].los.el * RAD2DEG, passes[i].los.rng);
+        printf("| LOS       | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].los.az * RAD2DEG, passes[i].los.el * RAD2DEG, passes[i].los.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].flare_t));
-        printf("| Flare     | %-19s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].flare.az * RAD2DEG, passes[i].flare.el * RAD2DEG, passes[i].flare.rng);
+        printf("| Flare     | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].flare.az * RAD2DEG, passes[i].flare.el * RAD2DEG, passes[i].flare.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].eclipse_t));
-        printf("| Eclipse   | %-19s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].eclipse.az * RAD2DEG, passes[i].eclipse.el * RAD2DEG, passes[i].eclipse.rng);
-        printf("+-----------+---------------------+---------+---------+------------+\n");
+        printf("| Eclipse   | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].eclipse.az * RAD2DEG, passes[i].eclipse.el * RAD2DEG, passes[i].eclipse.rng);
+        skylight_name(buff, passes[i].sky);
+        printf("| Skylight  | %-21s |         |         |            |\n", buff);
+        printf("+-----------+-----------------------+---------+---------+------------+\n");
 
         i++;
       }

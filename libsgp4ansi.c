@@ -55,6 +55,13 @@ str_trim
         char*  out
 );
 
+// Determine skylight type from the Sun elevation
+skylight
+el2skylight
+(
+  double sun_elevation
+);
+
 // Recursively zero in on an AOS or LOS event down to 1 sec resolution
 time_t
 find_zero
@@ -1810,6 +1817,7 @@ sat_find_passes
         {
           passes[pass_count].flare_t = passes[pass_count].aos_t;
           passes[pass_count].flare   = passes[pass_count].aos;
+          passes[pass_count].sky     = el2skylight(o.sun_azelrng.el);
         }
 
         // Count passes by AOS events
@@ -1892,6 +1900,36 @@ sat_find_passes
   fclose(outfile);
 
   return 0;
+}
+
+/*
+ * Determine skylight type from the Sun elevation
+ *
+ * Inputs:  sun_elevation - true elevation of the Sun at ground station
+ * Outputs: None
+ * Returns: Skylight type. The types correspond to:
+ *          0 - Nighttime
+ *          1 - Astronomical twilight
+ *          2 - Nautical twilight
+ *          3 - Civil twilight
+ *          4 - Daytime
+ */
+skylight
+el2skylight
+(
+  double sun_elevation
+)
+{
+  if (sun_elevation >= 0)
+    return 4;
+  else if (sun_elevation >= -6 * DEG2RAD)
+    return 3;
+  else if (sun_elevation >= -12 * DEG2RAD)
+    return 2;
+  else if (sun_elevation >= -18 * DEG2RAD)
+    return 1;
+  else
+    return 0;
 }
 
 /*
