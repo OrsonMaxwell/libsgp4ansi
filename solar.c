@@ -21,7 +21,7 @@
  *
  * Inputs:  time    - Unix time
  *          time_ms - Millisecond portion of time
- * Returns: azelrng - Equatorial coordinates vector (rad, rad, au)
+ * Returns: azelrng - Equatorial coordinates vector (rad, rad, km)
  */
 vec3
 solar_pos
@@ -80,7 +80,7 @@ solar_pos
 
   azelrng.az  = (alpha < 0)?(alpha + TAU):(alpha);
   azelrng.el  = delta;
-  azelrng.rng = R;
+  azelrng.rng = R * AU;
 
   return azelrng;
 }

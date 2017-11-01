@@ -102,5 +102,6 @@
 #define ZNS       1.19459e-5
 #define ZNL       1.5835218e-4
 #define AU        149597870.7            // Astronomical unit, km
+#define RSOL      695700                 // Radius of The Sun
 
 #endif /* CONST_H_ */

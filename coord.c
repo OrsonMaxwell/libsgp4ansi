@@ -565,18 +565,43 @@ eq2azelrng
   double LHA = fmod(ThetaLST - radecrv->ra, TAU);
 
   // Equation 4-12 (Elevation Deg)
-  azelrng.el = asin(sin(obs_geo->lat) * sin(radecrv->dec) + cos(obs_geo->lat) * cos(radecrv->dec) * cos(LHA));
+  azelrng.el = asin(sin(obs_geo->lat) * sin(radecrv->dec) + cos(obs_geo->lat)
+             * cos(radecrv->dec) * cos(LHA));
 
   // Equation 4-13 / 4-14 (Adaptation) (Azimuth Deg)
-  azelrng.az = fmod(atan2(-sin(LHA)*cos(radecrv->dec)/cos(azelrng.el),
-          (sin(radecrv->dec)-sin(azelrng.el)*sin(obs_geo->lat))/(cos(azelrng.el)*cos(obs_geo->lat))), TAU);
+  azelrng.az = fmod(atan2(-sin(LHA) * cos(radecrv->dec) / cos(azelrng.el),
+               (sin(radecrv->dec) - sin(azelrng.el) * sin(obs_geo->lat))
+             / (cos(azelrng.el) * cos(obs_geo->lat))), TAU);
 
   if (azelrng.az < 0)
   {
     azelrng.az += TAU;
   }
 
-  azelrng.rng = radecrv->rv * AU;
+  azelrng.rng = radecrv->rv;
 
   return azelrng;
 }
+
+/*
+ * Transform position vector from equatorial to TEME frame
+ *
+ * Inputs:  radecrv - Position vector in equatorial frame
+ * Outputs: None
+ * Returns: posteme - Position vector in TEME frame, km
+ */
+vec3
+eq2teme
+(
+  const vec3* radecrv
+)
+{
+  vec3 posteme;
+
+  posteme.x = (radecrv->rv * cos(radecrv->dec) * cos(radecrv->ra));
+  posteme.y = (radecrv->rv * cos(radecrv->dec) * sin(radecrv->ra));
+  posteme.z = (radecrv->rv * sin(radecrv->dec));
+
+  return posteme;
+}
+

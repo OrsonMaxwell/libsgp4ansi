@@ -73,4 +73,11 @@ eq2azelrng
         float  time_ms
 );
 
+// Transform position vector from equatorial to TEME frame
+vec3
+eq2teme
+(
+  const vec3*  radecrv
+);
+
 #endif /* COORD_H_ */

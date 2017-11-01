@@ -40,7 +40,7 @@ typedef struct _vec3
     double b, j, m, v, y, lon, el, dec;
   };
   union {
-    double c, k, n, w, z, alt, rng, rv, t;
+    double c, k, n, w, z, alt, rng, rv;
   };
 } vec3;
 
@@ -218,7 +218,7 @@ int
 sat_observe
 (
         sat*    s,
-        time_t  time,
+        time_t  timestamp,
         float   time_ms,
   const vec3*   obs_geo,
         obs*    result

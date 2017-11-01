@@ -1157,7 +1157,7 @@ sat_propagate
     const double step2 = 259200;
 
     // Calculate deep space resonance effects
-    s->dndt       = 0;
+    s->dndt       = 0; // TODO: Const correctness
     double theta  = fmod(s->GSTo + tdelta * RPTIM, TAU);
 
     // Perturbed quantities
@@ -1176,9 +1176,9 @@ sat_propagate
           || (tdelta * s->atime <= 0)
           || (fabs(tdelta) < fabs(s->atime)))
       {
-        s->atime = 0;
-        s->xni   = s->xnodp;
-        s->xli   = s->xlamo;
+        s->atime = 0; // TODO: Const correctness
+        s->xni   = s->xnodp; // TODO: Const correctness
+        s->xli   = s->xlamo; // TODO: Const correctness
       }
 
       if (tdelta > 0)
@@ -1233,9 +1233,9 @@ sat_propagate
 
         if (integrating == true)
         {
-          s->xli   = s->xli + xldot * delta + xndt * step2;
-          s->xni   = s->xni + xndt * delta + xnddt * step2;
-          s->atime = s->atime + delta;
+          s->xli   = s->xli + xldot * delta + xndt * step2;  // TODO: Const correctness
+          s->xni   = s->xni + xndt * delta + xnddt * step2; // TODO: Const correctness
+          s->atime = s->atime + delta; // TODO: Const correctness
         }
       }
 
@@ -1245,12 +1245,12 @@ sat_propagate
       if (s->is_12h_resonant)
       {
         xmp     = xl - 2 * xnode + 2 * theta;
-        s->dndt = nm - s->xnodp;
+        s->dndt = nm - s->xnodp;  // TODO: Const correctness
       }
       else
       {
         xmp     = xl - xnode - omega + theta;
-        s->dndt = nm - s->xnodp;
+        s->dndt = nm - s->xnodp;  // TODO: Const correctness
       }
       nm = s->xnodp + s->dndt;
 
@@ -1299,11 +1299,11 @@ sat_propagate
   xlm    = fmod(xlm, TAU);
   xmp    = fmod(xlm - omega - xnode, TAU);
 
-  s->inclination_lp      = inclm;
-  s->eccentricity_lp     = em;
-  s->right_asc_node_lp   = xnode;
-  s->argument_perigee_lp = omega;
-  s->mean_anomaly_lp     = xmp;
+  s->inclination_lp      = inclm;  // TODO: Const correctness
+  s->eccentricity_lp     = em; // TODO: Const correctness
+  s->right_asc_node_lp   = xnode; // TODO: Const correctness
+  s->argument_perigee_lp = omega; // TODO: Const correctness
+  s->mean_anomaly_lp     = xmp; // TODO: Const correctness
   double sinip = sin(s->inclination_lp);
   double cosip = cos(s->inclination_lp);
 
@@ -1364,8 +1364,8 @@ sat_propagate
     pl    = pl - s->plo;
     pgh   = pgh - s->pgho;
     ph    = ph - s->pho;
-    s->inclination_lp  += pinc;
-    s->eccentricity_lp += pe;
+    s->inclination_lp  += pinc;  // TODO: Const correctness
+    s->eccentricity_lp += pe;  // TODO: Const correctness
     sinip = sin(s->inclination_lp);
     cosip = cos(s->inclination_lp);
 
@@ -1375,9 +1375,9 @@ sat_propagate
       ph  = ph / sinip;
       pgh = pgh - cosip * ph;
 
-      s->argument_perigee_lp += pgh;
-      s->right_asc_node_lp   += ph;
-      s->mean_anomaly_lp     += pl;
+      s->argument_perigee_lp += pgh;  // TODO: Const correctness
+      s->right_asc_node_lp   += ph; // TODO: Const correctness
+      s->mean_anomaly_lp     += pl; // TODO: Const correctness
     }
     else
     {
@@ -1390,39 +1390,39 @@ sat_propagate
       double dbet   = -ph * sinop + pinc * cosip * cosop;
       alfdp  = alfdp + dalf;
       betdp  = betdp + dbet;
-      s->right_asc_node_lp  = fmod(s->right_asc_node_lp, TAU);
+      s->right_asc_node_lp  = fmod(s->right_asc_node_lp, TAU);  // TODO: Const correctness
 
       // Wrap negative node for atan below
       if (s->right_asc_node_lp < 0)
       {
-        s->right_asc_node_lp += TAU;
+        s->right_asc_node_lp += TAU;  // TODO: Const correctness
       }
 
       double xls    = s->mean_anomaly_lp + s->argument_perigee_lp + cosip * s->right_asc_node_lp;
       xls          += pl + pgh - pinc * s->right_asc_node_lp * sinip;
       double xnoh   = s->right_asc_node_lp;
-      s->right_asc_node_lp  = atan2(alfdp, betdp);
+      s->right_asc_node_lp  = atan2(alfdp, betdp);  // TODO: Const correctness
 
       // Wrap negative node for fabs below
       if (s->right_asc_node_lp < 0)
       {
-        s->right_asc_node_lp += TAU;
+        s->right_asc_node_lp += TAU;  // TODO: Const correctness
       }
 
       if (fabs(xnoh - s->right_asc_node_lp) > PI)
       {
         if (s->right_asc_node_lp < xnoh)
         {
-          s->right_asc_node_lp = s->right_asc_node_lp + TAU;
+          s->right_asc_node_lp = s->right_asc_node_lp + TAU;  // TODO: Const correctness
         }
         else
         {
-          s->right_asc_node_lp = s->right_asc_node_lp - TAU;
+          s->right_asc_node_lp = s->right_asc_node_lp - TAU;  // TODO: Const correctness
         }
       }
 
-      s->mean_anomaly_lp    += pl;
-      s->argument_perigee_lp = xls - s->mean_anomaly_lp - cosip * s->right_asc_node_lp;
+      s->mean_anomaly_lp    += pl; // TODO: Const correctness
+      s->argument_perigee_lp = xls - s->mean_anomaly_lp - cosip * s->right_asc_node_lp; // TODO: Const correctness
     }
 
 #ifdef MATH_TRACE
@@ -1440,9 +1440,9 @@ sat_propagate
 
     if (s->inclination_lp < 0)
     {
-      s->inclination_lp      *= -1;
-      s->right_asc_node_lp   += PI;
-      s->argument_perigee_lp -= PI;
+      s->inclination_lp      *= -1; // TODO: Const correctness
+      s->right_asc_node_lp   += PI; // TODO: Const correctness
+      s->argument_perigee_lp -= PI; // TODO: Const correctness
     }
 
     if ((s->eccentricity_lp < 0)
@@ -1454,16 +1454,16 @@ sat_propagate
     // Long period periodics
     sinip    =  sin(s->inclination_lp);
     cosip    =  cos(s->inclination_lp);
-    s->aycof = -0.5 * J3DIVJ2 * sinip;
+    s->aycof = -0.5 * J3DIVJ2 * sinip; // TODO: Const correctness
 
     // Avoid division by zero for s->inclination_lp = 180 deg
     if (fabs(cosip + 1) > 1.5e-12)
     {
-      s->xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / (1 + cosip);
+      s->xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / (1 + cosip); // TODO: Const correctness
     }
     else
     {
-      s->xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / 1.5e-12;
+      s->xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / 1.5e-12; // TODO: Const correctness
     }
   }
 
@@ -1553,9 +1553,9 @@ sat_propagate
     if (s->is_deep_space == true)
     {
       double cosip2 = cosip * cosip;
-      s->con41      = 3 * cosip2 - 1;
-      s->x1mth2     = 1 - cosip2;
-      s->x7thm1     = 7 * cosip2 - 1;
+      s->con41      = 3 * cosip2 - 1; // TODO: Const correctness
+      s->x1mth2     = 1 - cosip2; // TODO: Const correctness
+      s->x7thm1     = 7 * cosip2 - 1; // TODO: Const correctness
     }
 
            mrt   = rl * (1 - 1.5 * temp2 * betal * s->con41)
@@ -1656,7 +1656,7 @@ int
 sat_observe
 (
         sat*    s,
-        time_t  time,
+        time_t  timestamp,
         float   time_ms,
   const vec3*   obs_geo,
         obs*    result
@@ -1670,7 +1670,7 @@ sat_observe
     return -1;
   }
 
-  double tdelta = difftime(time + time_ms / 1000,
+  double tdelta = difftime(timestamp + time_ms / 1000,
                            s->epoch + s->epoch_ms / 1000) / 60;
 
   vec3 posteme, velteme;
@@ -1684,7 +1684,8 @@ sat_observe
   // Switching to ECEF common frame to fix to Earth
   vec3 posecef, velecef, obsposecef, obsvelecef;
 
-  teme2ecef(&posteme, &velteme, unix2jul(time, time_ms), &posecef, &velecef);
+  teme2ecef(&posteme, &velteme, unix2jul(timestamp, time_ms),
+                                         &posecef, &velecef);
 
   result->latlonalt = ecef2geo(&posecef);
 
@@ -1700,8 +1701,33 @@ sat_observe
   result->azelrng   = ecef2azelrng(&obsposecef, &posdiffecef);
   result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->azelrng.rng;
 
-  // TODO: Implementation pending
-  result->is_illum  = false;
+  // Find out if the satellite is illuminated by the Sun
+  vec3 sunposeq, sunposteme, sat2sun;
+
+  // Calculate satellite to the Sun vector
+  sunposeq   = solar_pos(timestamp, time_ms);
+  sunposteme = eq2teme(&sunposeq);
+  sat2sun    = vec3_add(1, &posteme, -1, &sunposteme);
+
+  // Calculate Semi-diameters of the Sun and the Earth from satellite v.p.
+  double sat2sun_range   = vec3_mag(&sat2sun);
+  double sat2earth_range = vec3_mag(&posteme);
+  double sun_semidia     = asin(RSOL / sat2sun_range);
+  double earth_semidia   = asin(RE   / sat2earth_range);
+
+  // Angle between the Earth and The Sun disk centres from the satellite v.p.
+  double Theta = acos(vec3_dot(&posteme, &sat2sun)
+                      / (sat2sun_range * sat2earth_range));
+
+  // Considering only umbral eclipses
+  if ((earth_semidia > sun_semidia) && (Theta < earth_semidia - sun_semidia))
+  {
+    result->is_illum  = false;
+  }
+  else
+  {
+    result->is_illum  = true;
+  }
 
   return retval;
 }

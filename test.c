@@ -48,18 +48,25 @@ main (int argc, char** argv)
   if (argv[1][0] == 'o')
   {
     sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   17276.21606951  .00004423  00000-0  74225-4 0  9990",
-                 "2 25544  51.6398 219.7869 0004167 337.1762 166.2321 15.54050189 78557",
+                 "1 25544U 98067A   17304.43179856  .00002963  00000-0  51675-4 0  9996",
+                 "2 25544  51.6415  79.1213 0005738  79.0270 358.3133 15.54307707 82943",
                  &s);
+
+//    sat_load_tle("FENGYUN 2E",
+//                 "1 33463U 08066A   17281.80233449 -.00000213  00000-0  00000+0 0  9997",
+//                 "2 33463   2.3909  67.6760 0005346 217.9202 107.6646  1.00271179 32268",
+//                 &s);
+
     struct tm t = {
       .tm_year  = 117,
-      .tm_mon   = 9,
-      .tm_mday  = 14,
-      .tm_hour  = 9,
-      .tm_min   = 20,
+      .tm_mon   = 10,
+      .tm_mday  = 1,
+      .tm_hour  = 10,
+      .tm_min   = 24,
       .tm_sec   = 0,
       .tm_isdst = 0
     };
+
     double time_ms = 0;
 
     time_t timestamp = mktime(&t) - TIMEZONE;
@@ -87,7 +94,6 @@ main (int argc, char** argv)
     printf("-----==== The Sun ====-----\n");
     printf("RA:     %11.3lf deg\n", solar.ra * RAD2DEG);
     printf("Dec:    %11.3lf deg\n", solar.dec * RAD2DEG);
-    printf("R:      %11.3lf au\n", solar.rv);
     printf("Az:     %11.3lf deg\n", solar_azelrng.az * RAD2DEG);
     printf("El:     %11.3lf deg\n", solar_azelrng.el * RAD2DEG);
     printf("Range:  %11.3lf km\n", solar_azelrng.rv);
@@ -98,7 +104,6 @@ main (int argc, char** argv)
     printf("-----==== The Moon ====-----\n");
     printf("RA:     %11.3lf deg\n", lunar.ra * RAD2DEG);
     printf("Dec:    %11.3lf deg\n", lunar.dec * RAD2DEG);
-    printf("R:      %11.3lf au\n", lunar.rv);
     printf("Az:     %11.3lf deg\n", lunar_azelrng.az * RAD2DEG);
     printf("El:     %11.3lf deg\n", lunar_azelrng.el * RAD2DEG);
     printf("Range:  %11.3lf km\n", lunar_azelrng.rv);
@@ -116,10 +121,10 @@ main (int argc, char** argv)
 
   if (argv[1][0] == 'p')
     {
-//      sat_load_tle("ISS (ZARYA)",
-//                 "1 25544U 98067A   17282.56741286  .00004860  00000-0  80618-4 0  9994",
-//                 "2 25544  51.6421 188.1336 0004628   3.8988  57.0297 15.54128125 79546",
-//                 &s);
+      sat_load_tle("ISS (ZARYA)",
+                 "1 25544U 98067A   17304.43179856  .00002963  00000-0  51675-4 0  9996",
+                 "2 25544  51.6415  79.1213 0005738  79.0270 358.3133 15.54307707 82943",
+                 &s);
 
 //         sat_load_tle("JUGNU",
 //                   "1 37839U 11058B   17281.88493397  .00000316  00000-0  27005-4 0  9993",
@@ -127,10 +132,10 @@ main (int argc, char** argv)
 //                   &s);
 
 
-      sat_load_tle("???",
-                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
-                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
-                   &s);
+//      sat_load_tle("???",
+//                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+//                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
+//                   &s);
 
 //      sat_load_tle("FENGYUN 2E",
 //                 "1 33463U 08066A   17281.80233449 -.00000213  00000-0  00000+0 0  9997",
@@ -146,6 +151,16 @@ main (int argc, char** argv)
         .tm_sec   = 4,
         .tm_isdst = 0
       };
+
+//      struct tm t = {
+//        .tm_year  = 117,
+//        .tm_mon   = 10,
+//        .tm_mday  = 1,
+//        .tm_hour  = 0,
+//        .tm_min   = 0,
+//        .tm_sec   = 0,
+//        .tm_isdst = 0
+//      };
 
       vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
       time_t start_time    = mktime(&t) - TIMEZONE;
