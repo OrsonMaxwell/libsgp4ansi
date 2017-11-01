@@ -90,7 +90,7 @@ solar_pos
  *
  * Inputs:  time    - Unix time
  *          time_ms - Millisecond portion of time
- * Returns: azelrng - Equatorial coordinates vector (rad, rad, au)
+ * Returns: azelrng - Equatorial coordinates vector (rad, rad, km)
  */
 vec3
 lunar_pos
@@ -357,7 +357,7 @@ lunar_pos
   azelrng.dec = sin(beta * DEG2RAD) * cos(epsilon * DEG2RAD)
               + cos(beta * DEG2RAD) * sin(epsilon * DEG2RAD)
               * sin(alambda * DEG2RAD);
-  azelrng.rv  = Delta / AU;
+  azelrng.rv  = Delta;
 
   return azelrng;
 }

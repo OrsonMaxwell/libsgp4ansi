@@ -1738,6 +1738,8 @@ sat_observe
   moonposeq = lunar_pos(timestamp, time_ms);
   result->moon_azelrng = eq2azelrng(&moonposeq, obs_geo, timestamp, time_ms);
 
+  // TODO: Moon phase here
+
   return retval;
 }
 
