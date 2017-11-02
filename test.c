@@ -40,6 +40,58 @@ skylight_name(char* string, skylight sky)
   }
 }
 
+// Get fancy name for moon phases
+void
+moon_phase(char* string, double phase)
+{
+  if (phase > 0)
+  {
+    if (fabs(phase) >= 0.96)
+    {
+      strcpy(string, "Full moon");
+    }
+    else if (fabs(phase) >= 0.7)
+    {
+      strcpy(string, "Waxing gibbous");
+    }
+    else if (fabs(phase) >= 0.3)
+    {
+      strcpy(string, "First quarter");
+    }
+    else if (fabs(phase) >= 0.04)
+    {
+      strcpy(string, "Waxing crescent");
+    }
+    else
+    {
+      strcpy(string, "New moon");
+    }
+  }
+  else
+  {
+    if (fabs(phase) >= 0.96)
+    {
+      strcpy(string, "Full moon");
+    }
+    else if (fabs(phase) >= 0.7)
+    {
+      strcpy(string, "Waning gibbous");
+    }
+    else if (fabs(phase) >= 0.3)
+    {
+      strcpy(string, "Last quarter");
+    }
+    else if (fabs(phase) >= 0.04)
+    {
+      strcpy(string, "Waning crescent");
+    }
+    else
+    {
+      strcpy(string, "New moon");
+    }
+  }
+}
+
 int
 main (int argc, char** argv)
 {
@@ -222,6 +274,8 @@ main (int argc, char** argv)
         printf("| Eclipse   | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].eclipse.az * RAD2DEG, passes[i].eclipse.el * RAD2DEG, passes[i].eclipse.rng);
         skylight_name(buff, passes[i].sky);
         printf("| Skylight  | %-21s |         |         |            |\n", buff);
+        moon_phase(buff, passes[i].moon_phase);
+        printf("| Moon disc | %3.0lf%% %16s |         |         |            |\n", fabs(passes[i].moon_phase) * 100, buff);
         printf("+-----------+-----------------------+---------+---------+------------+\n");
 
         i++;

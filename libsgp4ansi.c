@@ -1836,6 +1836,10 @@ sat_find_passes
         // Eclipse time defaults to LOS (see below)
         passes[pass_count].eclipse_t = 0;
 
+        // Consider the actual moon phase the one at the start of the pass
+        // May not hold for long intervals and geostationary passes!
+        passes[pass_count].moon_phase = o.moon_phase;
+
         // Count passes by AOS events
         pass_count++;
       }
@@ -1853,6 +1857,10 @@ sat_find_passes
           passes[pass_count].flare   = passes[pass_count].aos;
           passes[pass_count].sky     = el2skylight(o.sun_azelrng.el);
         }
+
+        // Consider the actual moon phase the one at the start of the pass
+        // May not hold for long intervals and geostationary passes!
+        passes[pass_count].moon_phase = o.moon_phase;
 
         // Count passes by AOS events
         pass_count++;
