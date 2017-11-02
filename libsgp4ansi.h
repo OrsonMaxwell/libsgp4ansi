@@ -24,7 +24,7 @@
 //                                VERSION                                    //
 // ************************************************************************* //
 
-#define LIBSGP4ANSI_VERSION "0.4"
+#define LIBSGP4ANSI_VERSION "0.8"
 extern const char libsgp4ansi_version[];
 
 // ************************************************************************* //
@@ -204,7 +204,7 @@ sat_init
   sat* s
 );
 
-// Get classical orbital elements from TEME vectors TODO: make a wrapper
+// Get classical orbital elements from TEME vectors TODO: make a wrapper?
 extern coe
 teme2coe
 (

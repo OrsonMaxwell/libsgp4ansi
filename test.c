@@ -12,10 +12,6 @@
 
 #include "libsgp4ansi.h"
 
-#include "solar.h" // TODO: Remove
-#include "epoch.h" // TODO: Remove
-#include "coord.h" // TODO: Remove
-
 // Get fancy name for skylight type
 void
 skylight_name(char* string, skylight sky)
