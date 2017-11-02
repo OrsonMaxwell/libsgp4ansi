@@ -21,13 +21,15 @@
  *
  * Inputs:  time    - Unix time
  *          time_ms - Millisecond portion of time
+ * Outputs: lambda  - Apparent geocentric longitude of the Sun, rad
  * Returns: azelrng - Equatorial coordinates vector (rad, rad, km)
  */
 vec3
 solar_pos
 (
-  time_t time,
-  float  time_ms
+  time_t  time,
+  float   time_ms,
+  double* lambda
 )
 {
   vec3 azelrng;
@@ -61,7 +63,14 @@ solar_pos
   double Omega = 125.04 - 1934.136 * T;
 
   // Apparent longitude
-  double lambda = Theta - 0.00569 - 0.00478 * sin(Omega * DEG2RAD);
+  double alambda  = Theta - 0.00569 - 0.00478 * sin(Omega * DEG2RAD);
+  alambda *= DEG2RAD;
+
+  if (lambda != NULL)
+  {
+    *lambda = alambda;
+  }
+
 
   // Mean oliquity of the ecliptic
   double epsilono = 23.43929 - 0.01300417 * T - 1.638889e-7 * T2
@@ -71,9 +80,9 @@ solar_pos
   double epsilon = epsilono + 0.00256 * cos(Omega * DEG2RAD);
 
   // Apparent right ascension and declination
-  double alpha = atan2(cos((epsilon) * DEG2RAD) * sin(lambda * DEG2RAD),
-                       cos(lambda * DEG2RAD));
-  double delta = asin(sin((epsilon) * DEG2RAD) * sin(lambda * DEG2RAD));
+  double alpha = atan2(cos((epsilon) * DEG2RAD) * sin(alambda),
+                       cos(alambda));
+  double delta = asin(sin((epsilon) * DEG2RAD) * sin(alambda));
 
   // Radius vector from Earth to Sun, au
   double R = (1.000001018 * (1 - e * e)) / (1 + e * cos(v * DEG2RAD));
@@ -90,13 +99,15 @@ solar_pos
  *
  * Inputs:  time    - Unix time
  *          time_ms - Millisecond portion of time
+ * Outputs: lambda  - Apparent geocentric longitude of the Moon, rad
  * Returns: azelrng - Equatorial coordinates vector (rad, rad, km)
  */
 vec3
 lunar_pos
 (
-  time_t time,
-  float  time_ms
+  time_t  time,
+  float   time_ms,
+  double* lambda
 )
 {
   vec3 azelrng;
@@ -327,7 +338,7 @@ lunar_pos
   Sigmab += -115  * sin(Ldot + Mdot);
 
   // Right ascension, declination and range
-  double lambda = Ldot * RAD2DEG + Sigmal / 1000000;
+  double ra     = Ldot * RAD2DEG + Sigmal / 1000000;
   double beta   = Sigmab / 1000000;
   double Delta  = 385000.56 + Sigmar / 1000;
 
@@ -338,7 +349,13 @@ lunar_pos
   double dpsi = 0.00461;
 
   // Apparent longitude
-  double alambda = lambda + dpsi;
+  double alambda  = ra + dpsi;
+  alambda *= DEG2RAD;
+
+  if (lambda != NULL)
+  {
+    *lambda = alambda;
+  }
 
   // Nutation and abberation correction factor
   double Omega = 125.04 - 1934.136 * T;
@@ -351,12 +368,12 @@ lunar_pos
   double epsilon = epsilono + 0.00256 * cos(Omega * DEG2RAD);
 
   // Apparent right ascension, declination and radius vector
-  azelrng.ra  = atan2(sin(alambda * DEG2RAD) * cos(epsilon * DEG2RAD)
+  azelrng.ra  = atan2(sin(alambda) * cos(epsilon * DEG2RAD)
                     - tan(beta * DEG2RAD) * sin(epsilon * DEG2RAD),
-                      cos(alambda * DEG2RAD));
+                      cos(alambda));
   azelrng.dec = sin(beta * DEG2RAD) * cos(epsilon * DEG2RAD)
               + cos(beta * DEG2RAD) * sin(epsilon * DEG2RAD)
-              * sin(alambda * DEG2RAD);
+              * sin(alambda);
   azelrng.rv  = Delta;
 
   return azelrng;

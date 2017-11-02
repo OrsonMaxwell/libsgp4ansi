@@ -18,16 +18,18 @@
 vec3
 solar_pos
 (
-  time_t time,
-  float  time_ms
+  time_t  time,
+  float   time_ms,
+  double* lambda
 );
 
 // Find (coarse) position of the Moon at given Julian time in equatorial frame
 vec3
 lunar_pos
 (
-  time_t time,
-  float  time_ms
+  time_t  time,
+  float   time_ms,
+  double* lambda
 );
 
 #endif /* SOLAR_H_ */

@@ -84,9 +84,9 @@ main (int argc, char** argv)
     struct tm t = {
       .tm_year  = 117,
       .tm_mon   = 10,
-      .tm_mday  = 1,
-      .tm_hour  = 10,
-      .tm_min   = 24,
+      .tm_mday  = 8,
+      .tm_hour  = 0,
+      .tm_min   = 0,
       .tm_sec   = 0,
       .tm_isdst = 0
     };
@@ -119,6 +119,8 @@ main (int argc, char** argv)
     printf("Az:     %13.3lf deg\n", o.moon_azelrng.az * RAD2DEG);
     printf("El:     %13.3lf deg\n", o.moon_azelrng.el * RAD2DEG);
     printf("Range:  %13.3lf km\n", o.moon_azelrng.rng);
+    printf("Illum:  %13.0lf %%\n", fabs(o.moon_phase * 100));
+    printf("Phase:  %13s\n", (o.moon_phase > 0)?("Waxing"):("Waning"));
     printf("-------------------------------------\n");
 
 #ifdef __unix__

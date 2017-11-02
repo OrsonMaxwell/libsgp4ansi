@@ -1728,9 +1728,10 @@ sat_observe
 
   // Find out if the satellite is illuminated by the Sun
   vec3 sunposeq, sunposteme, sun_azelrng, sat2sun;
+  double lambda_sun;
 
   // Calculate position of the Sun
-  sunposeq   = solar_pos(timestamp, time_ms);
+  sunposeq   = solar_pos(timestamp, time_ms, &lambda_sun);
   sunposteme = eq2teme(&sunposeq);
   result->sun_azelrng = eq2azelrng(&sunposeq, obs_geo, timestamp, time_ms);
 
@@ -1759,11 +1760,36 @@ sat_observe
 
   // Calculate position of the Moon
   vec3 moonposeq;
+  double lambda_moon;
 
-  moonposeq = lunar_pos(timestamp, time_ms);
+  moonposeq = lunar_pos(timestamp, time_ms, &lambda_moon);
   result->moon_azelrng = eq2azelrng(&moonposeq, obs_geo, timestamp, time_ms);
 
-  // TODO: Moon phase here
+  // Fraction of the Moon disc illuminated
+  double cospsi = sin(sunposeq.dec) * sin(moonposeq.dec)
+                + cos(sunposeq.dec) * cos(moonposeq.dec)
+                * cos(sunposeq.ra - moonposeq.ra);
+  double psi    = acos(sin(sunposeq.dec) * sin(moonposeq.dec)
+                + cos(sunposeq.dec) * cos(moonposeq.dec)
+                * cos(sunposeq.ra - moonposeq.ra));
+  double i      = atan2(sunposeq.rv * sin(psi), moonposeq.rv
+                - sunposeq.rv * cos(psi));
+  double k      = (1 + cos(i)) / 2;
+
+  // Calculate Moon phase
+  double excess_angle = fmod(lambda_moon - lambda_sun, TAU);
+  if (excess_angle < 0)
+  {
+    excess_angle += TAU;
+  }
+
+  result->moon_phase = k;
+
+  // Return negative portion for waning moons
+  if (excess_angle > PI)
+  {
+    result->moon_phase *= -1;
+  }
 
   return retval;
 }
@@ -1789,7 +1815,7 @@ sat_find_passes
   bool          prev_illum   = false;
 
   // for plotting
-  FILE* outfile = fopen("elevations.out", "w");
+  //FILE* outfile = fopen("elevations.out", "w");
 
   // Find principle zeroes and local maxima on a coarse time step pass
   for (time_t t = *start_time; t <= *stop_time; t += delta_t)
@@ -1797,7 +1823,7 @@ sat_find_passes
     sat_observe(s, t, 0, obs_geo, &o);
 
     // for plotting
-    fprintf(outfile, "%ld,%8.3lf\n", t - *start_time, o.azelrng.el * RAD2DEG);
+    //fprintf(outfile, "%ld,%8.3lf\n", t - *start_time, o.azelrng.el * RAD2DEG);
 
     if (o.azelrng.el > horizon)
     {
@@ -1905,7 +1931,7 @@ sat_find_passes
   }
 
   // for plotting
-  fclose(outfile);
+  //fclose(outfile);
 
   return 0;
 }

@@ -137,6 +137,8 @@ typedef struct _obs
   bool   is_illum;     // Is the satellite illuminated by the Sun?
   vec3   sun_azelrng;  // Azimuth-Elevation-Range of The Sun
   vec3   moon_azelrng; // Azimuth-Elevation-Range of The Moon
+  double moon_phase;   // Illuminated portion of Moon's disc combined with phase
+                       // (negative for waning, positive for waxing)
 } obs;
 
 /*
