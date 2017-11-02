@@ -1174,11 +1174,11 @@ sat_propagate
     const double step2 = 259200;
 
     // Calculate deep space resonance effects
-    s->dndt       = 0; // TODO: Const correctness
+    double dndt   = 0;
     double theta  = fmod(s->GSTo + tdelta * RPTIM, TAU);
 
     // Perturbed quantities
-    em += s->dedt * tdelta;
+    em    += s->dedt * tdelta;
     inclm += s->didt  * tdelta;
     omega += s->domdt * tdelta;
     xnode += s->dnodt * tdelta;
@@ -1261,15 +1261,15 @@ sat_propagate
 
       if (s->is_12h_resonant)
       {
-        xmp     = xl - 2 * xnode + 2 * theta;
-        s->dndt = nm - s->xnodp;  // TODO: Const correctness
+        xmp  = xl - 2 * xnode + 2 * theta;
+        dndt = nm - s->xnodp;
       }
       else
       {
-        xmp     = xl - xnode - omega + theta;
-        s->dndt = nm - s->xnodp;  // TODO: Const correctness
+        xmp  = xl - xnode - omega + theta;
+        dndt = nm - s->xnodp;
       }
-      nm = s->xnodp + s->dndt;
+      nm = s->xnodp + dndt;
 
 #ifdef MATH_TRACE
       printf("======================================== dp1\n");
@@ -1316,13 +1316,13 @@ sat_propagate
   xlm    = fmod(xlm, TAU);
   xmp    = fmod(xlm - omega - xnode, TAU);
 
-  s->inclination_lp      = inclm;  // TODO: Const correctness
-  s->eccentricity_lp     = em; // TODO: Const correctness
-  s->right_asc_node_lp   = xnode; // TODO: Const correctness
-  s->argument_perigee_lp = omega; // TODO: Const correctness
-  s->mean_anomaly_lp     = xmp; // TODO: Const correctness
-  double sinip = sin(s->inclination_lp);
-  double cosip = cos(s->inclination_lp);
+  double inclp  = inclm;
+  double ep     = em;
+  double xnodp  = xnode;
+  double omegap = omega;
+  double xmpp   = xmp;
+  double sinip  = sin(inclp);
+  double cosip  = cos(inclp);
 
 #ifdef MATH_TRACE
   printf("---------------------------------------- p2\n");
@@ -1332,16 +1332,19 @@ sat_propagate
   printf("xlm    %+.15e\n", xlm);
   printf("em2    %+.15e\n", em2);
   printf("omega  %+.15e\n", omega);
-  printf("inclp  %+.15e\n", s->inclination_lp);
-  printf("ep     %+.15e\n", s->eccentricity_lp);
-  printf("nodep  %+.15e\n", s->right_asc_node_lp);
-  printf("argpp  %+.15e\n", s->argument_perigee_lp);
-  printf("mp     %+.15e\n", s->mean_anomaly_lp);
+  printf("inclp  %+.15e\n", inclp);
+  printf("ep     %+.15e\n", ep);
+  printf("nodep  %+.15e\n", xnodp);
+  printf("argpp  %+.15e\n", omegap);
+  printf("mp     %+.15e\n", xmpp);
   printf("sinip  %+.15e\n", sinip);
   printf("cosip  %+.15e\n", cosip);
 #endif
 
   // Add lunar-solar periodics
+  double aycof = s->aycof;
+  double xlcof = s->xlcof;
+
   if (s->is_deep_space == true)
   {
     // Constants
@@ -1381,65 +1384,65 @@ sat_propagate
     pl    = pl - s->plo;
     pgh   = pgh - s->pgho;
     ph    = ph - s->pho;
-    s->inclination_lp  += pinc;  // TODO: Const correctness
-    s->eccentricity_lp += pe;  // TODO: Const correctness
-    sinip = sin(s->inclination_lp);
-    cosip = cos(s->inclination_lp);
+    inclp  += pinc;
+    ep += pe;
+    sinip = sin(inclp);
+    cosip = cos(inclp);
 
     // Apply periodics directly
-    if (s->inclination_lp >= 0.2) // Lyddane choice
+    if (inclp >= 0.2) // Lyddane choice
     {
       ph  = ph / sinip;
       pgh = pgh - cosip * ph;
 
-      s->argument_perigee_lp += pgh;  // TODO: Const correctness
-      s->right_asc_node_lp   += ph; // TODO: Const correctness
-      s->mean_anomaly_lp     += pl; // TODO: Const correctness
+      omegap += pgh;
+      xnodp  += ph;
+      xmpp   += pl;
     }
     else
     {
       // Apply periodics with Lyddane modifications
-      double sinop  = sin(s->right_asc_node_lp);
-      double cosop  = cos(s->right_asc_node_lp);
+      double sinop  = sin(xnodp);
+      double cosop  = cos(xnodp);
       double alfdp  = sinip * sinop;
       double betdp  = sinip * cosop;
       double dalf   =  ph * cosop + pinc * cosip * sinop;
       double dbet   = -ph * sinop + pinc * cosip * cosop;
-      alfdp  = alfdp + dalf;
-      betdp  = betdp + dbet;
-      s->right_asc_node_lp  = fmod(s->right_asc_node_lp, TAU);  // TODO: Const correctness
+             alfdp  = alfdp + dalf;
+             betdp  = betdp + dbet;
+             xnodp  = fmod(xnodp, TAU);
 
       // Wrap negative node for atan below
-      if (s->right_asc_node_lp < 0)
+      if (xnodp < 0)
       {
-        s->right_asc_node_lp += TAU;  // TODO: Const correctness
+        xnodp += TAU;
       }
 
-      double xls    = s->mean_anomaly_lp + s->argument_perigee_lp + cosip * s->right_asc_node_lp;
-      xls          += pl + pgh - pinc * s->right_asc_node_lp * sinip;
-      double xnoh   = s->right_asc_node_lp;
-      s->right_asc_node_lp  = atan2(alfdp, betdp);  // TODO: Const correctness
+      double xls    = xmpp + omegap + cosip * xnodp;
+      xls          += pl + pgh - pinc * xnodp * sinip;
+      double xnoh   = xnodp;
+      xnodp  = atan2(alfdp, betdp);
 
       // Wrap negative node for fabs below
-      if (s->right_asc_node_lp < 0)
+      if (xnodp < 0)
       {
-        s->right_asc_node_lp += TAU;  // TODO: Const correctness
+        xnodp += TAU;
       }
 
-      if (fabs(xnoh - s->right_asc_node_lp) > PI)
+      if (fabs(xnoh - xnodp) > PI)
       {
-        if (s->right_asc_node_lp < xnoh)
+        if (xnodp < xnoh)
         {
-          s->right_asc_node_lp = s->right_asc_node_lp + TAU;  // TODO: Const correctness
+          xnodp = xnodp + TAU;
         }
         else
         {
-          s->right_asc_node_lp = s->right_asc_node_lp - TAU;  // TODO: Const correctness
+          xnodp = xnodp - TAU;
         }
       }
 
-      s->mean_anomaly_lp    += pl; // TODO: Const correctness
-      s->argument_perigee_lp = xls - s->mean_anomaly_lp - cosip * s->right_asc_node_lp; // TODO: Const correctness
+      xmpp  += pl;
+      omegap = xls - xmpp - cosip * xnodp;
     }
 
 #ifdef MATH_TRACE
@@ -1448,51 +1451,51 @@ sat_propagate
     printf("xlm     %+.15e\n", xlm);
     printf("em2     %+.15e\n", em2);
     printf("omega   %+.15e\n", omega);
-    printf("incl_lp %+.15e\n", s->inclination_lp);
-    printf("node_lp %+.15e\n", s->right_asc_node_lp);
-    printf("argp_lp %+.15e\n", s->argument_perigee_lp);
-    printf("ecc_lp  %+.15e\n", s->eccentricity_lp);
-    printf("mo_lp   %+.15e\n", s->mean_anomaly_lp);
+    printf("incl_lp %+.15e\n", inclp);
+    printf("node_lp %+.15e\n", xnodp);
+    printf("argp_lp %+.15e\n", omegap);
+    printf("ecc_lp  %+.15e\n", ep);
+    printf("mo_lp   %+.15e\n", xmpp);
 #endif
 
-    if (s->inclination_lp < 0)
+    if (inclp < 0)
     {
-      s->inclination_lp      *= -1; // TODO: Const correctness
-      s->right_asc_node_lp   += PI; // TODO: Const correctness
-      s->argument_perigee_lp -= PI; // TODO: Const correctness
+      inclp  *= -1;
+      xnodp  += PI;
+      omegap -= PI;
     }
 
-    if ((s->eccentricity_lp < 0)
-     || (s->eccentricity_lp > 1))
+    if ((ep < 0)
+     || (ep > 1))
     {
       return -3;
     }
 
     // Long period periodics
-    sinip    =  sin(s->inclination_lp);
-    cosip    =  cos(s->inclination_lp);
-    s->aycof = -0.5 * J3DIVJ2 * sinip; // TODO: Const correctness
+    sinip =  sin(inclp);
+    cosip =  cos(inclp);
+    aycof = -0.5 * J3DIVJ2 * sinip;
 
-    // Avoid division by zero for s->inclination_lp = 180 deg
+    // Avoid division by zero for inclp = 180 deg
     if (fabs(cosip + 1) > 1.5e-12)
     {
-      s->xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / (1 + cosip); // TODO: Const correctness
+      xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / (1 + cosip);
     }
     else
     {
-      s->xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / 1.5e-12; // TODO: Const correctness
+      xlcof = -0.25 * J3DIVJ2 * sinip * (3 + 5 * cosip) / 1.5e-12;
     }
   }
 
-  double axnl    = s->eccentricity_lp * cos(s->argument_perigee_lp);
-  double a1e2inv = 1 / (am * (1 - pow(s->eccentricity_lp, 2)));
-  double aynl    = s->eccentricity_lp * sin(s->argument_perigee_lp)
-                 + a1e2inv * s->aycof;
-  double xl      = s->mean_anomaly_lp + s->argument_perigee_lp
-                 + s->right_asc_node_lp + a1e2inv * s->xlcof * axnl;
+  double axnl    = ep * cos(omegap);
+  double a1e2inv = 1 / (am * (1 - pow(ep, 2)));
+  double aynl    = ep * sin(omegap)
+                 + a1e2inv * aycof;
+  double xl      = xmpp + omegap
+                 + xnodp + a1e2inv * xlcof * axnl;
 
   // Kepler's equation
-  double  u       = fmod(xl - s->right_asc_node_lp, TAU);
+  double  u       = fmod(xl - xnodp, TAU);
   double  eo1     = u;
   double  kdelta  = 9999.9;
   uint8_t ktr     = 0;
@@ -1567,22 +1570,26 @@ sat_propagate
     double temp2  = temp1 * (1 / pl);
 
     // Update for short period periodics
+    double cosip2 = cosip * cosip;
+    double con41  = s->con41;
+    double x1mth2 = s->x1mth2;
+    double x7thm1 = s->x7thm1;
+
     if (s->is_deep_space == true)
     {
-      double cosip2 = cosip * cosip;
-      s->con41      = 3 * cosip2 - 1; // TODO: Const correctness
-      s->x1mth2     = 1 - cosip2; // TODO: Const correctness
-      s->x7thm1     = 7 * cosip2 - 1; // TODO: Const correctness
+      con41  = 3 * cosip2 - 1;
+      x1mth2 = 1 - cosip2;
+      x7thm1 = 7 * cosip2 - 1;
     }
 
-           mrt   = rl * (1 - 1.5 * temp2 * betal * s->con41)
-                 + 0.5 * temp1 * s->x1mth2 * cos2u;
-           su    = su - 0.25 * temp2 * s->x7thm1 * sin2u;
-           xnode = s->right_asc_node_lp + 1.5 * temp2 * cosip * sin2u;
-    double xinc  = s->inclination_lp    + 1.5 * temp2 * cosip * sinip * cos2u;
-    double mvt   = rdotl  - nm * temp1 * s->x1mth2  * sin2u / XKE;
-    double rvdot = rvdotl + nm * temp1 * (s->x1mth2 * cos2u
-                 + 1.5 * s->con41) / XKE;
+    mrt    = rl * (1 - 1.5 * temp2 * betal * con41)
+           + 0.5 * temp1 * x1mth2 * cos2u;
+    su     = su - 0.25 * temp2 * x7thm1 * sin2u;
+    xnode  = xnodp + 1.5 * temp2 * cosip * sin2u;
+    double xinc   = inclp + 1.5 * temp2 * cosip * sinip * cos2u;
+    double mvt    = rdotl  - nm * temp1 * x1mth2  * sin2u / XKE;
+    double rvdot  = rvdotl + nm * temp1 * (x1mth2 * cos2u
+                  + 1.5 * con41) / XKE;
 
 #ifdef MATH_TRACE
     printf("---------------------------------------- p5\n");

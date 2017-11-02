@@ -100,12 +100,6 @@ typedef struct _sat
   double zmol;
   // Deep space lunar solar terms
   double peo, pinco, plo, pgho, pho;
-  // Deep space long period last perturbed elements
-  double inclination_lp;
-  double eccentricity_lp;
-  double right_asc_node_lp;
-  double argument_perigee_lp;
-  double mean_anomaly_lp;
   // Deep space resonance terms
   double dedt, didt, dmdt, dndt, dnodt, domdt;
   double xlamo, xfact;

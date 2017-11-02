@@ -111,12 +111,10 @@ main (int argc, char** argv)
     printf("Range:  %13.3lf km\n",   o.azelrng.rng);
     printf("RRate:  %13.3lf km/s\n", o.rng_rate);
     printf("Illum:  %9d\n",          o.is_illum);
-
     printf("-------------- The Sun --------------\n");
     printf("Az:     %13.3lf deg\n", o.sun_azelrng.az * RAD2DEG);
     printf("El:     %13.3lf deg\n", o.sun_azelrng.el * RAD2DEG);
     printf("Range:  %13.3lf km\n", o.sun_azelrng.rng);
-
     printf("-------------- The Moon -------------\n");
     printf("Az:     %13.3lf deg\n", o.moon_azelrng.az * RAD2DEG);
     printf("El:     %13.3lf deg\n", o.moon_azelrng.el * RAD2DEG);
