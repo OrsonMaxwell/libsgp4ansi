@@ -105,8 +105,6 @@ typedef struct _sat
   double xlamo, xfact;
   double d2201, d2211, d3210, d3222 , d4410, d4422, d5220, d5232, d5421, d5433;
   double del1, del2, del3;
-  // Deep space integrator terms
-  double xli, xni, atime;
 } sat;
 
 /*
@@ -215,7 +213,7 @@ teme2coe
 int
 sat_propagate
 (
-  sat*         s,
+  const sat*   s,
   double       tdelta,
   unsigned int maxiter,
   double       tolerance,
@@ -227,7 +225,7 @@ sat_propagate
 int
 sat_observe
 (
-        sat*    s,
+  const sat*    s,
         time_t  timestamp,
         float   time_ms,
   const vec3*   obs_geo,
@@ -238,7 +236,7 @@ sat_observe
 int
 sat_find_passes
 (
-        sat*         s,
+  const sat*         s,
   const time_t*      start_time,
   const time_t*      stop_time,
   const vec3*        obs_geo,

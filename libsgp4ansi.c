@@ -66,7 +66,7 @@ el2skylight
 time_t
 find_zero
 (
-        sat*         s,
+  const sat*         s,
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t,
@@ -78,7 +78,7 @@ find_zero
 time_t
 find_tca
 (
-        sat*         s,
+  const sat*         s,
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t
@@ -87,7 +87,7 @@ find_tca
 time_t
 find_flare
 (
-        sat*         s,
+  const sat*         s,
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t,
@@ -1021,11 +1021,6 @@ sat_init
         s->xlamo = fmod(s->mean_anomaly + s->right_asc_node
                  + s->argument_perigee - s->GSTo, TAU);
       }
-
-      // Initialize the integrator
-      s->xli    = s->xlamo;
-      s->xni    = s->xnodp;
-      s->atime  = 0;
     }
   }
 
@@ -1100,12 +1095,12 @@ sat_init
 int
 sat_propagate
 (
-    sat* s,
-    double tdelta,
-    unsigned int maxiter,
-    double tolerance,
-    vec3* p,
-    vec3* v
+  const sat*   s,
+  double       tdelta,
+  unsigned int maxiter,
+  double       tolerance,
+  vec3*        p,
+  vec3*        v
 )
 {
   if ((s == NULL) || (maxiter < 1) || (tolerance <= 0.0))
@@ -1169,9 +1164,11 @@ sat_propagate
     const double g44   = 1.8014998;
     const double g52   = 1.0508330;
     const double g54   = 4.4108898;
+
+    // Euler-Maclaurin integrator steps for resonant orbits
     const double stepp = 720;
-    const double stepn = -720;
-    const double step2 = 259200;
+    const double stepn = -stepp;
+    const double step2 = (stepp * stepp) / 2;
 
     // Calculate deep space resonance effects
     double dndt   = 0;
@@ -1189,14 +1186,9 @@ sat_propagate
     double delta;
     if ((s->is_12h_resonant == true) || (s->is_24h_resonant == true))
     {
-      if ((s->atime == 0)
-          || (tdelta * s->atime <= 0)
-          || (fabs(tdelta) < fabs(s->atime)))
-      {
-        s->atime = 0; // TODO: Const correctness
-        s->xni   = s->xnodp; // TODO: Const correctness
-        s->xli   = s->xlamo; // TODO: Const correctness
-      }
+      double atime = 0;
+      double xni   = s->xnodp;
+      double xli   = s->xlamo;
 
       if (tdelta > 0)
         delta = stepp;
@@ -1211,53 +1203,62 @@ sat_propagate
         // Synchronous resonance dot terms
         if (s->is_24h_resonant == true)
         {
-          xndt  = s->del1 * sin(s->xli - fasx2) + s->del2
-                * sin(2 * (s->xli - fasx4))
-                + s->del3 * sin(3 * (s->xli - fasx6));
-          xldot = s->xni + s->xfact;
-          xnddt = s->del1 * cos(s->xli - fasx2) +
-              2 * s->del2 * cos(2 * (s->xli - fasx4)) +
-              3 * s->del3 * cos(3 * (s->xli - fasx6));
+          xndt  = s->del1 * sin(xli - fasx2) + s->del2
+                * sin(2   * (xli - fasx4))
+                + s->del3 * sin(3 * (xli - fasx6));
+          xldot = xni + s->xfact;
+          xnddt = s->del1 * cos(xli - fasx2) +
+              2 * s->del2 * cos(2 * (xli - fasx4)) +
+              3 * s->del3 * cos(3 * (xli - fasx6));
           xnddt = xnddt * xldot;
         }
         // Geopotential resonance terms
         else
         {
-          xomi  = s->argument_perigee + s->omgdot * s->atime;
+          xomi  = s->argument_perigee + s->omgdot * atime;
           x2omi = xomi + xomi;
-          x2li  = s->xli + s->xli;
-          xndt  = s->d2201 * sin(x2omi + s->xli - g22) + s->d2211 * sin(s->xli - g22) +
-              s->d3210 * sin(xomi + s->xli - g32)  + s->d3222 * sin(-xomi + s->xli - g32)+
-              s->d4410 * sin(x2omi + x2li - g44)+ s->d4422 * sin(x2li - g44) +
-              s->d5220 * sin(xomi + s->xli - g52)  + s->d5232 * sin(-xomi + s->xli - g52)+
-              s->d5421 * sin(xomi + x2li - g54) + s->d5433 * sin(-xomi + x2li - g54);
-          xldot = s->xni + s->xfact;
-          xnddt = s->d2201 * cos(x2omi + s->xli - g22) + s->d2211 * cos(s->xli - g22) +
-              s->d3210 * cos(xomi + s->xli - g32) + s->d3222 * cos(-xomi + s->xli - g32) +
-              s->d5220 * cos(xomi + s->xli - g52) + s->d5232 * cos(-xomi + s->xli - g52) +
-              2 * (s->d4410 * cos(x2omi + x2li - g44) +
-                  s->d4422 * cos(x2li - g44) + s->d5421 * cos(xomi + x2li - g54) +
-                  s->d5433 * cos(-xomi + x2li - g54));
+          x2li  = xli + xli;
+          xndt  = s->d2201 * sin(x2omi + xli  - g22)
+                + s->d2211 * sin(xli   - g22)
+                + s->d3210 * sin(xomi  + xli  - g32)
+                + s->d3222 * sin(-xomi + xli  - g32)
+                + s->d4410 * sin(x2omi + x2li - g44)
+                + s->d4422 * sin(x2li  - g44)
+                + s->d5220 * sin(xomi  + xli  - g52)
+                + s->d5232 * sin(-xomi + xli  - g52)
+                + s->d5421 * sin(xomi  + x2li - g54)
+                + s->d5433 * sin(-xomi + x2li - g54);
+          xldot = xni + s->xfact;
+          xnddt = s->d2201 * cos(x2omi + xli  - g22)
+                + s->d2211 * cos(xli   - g22)
+                + s->d3210 * cos(xomi  + xli  - g32)
+                + s->d3222 * cos(-xomi + xli  - g32)
+                + s->d5220 * cos(xomi  + xli  - g52)
+                + s->d5232 * cos(-xomi + xli  - g52)
+                + 2 * (s->d4410 * cos(x2omi + x2li - g44)
+                     + s->d4422 * cos(x2li  - g44)
+                     + s->d5421 * cos(xomi  + x2li - g54)
+                     + s->d5433 * cos(-xomi + x2li - g54));
           xnddt = xnddt * xldot;
         }
 
         // Integrator
-        if (fabs(tdelta - s->atime) < stepp)
+        if (fabs(tdelta - atime) < stepp)
         {
-          ft          = tdelta - s->atime;
+          ft          = tdelta - atime;
           integrating = false;
         }
 
         if (integrating == true)
         {
-          s->xli   = s->xli + xldot * delta + xndt * step2;  // TODO: Const correctness
-          s->xni   = s->xni + xndt * delta + xnddt * step2; // TODO: Const correctness
-          s->atime = s->atime + delta; // TODO: Const correctness
+          xli   = xli   + xldot * delta + xndt  * step2;
+          xni   = xni   + xndt  * delta + xnddt * step2;
+          atime = atime + delta;
         }
       }
 
-      nm = s->xni + xndt * ft + xnddt * ft * ft * 0.5;
-      double xl = s->xli + xldot * ft + xndt * ft * ft * 0.5;
+             nm = xni + xndt  * ft + xnddt * ft * ft * 0.5;
+      double xl = xli + xldot * ft + xndt  * ft * ft * 0.5;
 
       if (s->is_12h_resonant)
       {
@@ -1274,15 +1275,15 @@ sat_propagate
 #ifdef MATH_TRACE
       printf("======================================== dp1\n");
       printf("tdelta %+.15e\n", tdelta);
-      printf("atime  %+.15e\n", s->atime);
+      printf("atime  %+.15e\n", atime);
       printf("xndt   %+.15e\n", xndt);
       printf("xldot  %+.15e\n", xldot);
       printf("xnddt  %+.15e\n", xnddt);
       printf("xomi   %+.15e\n", xomi);
       printf("x2omi  %+.15e\n", x2omi);
       printf("x2li   %+.15e\n", x2li);
-      printf("xli    %+.15e\n", s->xli);
-      printf("xni    %+.15e\n", s->xni );
+      printf("xli    %+.15e\n", xli);
+      printf("xni    %+.15e\n", xni );
 #endif
     }
   }
@@ -1293,8 +1294,8 @@ sat_propagate
   }
 
   double am = pow((XKE / nm), TWOTHIRD) * tempa * tempa;
-  nm = XKE / pow(am, 1.5);
-  em = em - tempe;
+         nm = XKE / pow(am, 1.5);
+         em = em - tempe;
 
   if ((em >= 1) || (em < -0.001))
   {
@@ -1679,7 +1680,7 @@ sat_propagate
 int
 sat_observe
 (
-        sat*    s,
+  const sat*    s,
         time_t  timestamp,
         float   time_ms,
   const vec3*   obs_geo,
@@ -1770,7 +1771,7 @@ sat_observe
 int
 sat_find_passes
 (
-        sat*         s,
+  const sat*         s,
   const time_t*      start_time,
   const time_t*      stop_time,
   const vec3*        obs_geo,
@@ -1955,7 +1956,7 @@ el2skylight
 time_t
 find_zero
 (
-        sat*         s,
+  const sat*         s,
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t,
@@ -2010,7 +2011,7 @@ find_zero
 time_t
 find_tca
 (
-        sat*         s,
+  const sat*         s,
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t
@@ -2062,7 +2063,7 @@ find_tca
 time_t
 find_flare
 (
-        sat*         s,
+  const sat*         s,
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t,
