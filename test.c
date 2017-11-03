@@ -238,6 +238,7 @@ main (int argc, char** argv)
       vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
       time_t start_time    = mktime(&t) - TIMEZONE;
       time_t stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
+      //time_t stop_time     = mktime(&t) - TIMEZONE + 170 * 1440 * 60; // Drops dead
       //time_t stop_time     = mktime(&t) - TIMEZONE + 3600;
       pass*  passes;
       char   buff[70];
@@ -274,6 +275,7 @@ main (int argc, char** argv)
 
       for (unsigned int i = 0; i < retval; i++)
       {
+        printf("| Number    | %-21d |         |         |            |\n", i);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].aos_t));
         printf("| AOS       | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].aos.az * RAD2DEG, passes[i].aos.el * RAD2DEG, passes[i].aos.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].tca_t));
@@ -292,6 +294,15 @@ main (int argc, char** argv)
       }
 
       free(passes);
+
+      retval = sat_find_transits(&s, &observer_geo, start_time, stop_time, delta_t,
+                                 horizon);
+
+      if (retval < 0)
+      {
+        printf("Error %2d while searching for transits!", retval);
+        return retval;
+      }
 
       return 0;
     }

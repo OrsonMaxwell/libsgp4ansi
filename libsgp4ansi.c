@@ -2052,16 +2052,10 @@ sat_find_passes
   time_t        new_lmax_t   = 0;
   bool          prev_illum   = false;
 
-  // for plotting
-  //FILE* outfile = fopen("elevations.out", "w");
-
   // Find principle zeroes and local maxima on a coarse time step pass
   for (time_t t = start_time; t <= stop_time; t += delta_t)
   {
     sat_observe(s, t, 0, obs_geo, &o);
-
-    // for plotting
-    //fprintf(outfile, "%ld,%8.3lf\n", t - start_time, o.azelrng.el * RAD2DEG);
 
     if (o.azelrng.el > horizon)
     {
@@ -2193,9 +2187,6 @@ sat_find_passes
     prev_el      = o.azelrng.el;
   }
 
-  // for plotting
-  //fclose(outfile);
-
   return pass_count;
 }
 
@@ -2208,7 +2199,7 @@ sat_find_passes
  *          obs_geo   - Geodetic coordinates of the ground station
  * Outputs: result    - Observational data
  * Returns: >= 0      - The number of found transits on success
- *         -1         - Invalid inputs or parametres
+ *         -1         - Invalid inputs or parametres, failure to allocate memory
  *         -2         - Negative mean motion
  *         -3         - Eccentricity out of range (e >= 1; e < -1.0e-12)
  *         -4         - Short period preliminary quantities error
@@ -2230,6 +2221,50 @@ sat_find_transits
       (delta_t    <= 0))
   {
     return -1;
+  }
+
+  obs o      = {0};
+  int retval = 0;
+
+  // Important heuristic!
+  unsigned int  max_passes = (unsigned int)ceil((stop_time - start_time)
+                              / delta_t) / s->period * 2 + 1;
+
+  pass* passes = malloc(max_passes * sizeof(pass));
+
+  if (passes == NULL)
+  {
+    return -1;
+  }
+
+  int passes_found = sat_find_passes(s, obs_geo, start_time, stop_time, delta_t,
+                                     horizon, passes);
+
+  if (passes_found < 0)
+  {
+    return passes_found;
+  }
+
+  for (unsigned int i = 0; i < passes_found; i++)
+  {
+    // One second resolution comb trough found passes
+    for (time_t t = passes[i].aos_t; t <= passes[i].los_t; t++)
+    {
+      retval = sat_observe(s, t, 0, obs_geo, &o);
+      if (retval == 0)
+      {
+        if ((fabs(o.azelrng.az - o.sun_azelrng.az) < 1 * DEG2RAD)
+         && (fabs(o.azelrng.el - o.sun_azelrng.el) < 1 * DEG2RAD))
+        {
+          printf("%3d: Solar transit candidate!\n", i);
+        }
+        if ((fabs(o.azelrng.az - o.moon_azelrng.az) < 1 * DEG2RAD)
+         && (fabs(o.azelrng.el - o.moon_azelrng.el) < 1 * DEG2RAD))
+        {
+          printf("%3d: Solar transit candidate!\n", i);
+        }
+      }
+    }
   }
 
   return 0;
