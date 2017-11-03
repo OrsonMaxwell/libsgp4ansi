@@ -2043,6 +2043,8 @@ sat_find_passes
     return -1;
   }
 
+  horizon = fmax(horizon, 0.0);
+
   int           retval       = 0;
   obs           o            = {0};
   obs           o_tmp        = {0};
@@ -2213,15 +2215,19 @@ sat_find_transits
         time_t       start_time,
         time_t       stop_time,
         unsigned int delta_t,
-        double       horizon
+        double       horizon,
+        transit*     transits
 )
 {
   if ((s          == NULL) ||
       (obs_geo    == NULL) ||
+      (transits   == NULL) ||
       (delta_t    <= 0))
   {
     return -1;
   }
+
+  horizon = fmax(horizon, 0.0);
 
   obs o      = {0};
   int retval = 0;
@@ -2245,6 +2251,8 @@ sat_find_transits
     return passes_found;
   }
 
+  double angular_d;
+
   for (unsigned int i = 0; i < passes_found; i++)
   {
     // One second resolution comb trough found passes
@@ -2253,15 +2261,19 @@ sat_find_transits
       retval = sat_observe(s, t, 0, obs_geo, &o);
       if (retval == 0)
       {
-        if ((fabs(o.azelrng.az - o.sun_azelrng.az) < 1 * DEG2RAD)
-         && (fabs(o.azelrng.el - o.sun_azelrng.el) < 1 * DEG2RAD))
+        if ((fabs(o.azelrng.az - o.sun_azelrng.az) < 5 * DEG2RAD)
+         && (fabs(o.azelrng.el - o.sun_azelrng.el) < 5 * DEG2RAD))
         {
-          printf("%3d: Solar transit candidate!\n", i);
+          angular_d = 2 * atan2(RSOL, o.sun_azelrng.rng);
+          printf("%3d: Solar transit candidate at %ld\n", i, t);
+          printf("     Solar anguilar diameter: %lf\n", angular_d * RAD2DEG);
         }
-        if ((fabs(o.azelrng.az - o.moon_azelrng.az) < 1 * DEG2RAD)
-         && (fabs(o.azelrng.el - o.moon_azelrng.el) < 1 * DEG2RAD))
+        if ((fabs(o.azelrng.az - o.moon_azelrng.az) < 5 * DEG2RAD)
+         && (fabs(o.azelrng.el - o.moon_azelrng.el) < 5 * DEG2RAD))
         {
-          printf("%3d: Solar transit candidate!\n", i);
+          angular_d = 2 * atan2(RSOL, o.sun_azelrng.rng);
+          printf("%3d: Lunar transit candidate at %ld\n", i, t);
+          printf("     Lunar anguilar diameter: %lf\n", angular_d * RAD2DEG);
         }
       }
     }

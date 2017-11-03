@@ -160,6 +160,20 @@ typedef struct _pass
   skylight sky;        // Skylight type
 } pass;
 
+/*
+ * Satellite transit data at given time from a given location
+ */
+typedef struct _transit
+{
+  time_t   start_time;     // Transit start time
+  float    start_t_ms;     // Transit start time fractional portion
+  time_t   stop_time;      // Transit stop time
+  float    stop_t_ms;      // Transit stop time fractional portion
+  bool     is_sun_transit; // Does sat transit the Sun disc? (false for Moon)
+  double   moon_phase;     // Moon disc illumination fraction combined with phase
+  skylight sky;            // Skylight type
+} transit;
+
 // ************************************************************************* //
 //                                    API                                    //
 // ************************************************************************* //
@@ -250,7 +264,8 @@ sat_find_transits
         time_t       start_time,
         time_t       stop_time,
         unsigned int delta_t,
-        double       horizon
+        double       horizon,
+        transit*     transits
 );
 
 #endif /* LIBSGP4ANSI_H_ */

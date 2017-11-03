@@ -295,14 +295,17 @@ main (int argc, char** argv)
 
       free(passes);
 
+      transit* transits = malloc(sizeof(transit));
       retval = sat_find_transits(&s, &observer_geo, start_time, stop_time, delta_t,
-                                 horizon);
+                                 horizon, transits);
 
       if (retval < 0)
       {
         printf("Error %2d while searching for transits!", retval);
         return retval;
       }
+
+      free(transits);
 
       return 0;
     }
