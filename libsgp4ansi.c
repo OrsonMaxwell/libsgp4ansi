@@ -147,6 +147,200 @@ str_trim
   return out_size;
 }
 
+
+/*
+ * Determine skylight type from the Sun elevation
+ *
+ * Inputs:  sun_elevation - true elevation of the Sun at ground station
+ * Outputs: None
+ * Returns: Skylight type. The types correspond to:
+ *          0 - Nighttime
+ *          1 - Astronomical twilight
+ *          2 - Nautical twilight
+ *          3 - Civil twilight
+ *          4 - Daytime
+ */
+skylight
+el2skylight
+(
+  double sun_elevation
+)
+{
+  if (sun_elevation >= 0)
+    return Daytime;
+  else if (sun_elevation >= -6  * DEG2RAD)
+    return Civil;
+  else if (sun_elevation >= -12 * DEG2RAD)
+    return Nautical;
+  else if (sun_elevation >= -18 * DEG2RAD)
+    return Astronomical;
+  else
+    return Nighttime;
+}
+
+/*
+ * Zero in on an AOS or an LOS event down to 1 sec resolution
+ * using recursive binary section search
+ *
+ * Inputs:  s          - sat struct pointer with initialized orbital data
+ *          obs_geo    - Geodetic coordinates of the ground station
+ *          start_time - Unix timestamp of observation
+ *          delta_t    - Time step
+ *          horizon    - Elevation of observer horizon, [0; pi/2] rad
+ *          direction  - Are we looking for AOS or for LOS?
+ * Outputs: None
+ * Returns: zero crossing unix time with second precision
+ */
+time_t
+find_zero
+(
+  const sat*         s,
+  const vec3*        obs_geo,
+  const time_t       start_time,
+        unsigned int delta_t,
+        double       horizon,
+  enum  dir          direction
+)
+{
+  obs    o = {0};
+  double diff;
+
+  unsigned int half_dt = ceil(delta_t / 2.0);
+
+  if (delta_t > 1)
+  {
+    sat_observe(s, start_time + half_dt, 0, obs_geo, &o);
+
+    if (direction == AOS)
+    {
+      diff = o.azelrng.el - horizon;
+    }
+    else // direction == LOS
+    {
+      diff = horizon - o.azelrng.el;
+    }
+
+    if (diff > 0)
+    {
+      return find_zero(s, obs_geo, start_time,
+                       half_dt, horizon, direction);
+    }
+    else
+    {
+      return find_zero(s, obs_geo, start_time + half_dt,
+                      half_dt, horizon, direction);
+    }
+  }
+
+  return start_time;
+}
+
+/*
+ * Find max elevation time an angle in a given period down to 1s resolution
+ * using iterative golden section search
+ *
+ * Inputs:  s          - sat struct pointer with initialized orbital data
+ *          obs_geo    - Geodetic coordinates of the ground station
+ *          start_time - Unix timestamp of observation
+ *          delta_t    - Time step
+ * Outputs: None
+ * Returns: Maximum elevation unix time with second precision
+ */
+time_t
+find_tca
+(
+  const sat*         s,
+  const vec3*        obs_geo,
+  const time_t       start_time,
+        unsigned int delta_t
+)
+{
+  obs    o_c     = {0};
+  obs    o_d     = {0};
+
+  // Iterative golden section search
+  unsigned int  a = start_time;
+  unsigned int  b = start_time + delta_t;
+  unsigned int  c = b - (b - a) / GOLDENR;
+  unsigned int  d = a + (b - a) / GOLDENR;
+
+  while (abs(c - d) > 1)
+  {
+    sat_observe(s, c, 0, obs_geo, &o_c);
+    sat_observe(s, d, 0, obs_geo, &o_d);
+
+    if (o_c.azelrng.el > o_d.azelrng.el)
+    {
+      b = d;
+    }
+    else
+    {
+      a = c;
+    }
+
+    c = b - (b - a) / GOLDENR;
+    d = a + (b - a) / GOLDENR;
+  }
+
+  return (b + a) / 2;
+}
+
+/*
+ * Zero in on an AOS or an LOS event down to 1 sec resolution
+ * using recursive binary section search
+ *
+ * Inputs:  s          - sat struct pointer with initialized orbital data
+ *          obs_geo    - Geodetic coordinates of the ground station
+ *          start_time - Unix timestamp of observation
+ *          delta_t    - Time step
+ *          horizon    - Elevation of observer horizon, [0; pi/2] rad
+ *          direction  - Are we looking for AOS or for LOS?
+ * Outputs: None
+ * Returns: zero crossing unix time with second precision
+ */
+time_t
+find_flare
+(
+  const sat*         s,
+  const vec3*        obs_geo,
+  const time_t       start_time,
+        unsigned int delta_t,
+  enum  dir          direction
+)
+{
+  obs    o = {0};
+  bool   diff = false;
+
+  unsigned int half_dt = ceil(delta_t / 2.0);
+
+  if (delta_t > 1)
+  {
+    sat_observe(s, start_time + half_dt, 0, obs_geo, &o);
+
+    if (direction == FLARE)
+    {
+      diff = o.is_illum;
+    }
+    else // direction == ECLIPSE
+    {
+      diff = !o.is_illum;
+    }
+
+    if (diff == true)
+    {
+      return find_flare(s, obs_geo, start_time,
+                        half_dt, direction);
+    }
+    else
+    {
+      return find_flare(s, obs_geo, start_time + half_dt,
+                        half_dt, direction);
+    }
+  }
+
+  return start_time;
+}
+
 // ************************************************************************* //
 //                                    API                                    //
 // ************************************************************************* //
@@ -1794,6 +1988,21 @@ sat_observe
   return retval;
 }
 
+/*
+ * Get observational data about the satellite from ground station
+ *
+ * Inputs:  s         - sat struct pointer with initialized orbital data
+ *          time      - Unix timestamp of observation
+ *          time_ms   - Milllisecond portion of the above
+ *          obs_geo   - Geodetic coordinates of the ground station
+ * Outputs: result    - Observational data
+ * Returns: >= 0      - The number of found passes on success
+ *         -1         - Invalid inputs or parametres
+ *         -2         - Negative mean motion
+ *         -3         - Eccentricity out of range (e >= 1; e < -1.0e-12)
+ *         -4         - Short period preliminary quantities error
+ *         -5         - Decayed satellite
+ */
 int
 sat_find_passes
 (
@@ -1806,6 +2015,7 @@ sat_find_passes
         pass*        passes
 )
 {
+  int           retval       = 0;
   obs           o            = {0};
   obs           o_tmp        = {0};
   unsigned int  pass_count   = 0;
@@ -1880,7 +2090,13 @@ sat_find_passes
 
         passes[pass_count - 1].flare_t = find_flare(s, obs_geo, t - delta_t,
                                                     delta_t, FLARE);
-        sat_observe(s, passes[pass_count - 1].flare_t, 0, obs_geo, &o_tmp);
+        retval = sat_observe(s, passes[pass_count - 1].flare_t, 0, obs_geo, &o_tmp);
+
+        if (retval < 0)
+        {
+          return retval;
+        }
+
         passes[pass_count - 1].flare = o_tmp.azelrng;
       }
 
@@ -1888,7 +2104,13 @@ sat_find_passes
       {
         passes[pass_count - 1].eclipse_t = find_flare(s, obs_geo, t - delta_t,
                                                       delta_t, ECLIPSE);
-        sat_observe(s, passes[pass_count - 1].eclipse_t, 0, obs_geo, &o_tmp);
+        retval = sat_observe(s, passes[pass_count - 1].eclipse_t, 0, obs_geo, &o_tmp);
+
+        if (retval < 0)
+        {
+          return retval;
+        }
+
         passes[pass_count - 1].eclipse   = o_tmp.azelrng;
       }
       prev_illum   = o.is_illum;
@@ -1925,7 +2147,12 @@ sat_find_passes
         new_lmax_t = find_tca(s, obs_geo, t - delta_t * 2, delta_t * 2);
       }
 
-      sat_observe(s, new_lmax_t, 0, obs_geo, &o_tmp);
+      retval = sat_observe(s, new_lmax_t, 0, obs_geo, &o_tmp);
+
+      if (retval < 0)
+      {
+        return retval;
+      }
 
       if (o_tmp.azelrng.el > passes[pass_count - 1].tca.el)
       {
@@ -1941,198 +2168,34 @@ sat_find_passes
   // for plotting
   //fclose(outfile);
 
+  return pass_count;
+}
+
+/*
+ * Find satellite transits over the solar and lunar discs
+ *
+ * Inputs:  s         - sat struct pointer with initialized orbital data
+ *          time      - Unix timestamp of observation
+ *          time_ms   - Milllisecond portion of the above
+ *          obs_geo   - Geodetic coordinates of the ground station
+ * Outputs: result    - Observational data
+ * Returns: >= 0      - The number of found transits on success
+ *         -1         - Invalid inputs or parametres
+ *         -2         - Negative mean motion
+ *         -3         - Eccentricity out of range (e >= 1; e < -1.0e-12)
+ *         -4         - Short period preliminary quantities error
+ *         -5         - Decayed satellite
+ */
+int
+sat_find_transits
+(
+  const sat*         s,
+  const time_t*      start_time,
+  const time_t*      stop_time,
+  const vec3*        obs_geo,
+        unsigned int delta_t,
+        double       horizon
+)
+{
   return 0;
-}
-
-/*
- * Determine skylight type from the Sun elevation
- *
- * Inputs:  sun_elevation - true elevation of the Sun at ground station
- * Outputs: None
- * Returns: Skylight type. The types correspond to:
- *          0 - Nighttime
- *          1 - Astronomical twilight
- *          2 - Nautical twilight
- *          3 - Civil twilight
- *          4 - Daytime
- */
-skylight
-el2skylight
-(
-  double sun_elevation
-)
-{
-  if (sun_elevation >= 0)
-    return 4;
-  else if (sun_elevation >= -6 * DEG2RAD)
-    return 3;
-  else if (sun_elevation >= -12 * DEG2RAD)
-    return 2;
-  else if (sun_elevation >= -18 * DEG2RAD)
-    return 1;
-  else
-    return 0;
-}
-
-/*
- * Zero in on an AOS or an LOS event down to 1 sec resolution
- * using recursive binary section search
- *
- * Inputs:  s          - sat struct pointer with initialized orbital data
- *          obs_geo    - Geodetic coordinates of the ground station
- *          start_time - Unix timestamp of observation
- *          delta_t    - Time step
- *          horizon    - Elevation of observer horizon, [0; pi/2] rad
- *          direction  - Are we looking for AOS or for LOS?
- * Outputs: None
- * Returns: zero crossing unix time with second precision
- */
-time_t
-find_zero
-(
-  const sat*         s,
-  const vec3*        obs_geo,
-  const time_t       start_time,
-        unsigned int delta_t,
-        double       horizon,
-  enum  dir          direction
-)
-{
-  obs    o = {0};
-  double diff;
-
-  unsigned int half_dt = ceil(delta_t / 2.0);
-
-  if (delta_t > 1)
-  {
-    sat_observe(s, start_time + half_dt, 0, obs_geo, &o);
-
-    if (direction == AOS)
-    {
-      diff = o.azelrng.el - horizon;
-    }
-    else // direction == LOS
-    {
-      diff = horizon - o.azelrng.el;
-    }
-
-    if (diff > 0)
-    {
-      return find_zero(s, obs_geo, start_time,
-                       half_dt, horizon, direction);
-    }
-    else
-    {
-      return find_zero(s, obs_geo, start_time + half_dt,
-                      half_dt, horizon, direction);
-    }
-  }
-
-  return start_time;
-}
-
-/*
- * Find max elevation time an angle in a given period down to 1s resolution
- * using iterative golden section search
- *
- * Inputs:  s          - sat struct pointer with initialized orbital data
- *          obs_geo    - Geodetic coordinates of the ground station
- *          start_time - Unix timestamp of observation
- *          delta_t    - Time step
- * Outputs: None
- * Returns: Maximum elevation unix time with second precision
- */
-time_t
-find_tca
-(
-  const sat*         s,
-  const vec3*        obs_geo,
-  const time_t       start_time,
-        unsigned int delta_t
-)
-{
-  obs    o_c     = {0};
-  obs    o_d     = {0};
-
-  // Iterative golden section search
-  unsigned int  a = start_time;
-  unsigned int  b = start_time + delta_t;
-  unsigned int  c = b - (b - a) / GOLDENR;
-  unsigned int  d = a + (b - a) / GOLDENR;
-
-  while (abs(c - d) > 1)
-  {
-    sat_observe(s, c, 0, obs_geo, &o_c);
-    sat_observe(s, d, 0, obs_geo, &o_d);
-
-    if (o_c.azelrng.el > o_d.azelrng.el)
-    {
-      b = d;
-    }
-    else
-    {
-      a = c;
-    }
-
-    c = b - (b - a) / GOLDENR;
-    d = a + (b - a) / GOLDENR;
-  }
-
-  return (b + a) / 2;
-}
-
-/*
- * Zero in on an AOS or an LOS event down to 1 sec resolution
- * using recursive binary section search
- *
- * Inputs:  s          - sat struct pointer with initialized orbital data
- *          obs_geo    - Geodetic coordinates of the ground station
- *          start_time - Unix timestamp of observation
- *          delta_t    - Time step
- *          horizon    - Elevation of observer horizon, [0; pi/2] rad
- *          direction  - Are we looking for AOS or for LOS?
- * Outputs: None
- * Returns: zero crossing unix time with second precision
- */
-time_t
-find_flare
-(
-  const sat*         s,
-  const vec3*        obs_geo,
-  const time_t       start_time,
-        unsigned int delta_t,
-  enum  dir          direction
-)
-{
-  obs    o = {0};
-  bool   diff = false;
-
-  unsigned int half_dt = ceil(delta_t / 2.0);
-
-  if (delta_t > 1)
-  {
-    sat_observe(s, start_time + half_dt, 0, obs_geo, &o);
-
-    if (direction == FLARE)
-    {
-      diff = o.is_illum;
-    }
-    else // direction == ECLIPSE
-    {
-      diff = !o.is_illum;
-    }
-
-    if (diff == true)
-    {
-      return find_flare(s, obs_geo, start_time,
-                       half_dt, direction);
-    }
-    else
-    {
-      return find_flare(s, obs_geo, start_time + half_dt,
-                      half_dt, direction);
-    }
-  }
-
-  return start_time;
 }

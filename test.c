@@ -141,15 +141,25 @@ main (int argc, char** argv)
 
     double time_ms = 0;
 
+    int    retval    = 0;
     time_t timestamp = mktime(&t) - TIMEZONE;
     vec3   obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
     obs    o = {0};
+    char   buff[70];
 
     while (true)
     {
     timestamp = time(0);
 
-    sat_observe(&s, timestamp, time_ms, &obs_geo, &o);
+    retval = sat_observe(&s, timestamp, time_ms, &obs_geo, &o);
+
+    if (retval < 0)
+    {
+      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&timestamp));
+      printf("Error %2d at %s!", retval, buff);
+      return retval;
+    }
+
     printf("Lat:    %13.3lf deg\n",  o.latlonalt.lat * RAD2DEG);
     printf("Lon:    %13.3lf deg\n",  o.latlonalt.lon * RAD2DEG);
     printf("Alt:    %13.3lf km\n",   o.latlonalt.alt);
@@ -159,17 +169,17 @@ main (int argc, char** argv)
     printf("Range:  %13.3lf km\n",   o.azelrng.rng);
     printf("RRate:  %13.3lf km/s\n", o.rng_rate);
     printf("Illum:  %9d\n",          o.is_illum);
-    printf("-------------- The Sun --------------\n");
+    printf("------------------- The Sun -------------------\n");
     printf("Az:     %13.3lf deg\n", o.sun_azelrng.az * RAD2DEG);
     printf("El:     %13.3lf deg\n", o.sun_azelrng.el * RAD2DEG);
     printf("Range:  %13.3lf km\n", o.sun_azelrng.rng);
-    printf("-------------- The Moon -------------\n");
+    printf("------------------- The Moon ------------------\n");
     printf("Az:     %13.3lf deg\n", o.moon_azelrng.az * RAD2DEG);
     printf("El:     %13.3lf deg\n", o.moon_azelrng.el * RAD2DEG);
     printf("Range:  %13.3lf km\n", o.moon_azelrng.rng);
-    printf("Illum:  %13.0lf %%\n", fabs(o.moon_phase * 100));
-    printf("Phase:  %13s\n", (o.moon_phase > 0)?("Waxing"):("Waning"));
-    printf("-------------------------------------\n");
+    moon_phase(buff, o.moon_phase);
+    printf("Moon:   %13.0lf %-16s\n", fabs(o.moon_phase) * 100, buff);
+    printf("-----------------------------------------------\n");
 
 #ifdef __unix__
     usleep(1000000);
@@ -224,6 +234,7 @@ main (int argc, char** argv)
 //        .tm_isdst = 0
 //      };
 
+      int    retval        = 0;
       vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
       time_t start_time    = mktime(&t) - TIMEZONE;
       time_t stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
@@ -240,8 +251,14 @@ main (int argc, char** argv)
 
       passes = calloc(max_passes, sizeof(pass));
 
-      sat_find_passes(&s, &start_time, &stop_time, &observer_geo, delta_t,
-                      horizon, passes);
+      retval = sat_find_passes(&s, &start_time, &stop_time, &observer_geo, delta_t,
+                               horizon, passes);
+
+      if (retval < 0)
+      {
+        printf("Error %2d while searching for passes!", retval);
+        return retval;
+      }
 
       printf("+--------------------------------------------------------------------+\n");
       printf("|                      Running pass prediction                       |\n");
@@ -255,8 +272,7 @@ main (int argc, char** argv)
       printf("|   Event   |         Time          | Az, deg | El, deg |  Range, km |\n");
       printf("+-----------+-----------------------+---------+---------+------------+\n");
 
-      unsigned int i = 0;
-      while ((i < max_passes) && (passes[i].tca.el > horizon))
+      for (unsigned int i = 0; i < retval; i++)
       {
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].aos_t));
         printf("| AOS       | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].aos.az * RAD2DEG, passes[i].aos.el * RAD2DEG, passes[i].aos.rng);
@@ -271,11 +287,10 @@ main (int argc, char** argv)
         skylight_name(buff, passes[i].sky);
         printf("| Skylight  | %-21s |         |         |            |\n", buff);
         moon_phase(buff, passes[i].moon_phase);
-        printf("| Moon disc | %3.0lf%% %16s |         |         |            |\n", fabs(passes[i].moon_phase) * 100, buff);
+        printf("| Moon disc | %3.0lf%% %-16s |         |         |            |\n", fabs(passes[i].moon_phase) * 100, buff);
         printf("+-----------+-----------------------+---------+---------+------------+\n");
-
-        i++;
       }
+
       free(passes);
 
       return 0;

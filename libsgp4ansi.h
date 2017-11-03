@@ -248,4 +248,16 @@ sat_find_passes
         pass*        passes
 );
 
+// Find satellite transits over the solar and lunar discs
+int
+sat_find_transits
+(
+  const sat*         s,
+  const time_t*      start_time,
+  const time_t*      stop_time,
+  const vec3*        obs_geo,
+        unsigned int delta_t,
+        double       horizon
+);
+
 #endif /* LIBSGP4ANSI_H_ */
