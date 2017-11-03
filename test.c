@@ -251,7 +251,7 @@ main (int argc, char** argv)
 
       passes = calloc(max_passes, sizeof(pass));
 
-      retval = sat_find_passes(&s, &start_time, &stop_time, &observer_geo, delta_t,
+      retval = sat_find_passes(&s, &observer_geo, start_time, stop_time, delta_t,
                                horizon, passes);
 
       if (retval < 0)

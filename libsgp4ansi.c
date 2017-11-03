@@ -46,6 +46,13 @@ enum dir {AOS, LOS, FLARE, ECLIPSE};
 //                            PRIVATE PROTOTYPES                             //
 // ************************************************************************* //
 
+// Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
+int
+sat_init
+(
+  sat* s
+);
+
 // Trim leading and trailing whitespaces from a string
 static size_t
 str_trim
@@ -365,6 +372,14 @@ sat_load_tle
   sat* s
 )
 {
+  if ((tlestr0 == NULL)
+      || (tlestr1 == NULL)
+      || (tlestr2 == NULL)
+      || (s == NULL))
+  {
+    return -1;
+  }
+
   char str0[130];
   char str1[130];
   char str2[130];
@@ -467,9 +482,9 @@ sat_load_tle
  *          tlestr2 - TLE line 2
  * Outputs: sat     - orbit struct pointer with full orbital data
  * Returns: 0       - Success
- *         -1       - Failure to read TLE lines
- *
- * Calls: orbit_init
+ *         -1       - Eccentricity out of range [0, 1)
+ *         -2       - Inclination out of range [0, pi]
+ *         -3       - NULL pointer to sat struct
  */
 int
 sat_load_params
@@ -493,6 +508,11 @@ sat_load_params
         sat*         s
 )
 {
+  if (s == NULL)
+  {
+    return -3;
+  }
+
   strcpy(s->name, name);
   s->sec_class    = sec_class;
   strcpy(s->int_designator, int_designator);
@@ -2007,14 +2027,22 @@ int
 sat_find_passes
 (
   const sat*         s,
-  const time_t*      start_time,
-  const time_t*      stop_time,
   const vec3*        obs_geo,
+        time_t       start_time,
+        time_t       stop_time,
         unsigned int delta_t,
         double       horizon,
         pass*        passes
 )
 {
+  if ((s          == NULL) ||
+      (obs_geo    == NULL) ||
+      (passes     == NULL) ||
+      (delta_t    <= 0))
+  {
+    return -1;
+  }
+
   int           retval       = 0;
   obs           o            = {0};
   obs           o_tmp        = {0};
@@ -2028,18 +2056,18 @@ sat_find_passes
   //FILE* outfile = fopen("elevations.out", "w");
 
   // Find principle zeroes and local maxima on a coarse time step pass
-  for (time_t t = *start_time; t <= *stop_time; t += delta_t)
+  for (time_t t = start_time; t <= stop_time; t += delta_t)
   {
     sat_observe(s, t, 0, obs_geo, &o);
 
     // for plotting
-    //fprintf(outfile, "%ld,%8.3lf\n", t - *start_time, o.azelrng.el * RAD2DEG);
+    //fprintf(outfile, "%ld,%8.3lf\n", t - start_time, o.azelrng.el * RAD2DEG);
 
     if (o.azelrng.el > horizon)
     {
-      if (t == *start_time)
+      if (t == start_time)
       {
-        passes[pass_count].aos_t  = *start_time;
+        passes[pass_count].aos_t  = start_time;
         passes[pass_count].aos    = o.azelrng;
         passes[pass_count].aos.el = horizon;
 
@@ -2075,9 +2103,9 @@ sat_find_passes
         // Count passes by AOS events
         pass_count++;
       }
-      else if (t + delta_t > *stop_time)
+      else if (t + delta_t > stop_time)
       {
-        passes[pass_count - 1].los_t  = *stop_time;
+        passes[pass_count - 1].los_t  = stop_time;
         passes[pass_count - 1].los    = o.azelrng;
         passes[pass_count - 1].los.el = horizon;
       }
@@ -2138,9 +2166,9 @@ sat_find_passes
       // Special case where TCA was befor start_time, and LOS after
       // This case breaks unimodality of the elevation function in the time
       // interval passed to find_tca() which in turn is incompatible with GSS.
-      if(t <= *start_time + delta_t * 2)
+      if(t <= start_time + delta_t * 2)
       {
-        new_lmax_t = *start_time;
+        new_lmax_t = start_time;
       }
       else
       {
@@ -2190,12 +2218,19 @@ int
 sat_find_transits
 (
   const sat*         s,
-  const time_t*      start_time,
-  const time_t*      stop_time,
   const vec3*        obs_geo,
+        time_t       start_time,
+        time_t       stop_time,
         unsigned int delta_t,
         double       horizon
 )
 {
+  if ((s          == NULL) ||
+      (obs_geo    == NULL) ||
+      (delta_t    <= 0))
+  {
+    return -1;
+  }
+
   return 0;
 }

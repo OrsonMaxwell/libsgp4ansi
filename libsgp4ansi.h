@@ -197,13 +197,6 @@ sat_load_params
         sat*         s
 );
 
-// Expand SGP4/SDP4 orbit elements from an orbit containing NORAD TLE portion
-int
-sat_init
-(
-  sat* s
-);
-
 // Get classical orbital elements from TEME vectors TODO: make a wrapper?
 extern coe
 teme2coe
@@ -240,9 +233,9 @@ int
 sat_find_passes
 (
   const sat*         s,
-  const time_t*      start_time,
-  const time_t*      stop_time,
   const vec3*        obs_geo,
+        time_t       start_time,
+        time_t       stop_time,
         unsigned int delta_t,
         double       horizon,
         pass*        passes
@@ -253,9 +246,9 @@ int
 sat_find_transits
 (
   const sat*         s,
-  const time_t*      start_time,
-  const time_t*      stop_time,
   const vec3*        obs_geo,
+        time_t       start_time,
+        time_t       stop_time,
         unsigned int delta_t,
         double       horizon
 );
