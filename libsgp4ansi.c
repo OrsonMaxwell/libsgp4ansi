@@ -1909,8 +1909,8 @@ sat_observe
     return -1;
   }
 
-  double tdelta = difftime(timestamp + time_ms / 1000,
-                           s->epoch + s->epoch_ms / 1000) / 60;
+  double tdelta = difftime(timestamp, s->epoch) / 60
+                        + (time_ms - s->epoch_ms) / 60000;
 
   vec3 posteme, velteme;
 
@@ -2272,13 +2272,14 @@ sat_find_transits
                                + pow(o.azelrng.el - o.moon_azelrng.el, 2));
         lunar_angular_d = 2 * atan2(RLUN, o.moon_azelrng.rng);
 
+
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&t));
         printf("%3d: T=%s.%-3.0f ", i, buff, ms);
-        printf("AZ =%10.6lf EL =%10.6lf ", o.azelrng.az, o.azelrng.el);
-        printf("AZs=%10.6lf ELs=%10.6lf ", o.sun_azelrng.az, o.sun_azelrng.el);
-        printf("AZl=%10.6lf ELl=%10.6lf ", o.moon_azelrng.az, o.moon_azelrng.el);
-        //printf(" ds = %lf Ds = %-lf\n", angle_to_sun * RAD2DEG, solar_angular_d * RAD2DEG);
-        //printf(" dl = %lf Dl = %-lf ", angle_to_moon * RAD2DEG, lunar_angular_d * RAD2DEG);
+//        printf("AZ =%10.6lf EL =%10.6lf ", o.azelrng.az, o.azelrng.el);
+//        printf("AZs=%10.6lf ELs=%10.6lf ", o.sun_azelrng.az, o.sun_azelrng.el);
+//        printf("AZl=%10.6lf ELl=%10.6lf ", o.moon_azelrng.az, o.moon_azelrng.el);
+        printf(" ds = %lf Ds = %-lf ", angle_to_sun * RAD2DEG, solar_angular_d * RAD2DEG);
+        printf(" dl = %lf Dl = %-lf ", angle_to_moon * RAD2DEG, lunar_angular_d * RAD2DEG);
 
         printf("\n");
 
