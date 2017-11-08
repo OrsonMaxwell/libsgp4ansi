@@ -314,7 +314,7 @@ main (int argc, char** argv)
       for (unsigned int i = 0; i < transit_count; i++)
       {
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&transits[i].start_t));
-        printf("| %-9s | %-19s.%-3.0f | %7.2lf | %7.2lf | %11.3f |\n", (transits[i].is_solar)?("Solar"):("Lunar"),
+        printf("| %-9s | %-19s.%-3.0f | %7.2lf | %7.2lf | %11.3f |\n", (transits[i].is_solar)?((transits[i].is_lunar)?("Both"):("Solar")):("Lunar"),
             buff, transits[i].start_t_ms, transits[i].azelrng.az * RAD2DEG, transits[i].azelrng.el * RAD2DEG,
             (float)(transits[i].stop_t - transits[i].start_t +
                 (transits[i].stop_t_ms - transits[i].start_t_ms) / 1000));

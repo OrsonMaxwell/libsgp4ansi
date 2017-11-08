@@ -2288,8 +2288,8 @@ sat_find_transits
 
         was_transiting = is_transiting;
 
-        // Progressively diminish time step as the sattelite approaches the edge
-        // of apparent disc of the Sun or the Moon
+        // Progressively diminish time step as the sattelite approaches the
+        // first contact.
         float tstep = 1000;
 
         if ((angle_to_sun < solar_angular_d * 2))
