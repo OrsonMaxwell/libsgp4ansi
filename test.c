@@ -205,10 +205,10 @@ main (int argc, char** argv)
 
 
 //      sat_load_tle("???",
-//                   "1 08195U 75081A   06176.33215444  .00000099  00000-0  11873-3 0   813",
+//                   "1 08195U 75081A   17303.82395862  .00000099  00000-0  11873-3 0   813",
 //                   "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
 //                   &s);
-
+//
 //      sat_load_tle("FENGYUN 2E",
 //                 "1 33463U 08066A   17281.80233449 -.00000213  00000-0  00000+0 0  9997",
 //                 "2 33463   2.3909  67.6760 0005346 217.9202 107.6646  1.00271179 32268",
@@ -216,7 +216,7 @@ main (int argc, char** argv)
 
       struct tm t = {
         .tm_year  = 117,
-        .tm_mon   = 9,
+        .tm_mon   = 10,
         .tm_mday  = 10,
         .tm_hour  = 17,
         .tm_min   = 0,
@@ -238,9 +238,7 @@ main (int argc, char** argv)
       int      transit_count;
       vec3     observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
       time_t   start_time    = mktime(&t) - TIMEZONE;
-      time_t   stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
-      //time_t stop_time     = mktime(&t) - TIMEZONE + 170 * 1440 * 60; // Drops dead
-      //time_t stop_time     = mktime(&t) - TIMEZONE + 3600;
+      time_t   stop_time     = mktime(&t) - TIMEZONE + 170 * 1440 * 60;
       pass*    passes;
       transit* transits;
       char     buff[70];
@@ -250,7 +248,7 @@ main (int argc, char** argv)
 
       // Important heuristic!
       unsigned int  max_passes = (unsigned int)ceil((stop_time - start_time)
-                                                  / delta_t) / s.period * 2 + 1;
+                                                  / delta_t) / s.period * 4 + 1;
 
       printf("+-----------------------------------------------------------------------+\n");
       printf("|                        Running pass prediction                        |\n");

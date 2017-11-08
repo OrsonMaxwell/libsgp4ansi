@@ -2111,7 +2111,6 @@ sat_find_passes
           && (prev_illum == false)
           && (passes[pass_count - 1].flare_t != passes[pass_count - 1].aos_t))
       {
-
         passes[pass_count - 1].flare_t = find_flare(s, obs_geo, t - delta_t,
                                                     delta_t, FLARE);
         retval = sat_observe(s, passes[pass_count - 1].flare_t, 0, obs_geo, &o_tmp);
@@ -2184,7 +2183,6 @@ sat_find_passes
         passes[pass_count - 1].tca   = o_tmp.azelrng;
       }
     }
-
     prev_prev_el = prev_el;
     prev_el      = o.azelrng.el;
   }
