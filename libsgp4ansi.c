@@ -2249,8 +2249,6 @@ sat_find_transits
 
         if (retval < 0)
         {
-          strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&t));
-          printf("%s.-3.0f", buff, ms);
           return retval;
         }
 

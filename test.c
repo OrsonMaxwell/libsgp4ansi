@@ -5,6 +5,7 @@
 #include <math.h>
 
 #ifdef __unix__
+#define _BSD_SOURCE
 #include <unistd.h>
 #elif defined(_WIN32) || defined(WIN32)
 #include <windows.h>
@@ -178,7 +179,7 @@ main (int argc, char** argv)
     printf("El:     %13.3lf deg\n", o.moon_azelrng.el * RAD2DEG);
     printf("Range:  %13.3lf km\n", o.moon_azelrng.rng);
     moon_phase(buff, o.moon_phase);
-    printf("Moon:   %13.0lf %-16s\n", fabs(o.moon_phase) * 100, buff);
+    printf("Phase:  %13.0lf %-16s\n", fabs(o.moon_phase) * 100, buff);
     printf("-----------------------------------------------\n");
 
 #ifdef __unix__
@@ -238,7 +239,7 @@ main (int argc, char** argv)
       int      transit_count;
       vec3     observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
       time_t   start_time    = mktime(&t) - TIMEZONE;
-      time_t   stop_time     = mktime(&t) - TIMEZONE + 170 * 1440 * 60;
+      time_t   stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
       pass*    passes;
       transit* transits;
       char     buff[70];

@@ -12,10 +12,14 @@ ifeq ($(OS),Windows_NT)
 	LIB_NAME = libsgp4ansi.dll
 	TEST_NAME = ansi.exe
 	REF_TEST_NAME = aiaa.exe
+	COPY = copy
+	INSTALLDIR = c:\Windows\System32
 else
 	LIB_NAME = libsgp4ansi.so
 	TEST_NAME = ansi
 	REF_TEST_NAME = aiaa
+	COPY = cp
+	INSTALLDIR = /usr/lib
 endif
 
 ifeq ($(DEBUG), 1)
@@ -81,3 +85,6 @@ test_data_clean:
 	rm -f ${OUTPUTDIR}/*.out
 
 clean: lib_clean ref_test_clean test_clean test_data_clean
+
+install:
+	${COPY} ${OUTPUTDIR}/${LIB_NAME} ${INSTALLDIR} 
