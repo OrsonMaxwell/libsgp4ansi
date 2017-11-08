@@ -15,7 +15,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h> // TODO: Move to MATH_TRACE ifdef
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
@@ -2212,55 +2212,34 @@ sat_find_transits
 (
   const sat*         s,
   const vec3*        obs_geo,
-        time_t       start_time,
-        time_t       stop_time,
-        unsigned int delta_t,
-        double       horizon,
+  const pass*        passes,
+        unsigned int pass_count,
         transit*     transits
 )
 {
   if ((s          == NULL) ||
       (obs_geo    == NULL) ||
       (transits   == NULL) ||
-      (delta_t    <= 0))
+      (passes     == NULL) ||
+      (pass_count <= 0))
   {
     return -1;
   }
-
-  horizon = fmax(horizon, 0.0);
-
+  char buff[70];
   obs o      = {0};
-  int retval = 0;
-
-  // Important heuristic!
-  unsigned int  max_passes = (unsigned int)ceil((stop_time - start_time)
-                              / delta_t) / s->period * 2 + 1;
-
-  pass* passes = malloc(max_passes * sizeof(pass));
-
-  if (passes == NULL)
-  {
-    return -1;
-  }
-
-  int passes_found = sat_find_passes(s, obs_geo, start_time, stop_time, delta_t,
-                                     horizon, passes);
-
-  if (passes_found < 0)
-  {
-    return passes_found;
-  }
-
+  int retval;
   double angle_to_sun, angle_to_moon, solar_angular_d, lunar_angular_d;
-
   float  ms             = 0;
   float  duration       = 0;
   bool   is_transiting  = false;
   bool   was_transiting = false;
 
-  char   buff[70]; // TODO: remove after debug
+  unsigned int transit_count = 0;
 
-  for (unsigned int i = 0; i < passes_found; i++)
+  transits[transit_count].is_solar = false;
+  transits[transit_count].is_lunar = false;
+
+  for (unsigned int i = 0; i < pass_count; i++)
   {
     // One second comb trough found passes - identifying transit candidates
     for (time_t t = passes[i].aos_t; t <= passes[i].los_t; t++)
@@ -2268,7 +2247,14 @@ sat_find_transits
       // Millisecond inner cycle to allow for finer time grain
       while (ms < 1000)
       {
-        retval          = sat_observe(s, t, ms, obs_geo, &o);
+        retval = sat_observe(s, t, ms, obs_geo, &o);
+
+        if (retval < 0)
+        {
+          strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&t));
+          printf("%s.-3.0f", buff, ms);
+          return retval;
+        }
 
         angle_to_sun    = sqrt(pow(o.azelrng.az - o.sun_azelrng.az, 2)
                              + pow(o.azelrng.el - o.sun_azelrng.el, 2));
@@ -2281,18 +2267,23 @@ sat_find_transits
         // Detect beginning and end of transit
         is_transiting = (angle_to_sun < solar_angular_d) || (angle_to_moon < lunar_angular_d);
 
-        //
         if ((is_transiting == true) && (was_transiting == false))
         {
-          // TODO: save time and vector of transit start
-          strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&t));
-          printf("%s: %s.%-3.0f - ",
-                (angle_to_sun < solar_angular_d)?("Solar"):("Lunar"), buff, ms);
+          transits[transit_count].start_t    = t;
+          transits[transit_count].start_t_ms = ms;
+          transits[transit_count].moon_phase = o.moon_phase;
+          transits[transit_count].sky        = el2skylight(o.sun_azelrng.el);
+          transits[transit_count].is_solar   = angle_to_sun  < solar_angular_d;
+          transits[transit_count].is_solar   = angle_to_moon < lunar_angular_d;
+          transits[transit_count].azelrng    = o.azelrng;
         } else if ((is_transiting == false) && (was_transiting == true))
         {
-          // TODO: save time and vector of transit end
-          strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&t));
-          printf("%s.%-3.0f\n",buff, ms);
+          transits[transit_count].stop_t     = t;
+          transits[transit_count].stop_t_ms  = ms;
+
+          transit_count++;
+          transits[transit_count].is_solar = false;
+          transits[transit_count].is_lunar = false;
         }
 
         was_transiting = is_transiting;
@@ -2316,5 +2307,5 @@ sat_find_transits
     }
   }
 
-  return 0;
+  return transit_count;
 }

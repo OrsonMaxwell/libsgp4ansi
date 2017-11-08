@@ -165,13 +165,15 @@ typedef struct _pass
  */
 typedef struct _transit
 {
-  time_t   start_time;     // Transit start time
-  float    start_t_ms;     // Transit start time fractional portion
-  time_t   stop_time;      // Transit stop time
-  float    stop_t_ms;      // Transit stop time fractional portion
-  bool     is_sun_transit; // Does sat transit the Sun disc? (false for Moon)
-  double   moon_phase;     // Moon disc illumination fraction combined with phase
-  skylight sky;            // Skylight type
+  vec3     azelrng;    // Start azimuth-elevation-range vector
+  time_t   start_t;    // Transit start time
+  float    start_t_ms; // Transit start time fractional portion
+  time_t   stop_t;     // Transit stop time
+  float    stop_t_ms;  // Transit stop time fractional portion
+  bool     is_solar;   // Is the transit solar?
+  bool     is_lunar;   // Is the transit lunar?
+  double   moon_phase; // Moon disc illumination fraction combined with phase
+  skylight sky;        // Skylight type
 } transit;
 
 // ************************************************************************* //
@@ -261,10 +263,8 @@ sat_find_transits
 (
   const sat*         s,
   const vec3*        obs_geo,
-        time_t       start_time,
-        time_t       stop_time,
-        unsigned int delta_t,
-        double       horizon,
+  const pass*        passes,
+        unsigned int pass_count,
         transit*     transits
 );
 

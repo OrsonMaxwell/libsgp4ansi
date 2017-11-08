@@ -234,77 +234,98 @@ main (int argc, char** argv)
 //        .tm_isdst = 0
 //      };
 
-      int    retval        = 0;
-      vec3   observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
-      time_t start_time    = mktime(&t) - TIMEZONE;
-      time_t stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
+      int      pass_count;
+      int      transit_count;
+      vec3     observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+      time_t   start_time    = mktime(&t) - TIMEZONE;
+      time_t   stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
       //time_t stop_time     = mktime(&t) - TIMEZONE + 170 * 1440 * 60; // Drops dead
       //time_t stop_time     = mktime(&t) - TIMEZONE + 3600;
-      pass*  passes;
-      char   buff[70];
+      pass*    passes;
+      transit* transits;
+      char     buff[70];
 
       unsigned int delta_t = 60;
       double       horizon = 2 * DEG2RAD;
 
       // Important heuristic!
-      unsigned int  max_passes  = (unsigned int)ceil((stop_time - start_time)
-                                   / delta_t) / s.period * 2 + 1;
+      unsigned int  max_passes = (unsigned int)ceil((stop_time - start_time)
+                                                  / delta_t) / s.period * 2 + 1;
 
-      passes = calloc(max_passes, sizeof(pass));
+      printf("+-----------------------------------------------------------------------+\n");
+      printf("|                        Running pass prediction                        |\n");
+      printf("+-----------+-----------------------------------------------------------+\n");
+      printf("| Satellite | %-58s|\n", s.name);
+      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&start_time));
+      printf("| Start     | %-58s|\n", buff);
+      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&stop_time));
+      printf("| Stop      | %-58s|\n", buff);
+      printf("+-----------+-------------------------+---------+---------+-------------+\n");
+      printf("|   Event   |          Time           | Az, deg | El, deg |  Range, km  |\n");
+      printf("+-----------+-------------------------+---------+---------+-------------+\n");
 
-      retval = sat_find_passes(&s, &observer_geo, start_time, stop_time, delta_t,
-                               horizon, passes);
+      passes     = calloc(max_passes, sizeof(pass));
 
-      if (retval < 0)
+      pass_count = sat_find_passes(&s, &observer_geo, start_time, stop_time,
+                               delta_t, horizon, passes);
+
+      if (pass_count < 0)
       {
-        printf("Error %2d while searching for passes!", retval);
-        return retval;
+        printf("Error %2d while searching for passes!", pass_count);
+        return pass_count;
       }
 
-      printf("+--------------------------------------------------------------------+\n");
-      printf("|                      Running pass prediction                       |\n");
-      printf("+-----------+--------------------------------------------------------+\n");
-      printf("| Satellite | %-55s|\n", s.name);
-      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&start_time));
-      printf("| Start     | %-55s|\n", buff);
-      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&stop_time));
-      printf("| Stop      | %-55s|\n", buff);
-      printf("+-----------+-----------------------+---------+---------+------------+\n");
-      printf("|   Event   |         Time          | Az, deg | El, deg |  Range, km |\n");
-      printf("+-----------+-----------------------+---------+---------+------------+\n");
-
-      for (unsigned int i = 0; i < retval; i++)
+      for (unsigned int i = 0; i < pass_count; i++)
       {
-        printf("| Pass #    | %-21d |         |         |            |\n", i);
+        printf("| Pass #    | %-23d |         |         |             |\n", i);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].aos_t));
-        printf("| AOS       | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].aos.az * RAD2DEG, passes[i].aos.el * RAD2DEG, passes[i].aos.rng);
+        printf("| AOS       | %-23s | %7.2lf | %7.2lf | %11.3lf |\n", buff, passes[i].aos.az * RAD2DEG, passes[i].aos.el * RAD2DEG, passes[i].aos.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].tca_t));
-        printf("| TCA       | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].tca.az * RAD2DEG, passes[i].tca.el * RAD2DEG, passes[i].tca.rng);
+        printf("| TCA       | %-23s | %7.2lf | %7.2lf | %11.3lf |\n", buff, passes[i].tca.az * RAD2DEG, passes[i].tca.el * RAD2DEG, passes[i].tca.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].los_t));
-        printf("| LOS       | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].los.az * RAD2DEG, passes[i].los.el * RAD2DEG, passes[i].los.rng);
+        printf("| LOS       | %-23s | %7.2lf | %7.2lf | %11.3lf |\n", buff, passes[i].los.az * RAD2DEG, passes[i].los.el * RAD2DEG, passes[i].los.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].flare_t));
-        printf("| Flare     | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].flare.az * RAD2DEG, passes[i].flare.el * RAD2DEG, passes[i].flare.rng);
+        printf("| Flare     | %-23s | %7.2lf | %7.2lf | %11.3lf |\n", buff, passes[i].flare.az * RAD2DEG, passes[i].flare.el * RAD2DEG, passes[i].flare.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].eclipse_t));
-        printf("| Eclipse   | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].eclipse.az * RAD2DEG, passes[i].eclipse.el * RAD2DEG, passes[i].eclipse.rng);
+        printf("| Eclipse   | %-23s | %7.2lf | %7.2lf | %11.3lf |\n", buff, passes[i].eclipse.az * RAD2DEG, passes[i].eclipse.el * RAD2DEG, passes[i].eclipse.rng);
         skylight_name(buff, passes[i].sky);
-        printf("| Skylight  | %-21s |         |         |            |\n", buff);
+        printf("| Skylight  | %-23s |         |         |             |\n", buff);
         moon_phase(buff, passes[i].moon_phase);
-        printf("| Moon disc | %3.0lf%% %-16s |         |         |            |\n", fabs(passes[i].moon_phase) * 100, buff);
-        printf("+-----------+-----------------------+---------+---------+------------+\n");
+        printf("| Moon disc | %-16s (%3.0lf%%) |         |         |             |\n", buff, fabs(passes[i].moon_phase) * 100);
+        printf("+-----------+-------------------------+---------+---------+-------------+\n");
+      }
+
+      printf("+-----------------------------------------------------------------------+\n");
+      printf("|                        Running transit search                         |\n");
+      printf("+-----------+-------------------------+---------+---------+-------------+\n");
+      printf("|   Type    |        Start time       | Az, deg | El, deg | Duration, s |\n");
+      printf("+-----------+-------------------------+---------+---------+-------------+\n");
+
+      transits = calloc(sizeof(transit), pass_count);
+
+      transit_count = sat_find_transits(&s, &observer_geo, passes, pass_count, transits);
+
+      if (transit_count < 0)
+      {
+        printf("Error %2d while searching for transits!", transit_count);
+        return transit_count;
+      }
+
+      for (unsigned int i = 0; i < transit_count; i++)
+      {
+        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&transits[i].start_t));
+        printf("| %-9s | %-19s.%-3.0f | %7.2lf | %7.2lf | %11.3f |\n", (transits[i].is_solar)?("Solar"):("Lunar"),
+            buff, transits[i].start_t_ms, transits[i].azelrng.az * RAD2DEG, transits[i].azelrng.el * RAD2DEG,
+            (float)(transits[i].stop_t - transits[i].start_t +
+                (transits[i].stop_t_ms - transits[i].start_t_ms) / 1000));
+        skylight_name(buff, transits[i].sky);
+        printf("| Skylight  | %-23s |         |         |             |\n", buff);
+        moon_phase(buff, transits[i].moon_phase);
+        printf("| Moon disc | %-16s (%3.0lf%%) |         |         |             |\n", buff, fabs(transits[i].moon_phase) * 100);
+        printf("+-----------+-------------------------+---------+---------+-------------+\n");
       }
 
       free(passes);
-
-      transit* transits = malloc(sizeof(transit));
-      retval = sat_find_transits(&s, &observer_geo, start_time, stop_time, delta_t,
-                                 horizon, transits);
-
-      if (retval < 0)
-      {
-        printf("Error %2d while searching for transits!", retval);
-        return retval;
-      }
-
       free(transits);
 
       return 0;
