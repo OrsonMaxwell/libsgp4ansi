@@ -24,7 +24,7 @@
 //                                VERSION                                    //
 // ************************************************************************* //
 
-#define LIBSGP4ANSI_VERSION "0.8"
+#define LIBSGP4ANSI_VERSION "0.9"
 extern const char libsgp4ansi_version[];
 
 // ************************************************************************* //
