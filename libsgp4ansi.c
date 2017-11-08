@@ -2252,8 +2252,11 @@ sat_find_transits
   }
 
   double angle_to_sun, angle_to_moon, solar_angular_d, lunar_angular_d;
-  float  ms = 0;
-  bool   is_transiting = false;
+
+  float  ms             = 0;
+  float  duration       = 0;
+  bool   is_transiting  = false;
+  bool   was_transiting = false;
 
   char   buff[70]; // TODO: remove after debug
 
@@ -2262,37 +2265,52 @@ sat_find_transits
     // One second comb trough found passes - identifying transit candidates
     for (time_t t = passes[i].aos_t; t <= passes[i].los_t; t++)
     {
+      // Millisecond inner cycle to allow for finer time grain
       while (ms < 1000)
       {
         retval          = sat_observe(s, t, ms, obs_geo, &o);
+
         angle_to_sun    = sqrt(pow(o.azelrng.az - o.sun_azelrng.az, 2)
-                               + pow(o.azelrng.el - o.sun_azelrng.el, 2));
+                             + pow(o.azelrng.el - o.sun_azelrng.el, 2));
         solar_angular_d = 2 * atan2(RSOL, o.sun_azelrng.rng);
+
         angle_to_moon   = sqrt(pow(o.azelrng.az - o.moon_azelrng.az, 2)
-                               + pow(o.azelrng.el - o.moon_azelrng.el, 2));
+                             + pow(o.azelrng.el - o.moon_azelrng.el, 2));
         lunar_angular_d = 2 * atan2(RLUN, o.moon_azelrng.rng);
 
+        // Detect beginning and end of transit
+        is_transiting = (angle_to_sun < solar_angular_d) || (angle_to_moon < lunar_angular_d);
 
-        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&t));
-        printf("%3d: T=%s.%-3.0f ", i, buff, ms);
-//        printf("AZ =%10.6lf EL =%10.6lf ", o.azelrng.az, o.azelrng.el);
-//        printf("AZs=%10.6lf ELs=%10.6lf ", o.sun_azelrng.az, o.sun_azelrng.el);
-//        printf("AZl=%10.6lf ELl=%10.6lf ", o.moon_azelrng.az, o.moon_azelrng.el);
-        printf(" ds = %lf Ds = %-lf ", angle_to_sun * RAD2DEG, solar_angular_d * RAD2DEG);
-        printf(" dl = %lf Dl = %-lf ", angle_to_moon * RAD2DEG, lunar_angular_d * RAD2DEG);
-
-        printf("\n");
-
-        // Switch to finer grain when satellite approaching solar disc
-        if ((angle_to_sun < solar_angular_d * 2)
-            || (angle_to_moon < lunar_angular_d * 2))
+        //
+        if ((is_transiting == true) && (was_transiting == false))
         {
-          ms += 10;
-        }
-        else
+          // TODO: save time and vector of transit start
+          strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&t));
+          printf("%s: %s.%-3.0f - ",
+                (angle_to_sun < solar_angular_d)?("Solar"):("Lunar"), buff, ms);
+        } else if ((is_transiting == false) && (was_transiting == true))
         {
-          ms += 1000;
+          // TODO: save time and vector of transit end
+          strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&t));
+          printf("%s.%-3.0f\n",buff, ms);
         }
+
+        was_transiting = is_transiting;
+
+        // Progressively diminish time step as the sattelite approaches the edge
+        // of apparent disc of the Sun or the Moon
+        float tstep = 1000;
+
+        if ((angle_to_sun < solar_angular_d * 2))
+        {
+          tstep = ceil((fabs(angle_to_sun - solar_angular_d) / solar_angular_d) * 500);
+        }
+        if ((angle_to_moon < lunar_angular_d * 2))
+        {
+          tstep = ceil((fabs(angle_to_moon - lunar_angular_d) / lunar_angular_d) * 500);
+        }
+
+        ms += tstep;
       }
       ms = 0;
     }
