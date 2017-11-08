@@ -15,7 +15,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <stdio.h> // TODO: Move to MATH_TRACE ifdef
 #include <string.h>
 #include <math.h>
 #include <time.h>
@@ -2251,31 +2251,49 @@ sat_find_transits
     return passes_found;
   }
 
-  double angular_d;
+  double angle_to_sun, angle_to_moon, solar_angular_d, lunar_angular_d;
+  float  ms = 0;
+  bool   is_transiting = false;
+
+  char   buff[70]; // TODO: remove after debug
 
   for (unsigned int i = 0; i < passes_found; i++)
   {
-    // One second resolution comb trough found passes
+    // One second comb trough found passes - identifying transit candidates
     for (time_t t = passes[i].aos_t; t <= passes[i].los_t; t++)
     {
-      retval = sat_observe(s, t, 0, obs_geo, &o);
-      if (retval == 0)
+      while (ms < 1000)
       {
-        if ((fabs(o.azelrng.az - o.sun_azelrng.az) < 5 * DEG2RAD)
-         && (fabs(o.azelrng.el - o.sun_azelrng.el) < 5 * DEG2RAD))
+        retval          = sat_observe(s, t, ms, obs_geo, &o);
+        angle_to_sun    = sqrt(pow(o.azelrng.az - o.sun_azelrng.az, 2)
+                               + pow(o.azelrng.el - o.sun_azelrng.el, 2));
+        solar_angular_d = 2 * atan2(RSOL, o.sun_azelrng.rng);
+        angle_to_moon   = sqrt(pow(o.azelrng.az - o.moon_azelrng.az, 2)
+                               + pow(o.azelrng.el - o.moon_azelrng.el, 2));
+        lunar_angular_d = 2 * atan2(RLUN, o.moon_azelrng.rng);
+
+        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&t));
+        printf("%3d: T=%s.%-3.0f ", i, buff, ms);
+        printf("AZ =%10.6lf EL =%10.6lf ", o.azelrng.az, o.azelrng.el);
+        printf("AZs=%10.6lf ELs=%10.6lf ", o.sun_azelrng.az, o.sun_azelrng.el);
+        printf("AZl=%10.6lf ELl=%10.6lf ", o.moon_azelrng.az, o.moon_azelrng.el);
+        //printf(" ds = %lf Ds = %-lf\n", angle_to_sun * RAD2DEG, solar_angular_d * RAD2DEG);
+        //printf(" dl = %lf Dl = %-lf ", angle_to_moon * RAD2DEG, lunar_angular_d * RAD2DEG);
+
+        printf("\n");
+
+        // Switch to finer grain when satellite approaching solar disc
+        if ((angle_to_sun < solar_angular_d * 2)
+            || (angle_to_moon < lunar_angular_d * 2))
         {
-          angular_d = 2 * atan2(RSOL, o.sun_azelrng.rng);
-          printf("%3d: Solar transit candidate at %ld\n", i, t);
-          printf("     Solar anguilar diameter: %lf\n", angular_d * RAD2DEG);
+          ms += 10;
         }
-        if ((fabs(o.azelrng.az - o.moon_azelrng.az) < 5 * DEG2RAD)
-         && (fabs(o.azelrng.el - o.moon_azelrng.el) < 5 * DEG2RAD))
+        else
         {
-          angular_d = 2 * atan2(RSOL, o.sun_azelrng.rng);
-          printf("%3d: Lunar transit candidate at %ld\n", i, t);
-          printf("     Lunar anguilar diameter: %lf\n", angular_d * RAD2DEG);
+          ms += 1000;
         }
       }
+      ms = 0;
     }
   }
 

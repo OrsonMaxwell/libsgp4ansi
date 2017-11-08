@@ -275,7 +275,7 @@ main (int argc, char** argv)
 
       for (unsigned int i = 0; i < retval; i++)
       {
-        printf("| Number    | %-21d |         |         |            |\n", i);
+        printf("| Pass #    | %-21d |         |         |            |\n", i);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].aos_t));
         printf("| AOS       | %-21s | %7.2lf | %7.2lf | %10.3lf |\n", buff, passes[i].aos.az * RAD2DEG, passes[i].aos.el * RAD2DEG, passes[i].aos.rng);
         strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&passes[i].tca_t));
