@@ -91,212 +91,6 @@ kepler_newton
 }
 
 /*
- * Get classical orbital elements from TEME vectors
- *
- * Inputs:  posteme - Position vector in TEME frame, km
- *          velteme - Velocity vector in TEME frame, km/s
- * Outputs: None
- * Returns: e       - Success - struct containint the elements
- *          NULL    - Decayed satellite
- */
-coe
-teme2coe
-(
-  const vec3* posteme,
-  const vec3* velteme
-)
-{
-  coe e = {0};
-  char orbit_type;
-
-  double tolerance = 1.0e-8;
-
-  double magr = vec3_mag(posteme);
-  double magv = vec3_mag(velteme);
-
-  // Find h n and e vectors
-  vec3 hbar, nbar, ebar;
-
-  hbar = vec3_cross(posteme, velteme);
-  double magh = vec3_mag(&hbar);
-
-  if (magh < tolerance)
-  {
-    return e;
-  }
-
-  nbar.x = -hbar.y;
-  nbar.y =  hbar.x;
-  nbar.z =  0;
-
-  double magn  = vec3_mag(&nbar);
-  double c1    = pow(magv, 2) - GM  / magr;
-  double rdotv = vec3_dot(posteme, velteme);
-
-  ebar.x = (c1 * posteme->x - rdotv * velteme->x) / GM;
-  ebar.y = (c1 * posteme->y - rdotv * velteme->y) / GM;
-  ebar.z = (c1 * posteme->z - rdotv * velteme->z) / GM;
-
-  e.ecc = vec3_mag(&ebar);
-
-  // Find a e and semi-latus rectum
-  double sme = (pow(magv, 2) * 0.5) - (GM  / magr);
-
-  if (fabs(sme) > tolerance)
-  {
-    e.a = -GM / (2 * sme);
-  }
-  else
-  {
-    e.a = INFINITY;
-  }
-  e.p = pow(magh, 2) / GM;
-
-  // Find inclination
-  double hk = hbar.z / magh;
-  e.incl= acos( hk );
-
-  // Determine type of orbit
-  // Elliptical, parabolic, hyperbolic inclined
-  orbit_type = 1;
-  if (e.ecc < tolerance)
-  {
-    // Circular equatorial
-    if ((e.incl < tolerance) || (fabs(e.incl - PI) < tolerance))
-    {
-      orbit_type = -2;
-    }
-    else
-    {
-      // Circular inclined
-      orbit_type = -1;
-    }
-  }
-  else
-  {
-    // Elliptical, parabolic, hyperbolic equatorial
-    if ((e.incl < tolerance) || (fabs(e.incl - PI) < tolerance))
-    {
-    }
-  }
-
-  // Find longitude of ascending node
-  if (magn > tolerance)
-  {
-    double temp = nbar.x / magn;
-
-    if (fabs(temp) > 1)
-    {
-      temp = (temp >= 0)?(1.0):(-1.0);
-    }
-
-    e.omega = acos(temp);
-    if (nbar.y < 0)
-    {
-      e.omega = TAU - e.omega;
-    }
-  }
-  else
-    e.omega = NAN;
-
-  // Find argument of perigee
-  if (orbit_type == 1)
-  {
-    e.argp = vec3_angle(&nbar, &ebar);
-    if (ebar.z < 0)
-    {
-      e.argp= TAU - e.argp;
-    }
-  }
-  else
-    e.argp= NAN;
-
-  // Find true anomaly at epoch
-  if (orbit_type > 0)
-  {
-    e.nu = vec3_angle(&ebar, posteme);
-    if (rdotv < 0)
-    {
-      e.nu= TAU - e.nu;
-    }
-  }
-  else
-    e.nu= NAN;
-
-  // Find argument of latitude - circular inclined
-  if (orbit_type == -1)
-  {
-    e.arglat = vec3_angle(&nbar, posteme);
-    if (posteme->z < 0)
-    {
-      e.arglat = TAU - e.arglat;
-    }
-    e.m = e.arglat;
-  }
-  else
-    e.arglat = NAN;
-
-  // Find longitude of perigee - elliptical equatorial
-  if ((e.ecc > tolerance) && (orbit_type == 2))
-  {
-    double temp = ebar.x / e.ecc;
-
-    if (fabs(temp) > 1)
-    {
-      temp = (temp >= 0)?(1):(-1);
-    }
-
-    e.lonper = acos( temp );
-
-    if (ebar.y < 0)
-    {
-      e.lonper = TAU - e.lonper;
-    }
-    if (e.incl > PIDIV2)
-    {
-      e.lonper = TAU - e.lonper;
-    }
-  }
-  else
-  {
-    e.lonper = NAN;
-  }
-
-  // Find true longitude - circular equatorial
-  if  ((magr > tolerance) && (orbit_type == -2))
-  {
-    double temp = posteme->x / magr;
-
-    if ( fabs(temp) > 1)
-    {
-      temp = (temp >= 0)?(1):(-1);
-    }
-
-    e.truelon = acos(temp);
-
-    if (posteme->y < 0)
-    {
-      e.truelon = TAU - e.truelon;
-    }
-    if (e.incl > PIDIV2)
-    {
-      e.truelon = TAU - e.truelon;
-    }
-    e.m = e.truelon;
-  }
-  else
-    e.truelon = NAN;
-
-  // Find mean anomaly for all orbits
-  if (orbit_type > 0)
-  {
-    e.m = kepler_newton(e.ecc, e.nu);
-  }
-
-  return e;
-}
-
-/*
  * Transform position and velocity vectors from TEME to ECEF frame of reference
  *
  * Inputs:  posteme - Position vector in TEME frame, km
@@ -400,8 +194,8 @@ ecef2geo
 {
   vec3 geo;
 
-  unsigned int maxiter = 5;
-  double tolerance     = 1.0e-12;
+  unsigned int maxiter   = 5;
+  double       tolerance = 1.0e-12;
 
   // Longitude
   double ijsq = sqrt(posecef->i * posecef->i + posecef->j * posecef->j);
@@ -430,11 +224,11 @@ ecef2geo
 
   // Latitude
   double posmag  = vec3_mag(posecef);
-  geo.lat = asin(posecef->k / posmag);
+         geo.lat = asin(posecef->k / posmag);
 
   // Converge latitude to the goid over 10 iterations or less
   double c, latsine;
-  int i = 1;
+  int    i     = 1;
   double delta = geo.lat + 10;
 
   while ((fabs(delta - geo.lat) >= tolerance) && (i < maxiter))
@@ -462,7 +256,7 @@ ecef2geo
 /*
  * Transform geodetic latitude, longitude, and altitude to ECEF position vector
  *
- * Inputs:  geo  - Geodetic latitude, longitude and altitude vector
+ * Inputs:  geo  - Geodetic latitude-longitude-altitude vector, rad, rad, km
  * Outputs: None
  * Returns: ecef - Position vector in ECEF frame, km
  */
@@ -497,7 +291,7 @@ geo2ecef
  * Inputs:  op      - Observer position vector in ECEF frame
  *          dp      - Observer to satellite position vector in ECEF frame
  * Outputs: None
- * Returns: azelrng - Azimuth, elevation, range vector (rad, rad, km)
+ * Returns: azelrng - Azimuth, elevation, range vector, rad, rad, km
  */
 vec3
 ecef2azelrng
@@ -541,25 +335,25 @@ ecef2azelrng
 /*
  * Convert equatorial vector to az-el-rng vector from ground st-n at given time
  *
- * Inputs:  radecrv - Equatorial coordinates vector
- *          obs_geo - Geodetic coordinates of the ground station
- *          time    - Unix time
- *          time_ms - Millisecond portion if the time
+ * Inputs:  radecrv   - Equatorial coordinates vector
+ *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
+ *          timestamp - Unix time
+ *          time_ms   - Millisecond portion if the time
  * Outputs: None
- * Returns: azelrng - Azimuth, elevation, range vector
+ * Returns: azelrng   - Azimuth-elevation-range vector, rad, rad, km
  */
 vec3
 eq2azelrng
 (
   const vec3*  radecrv,
   const vec3*  obs_geo,
-        time_t time,
+        time_t timestamp,
         float  time_ms
 )
 {
   vec3 azelrng;
 
-  double ThetaLST = jul2gst(unix2jul(time, time_ms)) + obs_geo->lon;
+  double ThetaLST = jul2gst(unix2jul(timestamp, time_ms)) + obs_geo->lon;
 
   // Equation 4-11 (Define Siderial Time LHA)
   double LHA = fmod(ThetaLST - radecrv->ra, TAU);

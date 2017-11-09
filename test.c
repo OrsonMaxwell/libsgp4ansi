@@ -144,9 +144,13 @@ main (int argc, char** argv)
 
     int    retval    = 0;
     time_t timestamp = mktime(&t) - TIMEZONE;
-    vec3   obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+    // The Dacha
+    //vec3   obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+    // Peyton Observatory
+    vec3   obs_geo   = {40.346568 * DEG2RAD, -74.651688 * DEG2RAD, 0.0451};
     obs    o = {0};
     char   buff[70];
+    vec3   star_azelrng;
 
     while (true)
     {
@@ -160,6 +164,9 @@ main (int argc, char** argv)
       printf("Error %2d at %s!", retval, buff);
       return retval;
     }
+
+    vec3 star_radecrv = {10.6833 * DEG2RAD, 41.26917 * DEG2RAD, 1};
+    star_azelrng = star_observe(&star_radecrv, timestamp, time_ms, &obs_geo);
 
     printf("Lat:    %13.3lf deg\n",  o.latlonalt.lat * RAD2DEG);
     printf("Lon:    %13.3lf deg\n",  o.latlonalt.lon * RAD2DEG);
@@ -180,6 +187,9 @@ main (int argc, char** argv)
     printf("Range:  %13.3lf km\n", o.moon_azelrng.rng);
     moon_phase(buff, o.moon_phase);
     printf("Phase:  %13.0lf %-16s\n", fabs(o.moon_phase) * 100, buff);
+    printf("------------------- The star ------------------\n");
+    printf("Az:     %13.3lf deg\n", star_azelrng.az * RAD2DEG);
+    printf("El:     %13.3lf deg\n", star_azelrng.el * RAD2DEG);
     printf("-----------------------------------------------\n");
 
 #ifdef __unix__
@@ -450,7 +460,7 @@ main (int argc, char** argv)
 
         if (argv[1][0] == 'v')
         {
-          e = teme2coe(&posteme, &velteme);
+          e = sat_classical(&posteme, &velteme);
           fprintf(outfile, " %14.6f %8.6f %10.5f %10.5f %10.5f %10.5f %10.5f\n",
                   e.a, e.ecc, e.incl*RAD2DEG, e.omega*RAD2DEG, e.argp*RAD2DEG,
                   e.nu*RAD2DEG, e.m*RAD2DEG);

@@ -213,9 +213,9 @@ sat_load_params
         sat*         s
 );
 
-// Get classical orbital elements from TEME vectors TODO: make a wrapper?
+// Get classical orbital elements from TEME vectors
 extern coe
-teme2coe
+sat_classical
 (
   const vec3* posteme,
   const vec3* velteme
@@ -225,12 +225,12 @@ teme2coe
 int
 sat_propagate
 (
-  const sat*   s,
-  double       tdelta,
-  unsigned int maxiter,
-  double       tolerance,
-  vec3*        p,
-  vec3*        v
+  const sat*         s,
+        double       tdelta,
+        unsigned int maxiter,
+        double       tolerance,
+        vec3*        p,
+        vec3*        v
 );
 
 // Get observational data about the satellite from ground station
@@ -266,6 +266,16 @@ sat_find_transits
   const pass*        passes,
         unsigned int pass_count,
         transit*     transits
+);
+
+// Get observational data about a distant celestial object
+vec3
+star_observe
+(
+  const vec3*  radecrv,
+        time_t timestamp,
+        float  time_ms,
+  const vec3*  obs_geo
 );
 
 #endif /* LIBSGP4ANSI_H_ */

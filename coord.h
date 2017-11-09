@@ -22,14 +22,6 @@ kepler_newton
   const double nu
 );
 
-// Get classical orbital elements from TEME vectors
-coe
-teme2coe
-(
-  const vec3* posteme,
-  const vec3* velteme
-);
-
 // Transform position and velocity vectors from TEME to ECEF frame of reference
 void
 teme2ecef
@@ -69,7 +61,7 @@ eq2azelrng
 (
   const vec3*  radecrv,
   const vec3*  obs_geo,
-        time_t time,
+        time_t timestamp,
         float  time_ms
 );
 

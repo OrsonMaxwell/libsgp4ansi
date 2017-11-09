@@ -337,12 +337,12 @@ find_shadow_crossing
     if (diff == true)
     {
       return find_shadow_crossing(s, obs_geo, start_time,
-                        half_dt, direction);
+                                  half_dt, direction);
     }
     else
     {
       return find_shadow_crossing(s, obs_geo, start_time + half_dt,
-                        half_dt, direction);
+                                  half_dt, direction);
     }
   }
 
@@ -1292,6 +1292,212 @@ sat_init
 }
 
 /*
+ * Get classical orbital elements from TEME vectors
+ *
+ * Inputs:  posteme - Position vector in TEME frame, km
+ *          velteme - Velocity vector in TEME frame, km/s
+ * Outputs: None
+ * Returns: e       - Success - struct containint the elements
+ *          NULL    - Decayed satellite
+ */
+coe
+sat_classical
+(
+  const vec3* posteme,
+  const vec3* velteme
+)
+{
+  coe e = {0};
+  char orbit_type;
+
+  double tolerance = 1.0e-8;
+
+  double magr = vec3_mag(posteme);
+  double magv = vec3_mag(velteme);
+
+  // Find h n and e vectors
+  vec3 hbar, nbar, ebar;
+
+  hbar = vec3_cross(posteme, velteme);
+  double magh = vec3_mag(&hbar);
+
+  if (magh < tolerance)
+  {
+    return e;
+  }
+
+  nbar.x = -hbar.y;
+  nbar.y =  hbar.x;
+  nbar.z =  0;
+
+  double magn  = vec3_mag(&nbar);
+  double c1    = pow(magv, 2) - GM  / magr;
+  double rdotv = vec3_dot(posteme, velteme);
+
+  ebar.x = (c1 * posteme->x - rdotv * velteme->x) / GM;
+  ebar.y = (c1 * posteme->y - rdotv * velteme->y) / GM;
+  ebar.z = (c1 * posteme->z - rdotv * velteme->z) / GM;
+
+  e.ecc = vec3_mag(&ebar);
+
+  // Find a e and semi-latus rectum
+  double sme = (pow(magv, 2) * 0.5) - (GM  / magr);
+
+  if (fabs(sme) > tolerance)
+  {
+    e.a = -GM / (2 * sme);
+  }
+  else
+  {
+    e.a = INFINITY;
+  }
+  e.p = pow(magh, 2) / GM;
+
+  // Find inclination
+  double hk = hbar.z / magh;
+  e.incl= acos( hk );
+
+  // Determine type of orbit
+  // Elliptical, parabolic, hyperbolic inclined
+  orbit_type = 1;
+  if (e.ecc < tolerance)
+  {
+    // Circular equatorial
+    if ((e.incl < tolerance) || (fabs(e.incl - PI) < tolerance))
+    {
+      orbit_type = -2;
+    }
+    else
+    {
+      // Circular inclined
+      orbit_type = -1;
+    }
+  }
+  else
+  {
+    // Elliptical, parabolic, hyperbolic equatorial
+    if ((e.incl < tolerance) || (fabs(e.incl - PI) < tolerance))
+    {
+    }
+  }
+
+  // Find longitude of ascending node
+  if (magn > tolerance)
+  {
+    double temp = nbar.x / magn;
+
+    if (fabs(temp) > 1)
+    {
+      temp = (temp >= 0)?(1.0):(-1.0);
+    }
+
+    e.omega = acos(temp);
+    if (nbar.y < 0)
+    {
+      e.omega = TAU - e.omega;
+    }
+  }
+  else
+    e.omega = NAN;
+
+  // Find argument of perigee
+  if (orbit_type == 1)
+  {
+    e.argp = vec3_angle(&nbar, &ebar);
+    if (ebar.z < 0)
+    {
+      e.argp= TAU - e.argp;
+    }
+  }
+  else
+    e.argp= NAN;
+
+  // Find true anomaly at epoch
+  if (orbit_type > 0)
+  {
+    e.nu = vec3_angle(&ebar, posteme);
+    if (rdotv < 0)
+    {
+      e.nu= TAU - e.nu;
+    }
+  }
+  else
+    e.nu= NAN;
+
+  // Find argument of latitude - circular inclined
+  if (orbit_type == -1)
+  {
+    e.arglat = vec3_angle(&nbar, posteme);
+    if (posteme->z < 0)
+    {
+      e.arglat = TAU - e.arglat;
+    }
+    e.m = e.arglat;
+  }
+  else
+    e.arglat = NAN;
+
+  // Find longitude of perigee - elliptical equatorial
+  if ((e.ecc > tolerance) && (orbit_type == 2))
+  {
+    double temp = ebar.x / e.ecc;
+
+    if (fabs(temp) > 1)
+    {
+      temp = (temp >= 0)?(1):(-1);
+    }
+
+    e.lonper = acos( temp );
+
+    if (ebar.y < 0)
+    {
+      e.lonper = TAU - e.lonper;
+    }
+    if (e.incl > PIDIV2)
+    {
+      e.lonper = TAU - e.lonper;
+    }
+  }
+  else
+  {
+    e.lonper = NAN;
+  }
+
+  // Find true longitude - circular equatorial
+  if  ((magr > tolerance) && (orbit_type == -2))
+  {
+    double temp = posteme->x / magr;
+
+    if ( fabs(temp) > 1)
+    {
+      temp = (temp >= 0)?(1):(-1);
+    }
+
+    e.truelon = acos(temp);
+
+    if (posteme->y < 0)
+    {
+      e.truelon = TAU - e.truelon;
+    }
+    if (e.incl > PIDIV2)
+    {
+      e.truelon = TAU - e.truelon;
+    }
+    e.m = e.truelon;
+  }
+  else
+    e.truelon = NAN;
+
+  // Find mean anomaly for all orbits
+  if (orbit_type > 0)
+  {
+    e.m = kepler_newton(e.ecc, e.nu);
+  }
+
+  return e;
+}
+
+/*
  * Get position and velocity vectors in the TEME frame at given time since epoch
  *
  * Inputs:  s         - sat struct pointer with initialized orbital data
@@ -1310,12 +1516,12 @@ sat_init
 int
 sat_propagate
 (
-  const sat*   s,
-  double       tdelta,
-  unsigned int maxiter,
-  double       tolerance,
-  vec3*        p,
-  vec3*        v
+  const sat*         s,
+        double       tdelta,
+        unsigned int maxiter,
+        double       tolerance,
+        vec3*        p,
+        vec3*        v
 )
 {
   if ((s == NULL) || (maxiter < 1) || (tolerance <= 0.0))
@@ -1883,7 +2089,7 @@ sat_propagate
  * Inputs:  s         - sat struct pointer with initialized orbital data
  *          time      - Unix timestamp of observation
  *          time_ms   - Milllisecond portion of the above
- *          obs_geo   - Geodetic coordinates of the ground station
+ *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
  * Outputs: result    - Observational data
  * Returns: 0         - Success
  *         -1         - Invalid inputs or parametres
@@ -1902,44 +2108,49 @@ sat_observe
         obs*    result
 )
 {
-  if ((s        == NULL) ||
-      (time_ms  >= 1000) ||
+  if ((time_ms  >= 1000) ||
       (obs_geo  == NULL) ||
       (result   == NULL))
   {
     return -1;
   }
 
-  double tdelta = difftime(timestamp, s->epoch) / 60
+  vec3 posteme, velteme;
+  int  retval = 0;
+
+  if (s != NULL)
+  {
+    double tdelta = difftime(timestamp, s->epoch) / 60
                         + (time_ms - s->epoch_ms) / 60000;
 
-  vec3 posteme, velteme;
+    retval = sat_propagate(s, tdelta, 10, 1.0e-12, &posteme, &velteme);
 
-  int retval = sat_propagate(s, tdelta, 10, 1.0e-12, &posteme, &velteme);
+    if (retval != 0)
+    {
+      return retval;
+    }
+    // Switching to ECEF common frame to fix to Earth
+    vec3 posecef, velecef, obsposecef, obsvelecef;
 
-  if (retval != 0)
-  {
-    return retval;
+    teme2ecef(&posteme, &velteme, unix2jul(timestamp, time_ms),
+              &posecef, &velecef);
+
+    result->latlonalt = ecef2geo(&posecef);
+
+    // Vis-viva equation
+    result->velocity  = sqrt(GM * (2 / (RE + result->latlonalt.alt)
+        - 1 / (RE * s->aodp)));
+
+
+    obsposecef = geo2ecef(obs_geo);
+
+    // Observer to satellite vector in ECEF frame
+    vec3 posdiffecef  = vec3_add(1, &posecef, -1, &obsposecef);
+
+    result->azelrng   = ecef2azelrng(&obsposecef, &posdiffecef);
+    result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->azelrng.rng;
+
   }
-  // Switching to ECEF common frame to fix to Earth
-  vec3 posecef, velecef, obsposecef, obsvelecef;
-
-  teme2ecef(&posteme, &velteme, unix2jul(timestamp, time_ms),
-                                         &posecef, &velecef);
-
-  result->latlonalt = ecef2geo(&posecef);
-
-  // Vis-viva equation
-  result->velocity  = sqrt(GM * (2 / (RE + result->latlonalt.alt)
-                               - 1 / (RE * s->aodp)));
-
-  obsposecef = geo2ecef(obs_geo);
-
-  // Observer to satellite vector in ECEF frame
-  vec3 posdiffecef  = vec3_add(1, &posecef, -1, &obsposecef);
-
-  result->azelrng   = ecef2azelrng(&obsposecef, &posdiffecef);
-  result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->azelrng.rng;
 
   // Find out if the satellite is illuminated by the Sun
   vec3 sunposeq, sunposteme, sun_azelrng, sat2sun;
@@ -1950,27 +2161,30 @@ sat_observe
   sunposteme = eq2teme(&sunposeq);
   result->sun_azelrng = eq2azelrng(&sunposeq, obs_geo, timestamp, time_ms);
 
-  // Calculate satellite to the Sun vector
-  sat2sun    = vec3_add(1, &posteme, -1, &sunposteme);
-
-  // Calculate Semi-diameters of the Sun and the Earth from satellite v.p.
-  double sat2sun_range   = vec3_mag(&sat2sun);
-  double sat2earth_range = vec3_mag(&posteme);
-  double sun_semidia     = asin(RSOL / sat2sun_range);
-  double earth_semidia   = asin(RE   / sat2earth_range);
-
-  // Angle between the Earth and The Sun disk centres from the satellite v.p.
-  double Theta = acos(vec3_dot(&posteme, &sat2sun)
-                      / (sat2sun_range * sat2earth_range));
-
-  // Considering only umbral eclipses
-  if ((earth_semidia > sun_semidia) && (Theta < earth_semidia - sun_semidia))
+  if (s != NULL)
   {
-    result->is_illum  = false;
-  }
-  else
-  {
-    result->is_illum  = true;
+    // Calculate satellite to the Sun vector
+    sat2sun    = vec3_add(1, &posteme, -1, &sunposteme);
+
+    // Calculate Semi-diameters of the Sun and the Earth from satellite v.p.
+    double sat2sun_range   = vec3_mag(&sat2sun);
+    double sat2earth_range = vec3_mag(&posteme);
+    double sun_semidia     = asin(RSOL / sat2sun_range);
+    double earth_semidia   = asin(RE   / sat2earth_range);
+
+    // Angle between the Earth and The Sun disk centres from the satellite v.p.
+    double Theta = acos(vec3_dot(&posteme, &sat2sun)
+                        / (sat2sun_range * sat2earth_range));
+
+    // Considering only umbral eclipses
+    if ((earth_semidia > sun_semidia) && (Theta < earth_semidia - sun_semidia))
+    {
+      result->is_illum  = false;
+    }
+    else
+    {
+      result->is_illum  = true;
+    }
   }
 
   // Calculate position of the Moon
@@ -2015,7 +2229,7 @@ sat_observe
  * Inputs:  s         - sat struct pointer with initialized orbital data
  *          time      - Unix timestamp of observation
  *          time_ms   - Milllisecond portion of the above
- *          obs_geo   - Geodetic coordinates of the ground station
+ *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
  * Outputs: result    - Observational data
  * Returns: >= 0      - The number of found passes on success
  *         -1         - Invalid inputs or parametres
@@ -2205,7 +2419,7 @@ sat_find_passes
  * Inputs:  s         - sat struct pointer with initialized orbital data
  *          time      - Unix timestamp of observation
  *          time_ms   - Milllisecond portion of the above
- *          obs_geo   - Geodetic coordinates of the ground station
+ *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
  * Outputs: result    - Observational data
  * Returns: >= 0      - The number of found transits on success
  *         -1         - Invalid inputs or parametres, failure to allocate memory
@@ -2314,4 +2528,26 @@ sat_find_transits
   }
 
   return transit_count;
+}
+
+/*
+ * Get observational data about a distant celestial object
+ *
+ * Inputs:  radecrv   - Equatorial coordinates of a celestial body, rad, rad, km
+ *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
+ *          timestamp - Unix timestamp of observation
+ *          time_ms   - Milllisecond portion of the above
+ * Outputs: None
+ * Returns: azelrng   - azimuth-elevation-range vector from ground station
+ */
+vec3
+star_observe
+(
+  const vec3*  radecrv,
+        time_t timestamp,
+        float  time_ms,
+  const vec3*  obs_geo
+)
+{
+  return eq2azelrng(radecrv, obs_geo, timestamp, time_ms);
 }
