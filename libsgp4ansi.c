@@ -2485,7 +2485,8 @@ sat_find_transits
         lunar_angular_d = 2 * atan2(RLUN, o.moon_azelrng.rng);
 
         // Detect beginning and end of transit
-        is_transiting = (angle_to_sun < solar_angular_d) || (angle_to_moon < lunar_angular_d);
+        is_transiting = (angle_to_sun < solar_angular_d)
+                     || (angle_to_moon < lunar_angular_d);
 
         if ((is_transiting == true) && (was_transiting == false))
         {
@@ -2493,8 +2494,6 @@ sat_find_transits
           transits[transit_count].start_t_ms = ms;
           transits[transit_count].moon_phase = o.moon_phase;
           transits[transit_count].sky        = el2skylight(o.sun_azelrng.el);
-          transits[transit_count].is_solar   = angle_to_sun  < solar_angular_d;
-          transits[transit_count].is_solar   = angle_to_moon < lunar_angular_d;
           transits[transit_count].azelrng    = o.azelrng;
         } else if ((is_transiting == false) && (was_transiting == true))
         {
@@ -2508,22 +2507,22 @@ sat_find_transits
 
         was_transiting = is_transiting;
 
-        printf("S: d=%lf. D=%lf ", angle_to_sun * RAD2DEG, solar_angular_d * RAD2DEG);
-        printf("L: d=%lf. D=%lf ", angle_to_moon * RAD2DEG, lunar_angular_d * RAD2DEG);
-        printf("T=%ld.%-3.0f ", t, ms);
-        printf("F=%1d %1d\n", transits[transit_count].is_solar, transits[transit_count].is_lunar);
+        transits[transit_count].is_solar = (angle_to_sun  < solar_angular_d)
+                                         || transits[transit_count].is_solar;
+        transits[transit_count].is_lunar = (angle_to_moon < lunar_angular_d)
+                                         || transits[transit_count].is_lunar;
 
         // Progressively diminish time step as the sattelite approaches the
         // first contact
         tstep = 1000;
 
-        if ((angle_to_sun < solar_angular_d * 2))
+        if ((angle_to_sun  < solar_angular_d * 2)
+         || (angle_to_moon < lunar_angular_d * 2))
         {
-          tstep = ceil((fabs(angle_to_sun - solar_angular_d) / solar_angular_d) * 500);
-        }
-        if ((angle_to_moon < lunar_angular_d * 2))
-        {
-          tstep = ceil((fabs(angle_to_moon - lunar_angular_d) / lunar_angular_d) * 500);
+          tstep = ceil((fmin(
+                fabs(angle_to_sun - solar_angular_d) / solar_angular_d,
+                fabs(angle_to_moon - lunar_angular_d) / lunar_angular_d
+                )) * 500);
         }
 
         ms += tstep;

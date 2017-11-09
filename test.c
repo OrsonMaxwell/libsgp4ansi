@@ -251,8 +251,6 @@ main (int argc, char** argv)
     //vec3     obs_geo   = {40.346568 * DEG2RAD, -74.651688 * DEG2RAD, 0.0451};
     // Banner, Wyoming
     vec3     obs_geo   = {44.601882 * DEG2RAD, -106.855443 * DEG2RAD, 1.4057};
-
-
     time_t   start_time    = mktime(&t) - TIMEZONE;
     time_t   stop_time     = mktime(&t) - TIMEZONE + 1 * 1440 * 60;
     pass*    passes;
