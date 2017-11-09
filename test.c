@@ -147,7 +147,9 @@ main (int argc, char** argv)
     // The Dacha
     //vec3   obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
     // Peyton Observatory
-    vec3   obs_geo   = {40.346568 * DEG2RAD, -74.651688 * DEG2RAD, 0.0451};
+    //vec3   obs_geo   = {40.346568 * DEG2RAD, -74.651688 * DEG2RAD, 0.0451};
+    // Banner, Wyoming
+    vec3   obs_geo   = {44.601882 * DEG2RAD, -106.865443 * DEG2RAD, 1.4057};
     obs    o = {0};
     char   buff[70];
     vec3   star_azelrng;
@@ -165,6 +167,7 @@ main (int argc, char** argv)
       return retval;
     }
 
+    // Andromeda Galaxy
     vec3 star_radecrv = {10.6833 * DEG2RAD, 41.26917 * DEG2RAD, 1};
     star_azelrng = star_observe(&star_radecrv, timestamp, time_ms, &obs_geo);
 
@@ -210,8 +213,8 @@ main (int argc, char** argv)
 //                 &s);
 
     sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   17312.55361111  .00002068  00000-0  38554-4 0  9992",
-                 "2 25544  51.6424  38.6321 0004305 100.0031  87.4339 15.54077613 84201",
+                 "1 25544U 98067A   17233.89654113 +.00001846 +00000-0 +35084-4 0  9996",
+                 "2 25544 051.6406 070.7550 0005080 161.3029 292.5190 15.54181235071970",
                  &s);
 //
 //    sat_load_tle("JUGNU",
@@ -232,9 +235,9 @@ main (int argc, char** argv)
 
     struct tm t = {
         .tm_year  = 117,
-        .tm_mon   = 10,
-        .tm_mday  = 11,
-        .tm_hour  = 2,
+        .tm_mon   = 7,
+        .tm_mday  = 21,
+        .tm_hour  = 0,
         .tm_min   = 0,
         .tm_sec   = 0,
         .tm_isdst = 0
@@ -242,9 +245,16 @@ main (int argc, char** argv)
 
     int      pass_count;
     int      transit_count;
-    vec3     observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+    // The Dacha
+    //vec3     obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+    // Peyton Observatory
+    //vec3     obs_geo   = {40.346568 * DEG2RAD, -74.651688 * DEG2RAD, 0.0451};
+    // Banner, Wyoming
+    vec3     obs_geo   = {44.601882 * DEG2RAD, -106.855443 * DEG2RAD, 1.4057};
+
+
     time_t   start_time    = mktime(&t) - TIMEZONE;
-    time_t   stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
+    time_t   stop_time     = mktime(&t) - TIMEZONE + 1 * 1440 * 60;
     pass*    passes;
     transit* transits;
     char     buff[70];
@@ -260,21 +270,23 @@ main (int argc, char** argv)
     printf("|                        Running pass prediction                        |\n");
     printf("+-----------+-----------------------------------------------------------+\n");
     printf("| Satellite | %-58s|\n", s.name);
+    strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&s.epoch));
+    printf("| Epoch     | %-58s|\n", buff);
     strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&start_time));
     printf("| Start     | %-58s|\n", buff);
     strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&stop_time));
     printf("| Stop      | %-58s|\n", buff);
-    printf("| Observer  | %5.2lf°%s %5.2lf°%s %4.0lfm                                     |\n",
-           observer_geo.lat * RAD2DEG, (observer_geo.lat < 0)?("S"):("N"),
-           observer_geo.lon * RAD2DEG, (observer_geo.lon < 0)?("W"):("E"),
-           observer_geo.alt * 1000);
+    printf("| Observer  | %5.2lf%s %5.2lf%s %4.0lfm                                     |\n",
+           obs_geo.lat * RAD2DEG, (obs_geo.lat < 0)?("S"):("N"),
+           obs_geo.lon * RAD2DEG, (obs_geo.lon < 0)?("W"):("E"),
+           obs_geo.alt * 1000);
     printf("+-----------+-------------------------+---------+---------+-------------+\n");
     printf("|   Event   |          Time           | Az, deg | El, deg |  Range, km  |\n");
     printf("+-----------+-------------------------+---------+---------+-------------+\n");
 
     passes     = calloc(max_passes, sizeof(pass));
 
-    pass_count = sat_find_passes(&s, &observer_geo, start_time, stop_time,
+    pass_count = sat_find_passes(&s, &obs_geo, start_time, stop_time,
                                  delta_t, horizon, passes);
 
     if (pass_count < 0)
@@ -315,7 +327,7 @@ main (int argc, char** argv)
 
     transits = calloc(sizeof(transit), pass_count);
 
-    transit_count = sat_find_transits(&s, &observer_geo, passes, pass_count, transits);
+    transit_count = sat_find_transits(&s, &obs_geo, passes, pass_count, transits);
 
     if (transit_count < 0)
     {

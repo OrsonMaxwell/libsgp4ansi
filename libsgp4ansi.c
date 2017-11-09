@@ -2508,6 +2508,11 @@ sat_find_transits
 
         was_transiting = is_transiting;
 
+        printf("S: d=%lf. D=%lf ", angle_to_sun * RAD2DEG, solar_angular_d * RAD2DEG);
+        printf("L: d=%lf. D=%lf ", angle_to_moon * RAD2DEG, lunar_angular_d * RAD2DEG);
+        printf("T=%ld.%-3.0f ", t, ms);
+        printf("F=%1d %1d\n", transits[transit_count].is_solar, transits[transit_count].is_lunar);
+
         // Progressively diminish time step as the sattelite approaches the
         // first contact
         tstep = 1000;
