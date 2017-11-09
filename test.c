@@ -223,8 +223,8 @@ main (int argc, char** argv)
     struct tm t = {
         .tm_year  = 117,
         .tm_mon   = 10,
-        .tm_mday  = 10,
-        .tm_hour  = 17,
+        .tm_mday  = 11,
+        .tm_hour  = 2,
         .tm_min   = 0,
         .tm_sec   = 0,
         .tm_isdst = 0
@@ -234,7 +234,7 @@ main (int argc, char** argv)
     int      transit_count;
     vec3     observer_geo  = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
     time_t   start_time    = mktime(&t) - TIMEZONE;
-    time_t   stop_time     = mktime(&t) - TIMEZONE + 31 * 1440 * 60;
+    time_t   stop_time     = mktime(&t) - TIMEZONE + 7 * 1440 * 60;
     pass*    passes;
     transit* transits;
     char     buff[70];
@@ -254,6 +254,10 @@ main (int argc, char** argv)
     printf("| Start     | %-58s|\n", buff);
     strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&stop_time));
     printf("| Stop      | %-58s|\n", buff);
+    printf("| Observer  | %5.2lf°%s %5.2lf°%s %4.0lfm                                     |\n",
+           observer_geo.lat * RAD2DEG, (observer_geo.lat < 0)?("S"):("N"),
+           observer_geo.lon * RAD2DEG, (observer_geo.lon < 0)?("W"):("E"),
+           observer_geo.alt * 1000);
     printf("+-----------+-------------------------+---------+---------+-------------+\n");
     printf("|   Event   |          Time           | Az, deg | El, deg |  Range, km  |\n");
     printf("+-----------+-------------------------+---------+---------+-------------+\n");

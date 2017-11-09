@@ -71,7 +71,7 @@ el2skylight
 
 // Recursively zero in on an AOS or LOS event down to 1 sec resolution
 time_t
-find_zero
+find_horizon_crossing
 (
   const sat*         s,
   const vec3*        obs_geo,
@@ -91,14 +91,16 @@ find_tca
         unsigned int delta_t
 );
 
+
+// Zero in on a flare or an eclipse event down to 1 sec resolution
 time_t
-find_flare
+find_shadow_crossing
 (
   const sat*         s,
   const vec3*        obs_geo,
   const time_t       start_time,
         unsigned int delta_t,
-        enum  dir          direction
+  enum  dir          direction
 );
 
 // ************************************************************************* //
@@ -199,7 +201,7 @@ el2skylight
  * Returns: zero crossing unix time with second precision
  */
 time_t
-find_zero
+find_horizon_crossing
 (
   const sat*         s,
   const vec3*        obs_geo,
@@ -229,13 +231,13 @@ find_zero
 
     if (diff > 0)
     {
-      return find_zero(s, obs_geo, start_time,
-                       half_dt, horizon, direction);
+      return find_horizon_crossing(s, obs_geo, start_time,
+                                   half_dt, horizon, direction);
     }
     else
     {
-      return find_zero(s, obs_geo, start_time + half_dt,
-                      half_dt, horizon, direction);
+      return find_horizon_crossing(s, obs_geo, start_time + half_dt,
+                                   half_dt, horizon, direction);
     }
   }
 
@@ -251,7 +253,7 @@ find_zero
  *          start_time - Unix timestamp of observation
  *          delta_t    - Time step
  * Outputs: None
- * Returns: Maximum elevation unix time with second precision
+ * Returns: Maximum elevation unix time
  */
 time_t
 find_tca
@@ -293,20 +295,19 @@ find_tca
 }
 
 /*
- * Zero in on an AOS or an LOS event down to 1 sec resolution
+ * Zero in on a flare or an eclipse event down to 1 sec resolution
  * using recursive binary section search
  *
  * Inputs:  s          - sat struct pointer with initialized orbital data
  *          obs_geo    - Geodetic coordinates of the ground station
  *          start_time - Unix timestamp of observation
  *          delta_t    - Time step
- *          horizon    - Elevation of observer horizon, [0; pi/2] rad
- *          direction  - Are we looking for AOS or for LOS?
+ *          direction  - Are we looking for a flare or for an eclipse?
  * Outputs: None
- * Returns: zero crossing unix time with second precision
+ * Returns: shadow crossing unix time
  */
 time_t
-find_flare
+find_shadow_crossing
 (
   const sat*         s,
   const vec3*        obs_geo,
@@ -335,12 +336,12 @@ find_flare
 
     if (diff == true)
     {
-      return find_flare(s, obs_geo, start_time,
+      return find_shadow_crossing(s, obs_geo, start_time,
                         half_dt, direction);
     }
     else
     {
-      return find_flare(s, obs_geo, start_time + half_dt,
+      return find_shadow_crossing(s, obs_geo, start_time + half_dt,
                         half_dt, direction);
     }
   }
@@ -2045,14 +2046,14 @@ sat_find_passes
 
   horizon = fmax(horizon, 0.0);
 
-  int           retval       = 0;
-  obs           o            = {0};
-  obs           o_tmp        = {0};
-  unsigned int  pass_count   = 0;
-  double        prev_el      = -TAU;
-  double        prev_prev_el = -TAU;
-  time_t        new_lmax_t   = 0;
-  bool          prev_illum   = false;
+  int          retval       = 0;
+  obs          o            = {0};
+  obs          o_tmp        = {0};
+  unsigned int pass_count   = 0;
+  double       prev_el      = -TAU;
+  double       prev_prev_el = -TAU;
+  time_t       new_lmax_t   = 0;
+  bool         prev_illum   = false;
 
   // Find principle zeroes and local maxima on a coarse time step pass
   for (time_t t = start_time; t <= stop_time; t += delta_t)
@@ -2070,17 +2071,19 @@ sat_find_passes
         // Eclipse time defaults to LOS (see below)
         passes[pass_count].eclipse_t = 0;
 
-        // Consider the actual moon phase the one at the start of the pass
+        // Consider the actual moon phase to be the one at the start of the pass
         // May not hold for long intervals and geostationary passes!
         passes[pass_count].moon_phase = o.moon_phase;
 
         // Count passes by AOS events
         pass_count++;
+        prev_illum = false;
       }
       else if (prev_el <= horizon)
       {
-        passes[pass_count].aos_t  = find_zero(s, obs_geo, t - delta_t,
-                                              delta_t, horizon, AOS);
+        passes[pass_count].aos_t  = find_horizon_crossing(s, obs_geo,
+                                                          t - delta_t, delta_t,
+                                                          horizon, AOS);
         passes[pass_count].aos    = o.azelrng;
         passes[pass_count].aos.el = horizon;
 
@@ -2098,6 +2101,7 @@ sat_find_passes
 
         // Count passes by AOS events
         pass_count++;
+        prev_illum = false;
       }
       else if (t + delta_t > stop_time)
       {
@@ -2111,8 +2115,9 @@ sat_find_passes
           && (prev_illum == false)
           && (passes[pass_count - 1].flare_t != passes[pass_count - 1].aos_t))
       {
-        passes[pass_count - 1].flare_t = find_flare(s, obs_geo, t - delta_t,
-                                                    delta_t, FLARE);
+        passes[pass_count - 1].flare_t = find_shadow_crossing(s, obs_geo,
+                                                              t - delta_t,
+                                                              delta_t, FLARE);
         retval = sat_observe(s, passes[pass_count - 1].flare_t, 0, obs_geo, &o_tmp);
 
         if (retval < 0)
@@ -2125,8 +2130,11 @@ sat_find_passes
 
       if ((o.is_illum == false) && (prev_illum == true))
       {
-        passes[pass_count - 1].eclipse_t = find_flare(s, obs_geo, t - delta_t,
-                                                      delta_t, ECLIPSE);
+        passes[pass_count - 1].eclipse_t = find_shadow_crossing(s, obs_geo,
+                                                                t - delta_t,
+                                                                delta_t,
+                                                                ECLIPSE);
+
         retval = sat_observe(s, passes[pass_count - 1].eclipse_t, 0, obs_geo, &o_tmp);
 
         if (retval < 0)
@@ -2140,16 +2148,17 @@ sat_find_passes
     }
     else if (prev_el > horizon)
     {
-      passes[pass_count - 1].los_t = find_zero(s, obs_geo, t - delta_t,
-                                      delta_t, horizon, LOS);
+      passes[pass_count - 1].los_t = find_horizon_crossing(s, obs_geo,
+                                                           t - delta_t, delta_t,
+                                                           horizon, LOS);
       passes[pass_count - 1].los    = o.azelrng;
       passes[pass_count - 1].los.el = horizon;
 
       if (passes[pass_count - 1].eclipse_t == 0)
       {
-        passes[pass_count - 1].eclipse_t = passes[pass_count - 1].los_t;
-        passes[pass_count - 1].eclipse   = passes[pass_count - 1].los;
-        passes[pass_count - 1].los.el    = horizon;
+        passes[pass_count - 1].eclipse_t  = passes[pass_count - 1].los_t;
+        passes[pass_count - 1].eclipse    = passes[pass_count - 1].los;
+        passes[pass_count - 1].eclipse.el = horizon;
       }
     }
 
@@ -2229,6 +2238,7 @@ sat_find_transits
   double angle_to_sun, angle_to_moon, solar_angular_d, lunar_angular_d;
   float  ms             = 0;
   float  duration       = 0;
+  float  tstep          = 1000;
   bool   is_transiting  = false;
   bool   was_transiting = false;
 
@@ -2285,8 +2295,8 @@ sat_find_transits
         was_transiting = is_transiting;
 
         // Progressively diminish time step as the sattelite approaches the
-        // first contact.
-        float tstep = 1000;
+        // first contact
+        tstep = 1000;
 
         if ((angle_to_sun < solar_angular_d * 2))
         {

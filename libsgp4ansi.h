@@ -165,7 +165,7 @@ typedef struct _pass
  */
 typedef struct _transit
 {
-  vec3     azelrng;    // Start azimuth-elevation-range vector
+  vec3     azelrng;    // Transit start azimuth-elevation-range vector
   time_t   start_t;    // Transit start time
   float    start_t_ms; // Transit start time fractional portion
   time_t   stop_t;     // Transit stop time
