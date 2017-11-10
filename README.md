@@ -1,68 +1,36 @@
-## Регулярное выражение для записи TLE:
-```
-^(.{24})$
-^1\ ([0-9]{5})([A-Z\ ])\ ([0-9A-Z ]{8})\ ([0-9]{2})([0-9\.]{12})\ ([-|\ ]\.[0-9]{8})\ ([\ |-][0-9]{5}[+|-][0-9])\ ([\ |-][0-9]{5}[+|-][0-9])\ ([0-9])\ ([\ 0-9]{4})([0-9])$
-^2\ ([0-9]{5})\ ([ 0-9.]{8})\ ([ 0-9.]{8})\ ([0-9]{7})\ ([ 0-9.]{8})\ ([ 0-9.]{8})\ ([ 0-9.]{11})([ 0-9]{5})([0-9])$
-```
-### Группы:
-1. Название (**char[24]**)
-2. Каталожный номер (**unsigned int**)
-3. Класс безопастности (**char**)
-4. Международный код (**char[8]**)
-5. Последние две цифры года эпохи
-6. Дробные дни эпохи (**time_t** вместе с полем 5)
-7. Первая производная среднего движения (**double**)
-8. Вторая производная среднего движения (**double**, десятичная точка левее первого символа подразумевается; последние два символа - знак экспоненты и экспонента) [0;1)
-9. Псевдобалистический коэффициент BSTAR (**double**, десятичная точка левее первого символа подразумевается; последние два символа - знак экспоненты и экспонента) [0;1)
-10. Тип эфимеры (**uint8_t**)
-11. Номер текущего набора элементов (**unsigned int**)
-12. Контрольная сумма строки 1 (**uint8_t**)
-13. Каталожный номер (**unsigned int**)
-14. Наклонение плоскости орбиты (**double**) [0;180)
-15. Прямое восхождение узла наивысшего восхождения (**double**) [0;360)
-16. Орбитальный эксцентриситет (**double**, десятичная точка левее первого символа подразумевается) [0;1)
-17. Аргумент перигея (**double**) [0;360)
-18. Средняя аномалия (**double**) [0; 360)
-19. Среднее движение (**double**)
-20. Совершенное количество оборотов (**unsigned int**)
-21. Контрольная сумма строки 2 (**unit8_t**)
+Description:
+  LibSGP4ANSI is an ANSI C11 shared library implementation of the SGP4 and SDP4
+  algorithms with all the corrections according to the AIAA 2006-6753 paper
+  "Revisiting Spacetrack Report #3" by Vallado, Crawford, Hujsak, and Kelso.
 
-## Usecases:
-1. Запрос списка всех известных серверу спутников
-  * Входные данные: команда (например "list-satellites")
-  * Выходные данные: Список имен спутников (**\*char[24]**)
-2. Запрос мгновенных данных об отслеживаемых спутниках
-  * Входные данные:
-      * список отслеживаемых спутников (**\*char[24]**)
-      * таймстемп (**time_t**)
-      * широта, долгота и высота наблюдателя (**\*double**)
-  * Выходные данные (для каждого спутника):
-      * название спутника (**char[24]**)
-      * широта (**double**)
-      * долгота (**double**)
-      * высота (**double**)
-      * азимут (**double**)
-      * восход (**double**)
-      * прямое восхождение (**double**)
-      * склонение (**double**)
-      * расстояние от наблюдателя (**double**)
-      * скорость проекции (**double**)
-      * скорость сближения (**double**)
-      * освещенность солнцем (**bool**)
-3. Предсказание восходов спутников
-  * Входные данные:
-      * список отслеживаемых спутников (**\*char[24]**)
-      * таймстемп начала периода (**time_t**)
-      * таймстемп окончания периода (**time_t**)
-      * широта, долгота и высота наблюдателя (три переменные типа **double**)
-  * Выходные данные (для каждого спутника):
-      * название спутника (**char[24]**)
-      * массив таймстемпов восхождения (**\*double**) AOS
-      * массив таймстемпов наивысшей точки стояния (**\*double**) TCA
-      * массив таймстемпов заходы (**\*double**) LOS
-      * массив азимутов восхождений (**\*double**)
-      * массив азимутов заходов (**\*double**)
-      * массив азимутов наивысших точек стояния (**\*double**)
-      * массив восходов наивысших точек стояния (**\*double**)
+Motivation:
+  Apparently the author was unable to locate a singular convenient project which
+  could be used as a mathematical core for satellite propagation software of his
+  own. Some of the implementations out there seemed inefficient and sometimes an
+  overkill in their approach to scientific computing.
+  This particular implementation was concieved with practical applications for
+  radio amateurs and astro photography enthusiasts in mind as well as carrying
+  an educational value for its author. Having said all this, this code base
+  possesses the following notable features:
+  - Cleaner code. Most of the historic routines that were migrated directly from
+    FORTRAN sources by other authors were inlined into the main initialization
+    and propagation routines saving up on call overheads using 40+ arguments.
+    Also a light refactoring of the naming was in order as well as significantly
+    reducing the number of variables used.
+    Common constants were moved into macros, all relevant code subsets were 
+    organized into respective translation units;
+  - Condensed feature list. The author chose to concentrate on what was required
+    for practical applications instead of trying to implement an exhaustive set
+    of downstream astrodynamical mathematics;
+    Thanks to this approach, this library has the facilities to not only propa-
+    gate NORAD TLE element sets in time, but also to predict satellite passes
+    over given observer location on the geoid as well as to find satellite tran-
+    sits over solar and lunar discs;
+  - Shared library format allows flexibility and compartmentalization of effort;
+  - Optimization allowed to achieve temporal performance comparable to statical-
+    ly linked reference AIAA paper C++ code when propagating the orbits and
+    significantly better performance when finding satellite passes when compa-
+    red to popular amateur software (like Orbitron);
 
-## Структура данных таблицы PostgreSQL
+Version history:
+  0.9 Initial release. requires extensive observational fidelity testing.
