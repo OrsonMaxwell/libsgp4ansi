@@ -32,5 +32,36 @@ Motivation:
     significantly better performance when finding satellite passes when compa-
     red to popular amateur software (like Orbitron);
 
+Usage:
+  Basic usage consists of instantiating a 'sat' data structure and then passing
+  it to either 'sat_load_tle()' function along with the TLE strings or to the 
+  'sat_load_params()' function. In the latter case you will require to supply
+  the mean elements encoded in TLE as arguments to that function.
+  After that the 'sat' structure will contain all the mathematical terms requi-
+  red to propagate the orbit in time expanded according to SGP4/SDP4 specifica-
+  tion.
+  To do so, you can use 'sat_propagate()' to obtain a TEME position and velocity
+  vectors of the satellite at given time.
+  It is also possible to use a number of downstream wrapper functions:
+  - 'sat_observe()' - get observational data from a given geodetic point at a 
+    given time including satellite azimuth, elevation, range, range rate, posi-
+    tions of the Sun and the Moon, skylight type etc;
+  - 'sat_find_passes()' get information on all the passes the satellite makes in
+    a given time frame over a given location on the geoid. Output includes times
+    and observational vectors of all AOS, TCA and LOS events as well as informa-
+    tion about satellite illumination by the sun etc;
+  - 'sat_find_transits()' - get information about the transits which satellite
+    makes over solar and lunar discs as viewed from a given geodetic location in
+    a given time frame;
+  - 'star_observe()' - get observational vector for a quazi-fixed celestial
+    body (the one whose movement across the sky is insignificant for a single
+    observation session) - stars, nebulae, and other catalogue objects as well
+    as some planets. The scope of this library does not include the determina-
+    tion of true equatorial coordinates of such objects, therefore these coordi-
+    nates must be supplied to this function explicitly.
+    
+   Please see the source code for more information - the author likes to think
+   that it is well documented and does not require any further explanation.
+
 Version history:
   0.9 Initial release. requires extensive observational fidelity testing.
