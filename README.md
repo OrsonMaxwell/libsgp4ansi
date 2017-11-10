@@ -49,7 +49,10 @@ Usage:
   - 'sat_find_passes()' get information on all the passes the satellite makes in
     a given time frame over a given location on the geoid. Output includes times
     and observational vectors of all AOS, TCA and LOS events as well as informa-
-    tion about satellite illumination by the sun etc;
+    tion about satellite illumination by the sun etc. Be aware that this func-
+    tion requires a pointer to a preallocated array of 'pass' objects - plese
+    refer to test.c for a useful heuristic that helps determine how many 'pass'
+    elements to allocate memory for;
   - 'sat_find_transits()' - get information about the transits which satellite
     makes over solar and lunar discs as viewed from a given geodetic location in
     a given time frame;
