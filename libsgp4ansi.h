@@ -24,8 +24,10 @@
 //                                VERSION                                    //
 // ************************************************************************* //
 
-#define LIBSGP4ANSI_VERSION "0.9"
-extern const char libsgp4ansi_version[];
+#define LIBSGP4ANSI_VERSION_MAJ 0
+#define LIBSGP4ANSI_VERSION_MIN 9
+extern const int version_major;
+extern const int version_minor;
 
 // ************************************************************************* //
 //                               CUSTOM TYPES                                //

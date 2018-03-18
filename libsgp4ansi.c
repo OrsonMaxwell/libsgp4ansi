@@ -31,7 +31,8 @@
 //                                VERSION                                    //
 // ************************************************************************* //
 
-const char libsgp4ansi_version[] = LIBSGP4ANSI_VERSION;
+const int version_major = LIBSGP4ANSI_VERSION_MAJ;
+const int version_minor = LIBSGP4ANSI_VERSION_MIN;
 
 // ************************************************************************* //
 //                             PRIVATE TYPES                                 //

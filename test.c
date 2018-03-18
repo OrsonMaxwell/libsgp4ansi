@@ -196,7 +196,7 @@ main (int argc, char** argv)
     printf("-----------------------------------------------\n");
 
 #ifdef __unix__
-    usleep(1000000);
+    sleep(1);
 #elif defined(_WIN32) || defined(WIN32)
     Sleep(1000);
 #endif
@@ -356,7 +356,7 @@ main (int argc, char** argv)
   if (argv[1][0] == 't')
   {
     // Timing run
-    printf("libsgp4ansi v%s: timing run\n", libsgp4ansi_version);
+    printf("libsgp4ansi v%d.%d: timing run\n", version_major, version_minor);
 
     strcpy(tlestr0, "DELTA 1");
     strcpy(tlestr1, "1 06251U 62025E   06176.82412014  .00008885  00000-0  12808-3 0  3985");
@@ -422,12 +422,12 @@ main (int argc, char** argv)
 
   if (argv[1][0] == 'v')
   {
-    printf("libsgp4ansi v%s: verification run\n", libsgp4ansi_version);
+    printf("libsgp4ansi v%d.%d: verification run\n", version_major, version_minor);
     outfile  = fopen("ansi_ver.out", "w");
   }
   else
   {
-    printf("libsgp4ansi v%s: full catalogue run\n", libsgp4ansi_version);
+    printf("libsgp4ansi v%d.%d: full catalogue run\n", version_major, version_minor);
     outfile  = fopen("ansi.out", "w");
   }
 
