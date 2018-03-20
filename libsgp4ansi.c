@@ -361,7 +361,9 @@ find_shadow_crossing
  *          tlestr2 - TLE line 2
  * Outputs: sat     - orbit struct pointer with full orbital data
  * Returns: 0       - Success
- *         -1       - Failure to read TLE lines
+ *         -1       - Eccentricity out of range [0, 1)
+ *         -2       - Inclination out of range [0, pi]
+ *         -4       - Failure to read TLE lines
  *
  * Calls: orbit_init
  */
@@ -379,7 +381,7 @@ sat_load_tle
       || (tlestr2 == NULL)
       || (s == NULL))
   {
-    return -1;
+    return -4;
   }
 
   char str0[130];
@@ -442,7 +444,7 @@ sat_load_tle
 
   if (retval != 13)
   {
-    return -1;
+    return -4;
   }
 
   if (str2[52] == ' ') // check for minus sign
@@ -456,7 +458,7 @@ sat_load_tle
 
   if (retval != 9)
   {
-    return -1;
+    return -4;
   }
 
   s->epoch             = fractday2unix(epochyr, epochdays, &s->epoch_ms);
