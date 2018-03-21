@@ -45,6 +45,9 @@ typedef enum _skylight
   Daytime
 } skylight;
 
+/*
+ * 3D vector
+ */
 typedef struct _vec3
 {
   union {
@@ -244,9 +247,9 @@ int
 sat_observe
 (
   const sat*    s,
+  const vec3*   obs_geo,
         time_t  timestamp,
         float   time_ms,
-  const vec3*   obs_geo,
         obs*    result
 );
 

@@ -219,7 +219,7 @@ find_horizon_crossing
 
   if (delta_t > 1)
   {
-    sat_observe(s, start_time + half_dt, 0, obs_geo, &o);
+    sat_observe(s, obs_geo, start_time + half_dt, 0, &o);
 
     if (direction == AOS)
     {
@@ -276,8 +276,8 @@ find_tca
 
   while (abs(c - d) > 1)
   {
-    sat_observe(s, c, 0, obs_geo, &o_c);
-    sat_observe(s, d, 0, obs_geo, &o_d);
+    sat_observe(s, obs_geo, c, 0, &o_c);
+    sat_observe(s, obs_geo, d, 0, &o_d);
 
     if (o_c.azelrng.el > o_d.azelrng.el)
     {
@@ -324,7 +324,7 @@ find_shadow_crossing
 
   if (delta_t > 1)
   {
-    sat_observe(s, start_time + half_dt, 0, obs_geo, &o);
+    sat_observe(s, obs_geo, start_time + half_dt, 0, &o);
 
     if (direction == FLARE)
     {
@@ -485,13 +485,27 @@ sat_load_tle
 /*
  * Initialize SGP4/SDP4 orbit model from a raw NORAD TLE parametres
  *
- * Inputs:  tlestr1 - TLE line 1
- *          tlestr2 - TLE line 2
- * Outputs: sat     - orbit struct pointer with full orbital data
- * Returns: 0       - Success
- *         -1       - Eccentricity out of range [0, 1)
- *         -2       - Inclination out of range [0, pi]
- *         -3       - NULL pointer to sat struct
+ * Inputs:  name             - Satellite name
+ *          sec_class        - Security classification
+ *          int_designator   - International designator
+ *          epoch            - Epoch of the TLE
+ *          epoch_ms         - Fractional seconds portion of epoch, ms
+ *          mean_motion_dt2  - 1st deriv. of mean motion div2, rev/day2
+ *          mean_motion_ddt6 - 2nd deriv. of mean motion div6, rev/day3
+ *          Bstar            - Pseudo-ballistic drag coefficient, 1/AE
+ *          inclination      - Orbital inclination, [0;180) deg
+ *          right_asc_node   - Right ascension of asc. node, [0;360) deg
+ *          eccentricity     - Orbital eccentricity, [0;1)
+ *          argument_perigee - Argument of perigee, [0;360) deg
+ *          mean_anomaly     - Mean anomaly at epoch, [0;360) deg
+ *          mean_motion      - Mean motion at epoch, rev/day
+ *          norad_number     - Catalogue number
+ *          orbit_number     - Current orbital counter
+ * Outputs: s                - orbit struct pointer with full orbital data
+ * Returns: 0                - Success
+ *         -1                - Eccentricity out of range [0, 1)
+ *         -2                - Inclination out of range [0, pi]
+ *         -3                - NULL pointer to sat struct
  */
 int
 sat_load_params
@@ -2108,9 +2122,9 @@ int
 sat_observe
 (
   const sat*    s,
+  const vec3*   obs_geo,
         time_t  timestamp,
         float   time_ms,
-  const vec3*   obs_geo,
         obs*    result
 )
 {
@@ -2289,7 +2303,7 @@ sat_find_passes
   // Find principle zeroes and local maxima on a coarse time step pass
   for (time_t t = start_time; t <= stop_time; t += delta_t)
   {
-    sat_observe(s, t, 0, obs_geo, &o);
+    sat_observe(s, obs_geo, t, 0, &o);
 
     if (o.azelrng.el > horizon)
     {
@@ -2349,7 +2363,7 @@ sat_find_passes
         passes[pass_count - 1].flare_t = find_shadow_crossing(s, obs_geo,
                                                               t - delta_t,
                                                               delta_t, FLARE);
-        retval = sat_observe(s, passes[pass_count - 1].flare_t, 0, obs_geo,
+        retval = sat_observe(s, obs_geo, passes[pass_count - 1].flare_t, 0,
                              &o_tmp);
 
         if (retval < 0)
@@ -2367,7 +2381,7 @@ sat_find_passes
                                                                 delta_t,
                                                                 ECLIPSE);
 
-        retval = sat_observe(s, passes[pass_count - 1].eclipse_t, 0, obs_geo,
+        retval = sat_observe(s, obs_geo, passes[pass_count - 1].eclipse_t, 0,
                              &o_tmp);
 
         if (retval < 0)
@@ -2412,7 +2426,7 @@ sat_find_passes
         new_lmax_t = find_tca(s, obs_geo, t - delta_t * 2, delta_t * 2);
       }
 
-      retval = sat_observe(s, new_lmax_t, 0, obs_geo, &o_tmp);
+      retval = sat_observe(s, obs_geo, new_lmax_t, 0, &o_tmp);
 
       if (retval < 0)
       {
@@ -2488,7 +2502,7 @@ sat_find_transits
       // Millisecond inner cycle to allow for finer time grain
       while (ms < 1000)
       {
-        retval = sat_observe(s, t, ms, obs_geo, &o);
+        retval = sat_observe(s, obs_geo, t, ms, &o);
 
         if (retval < 0)
         {

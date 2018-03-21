@@ -158,7 +158,7 @@ main (int argc, char** argv)
     {
     timestamp = time(0);
 
-    retval = sat_observe(&s, timestamp, time_ms, &obs_geo, &o);
+    retval = sat_observe(&s, &obs_geo, timestamp, time_ms, &o);
 
     if (retval < 0)
     {
