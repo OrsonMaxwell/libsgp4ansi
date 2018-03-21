@@ -1,5 +1,5 @@
 /*
- * libsgp4ansi.h - an ANSI C-11 SGP4/SDP4 implementation library for sgp4ansid.
+ * libsgp4ansi.h - an ANSI C-11 SGP4/SDP4 implementation library.
  *
  * References:
  * https://www.celestrak.com/NORAD/documentation/spacetrk.pdf
