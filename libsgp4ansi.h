@@ -228,7 +228,7 @@ int
 sat_propagate
 (
   const sat*         s,
-        double       tdelta,
+        double       delta_t,
         unsigned int maxiter,
         double       tolerance,
         vec3*        p,

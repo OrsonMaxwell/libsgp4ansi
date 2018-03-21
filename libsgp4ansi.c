@@ -1504,7 +1504,7 @@ sat_classical
  * Get position and velocity vectors in the TEME frame at given time since epoch
  *
  * Inputs:  s         - sat struct pointer with initialized orbital data
- *          tdelta    - Time since orbit TLE epoch, minutes
+ *          delta_t    - Time since orbit TLE epoch, minutes
  *          maxiter   - Kepler's equation maximum iteration count
  *          tolerance - Kepler's equation desired precision tolerance
  * Outputs: p         - 3D position vector in TEME frame in km
@@ -1520,7 +1520,7 @@ int
 sat_propagate
 (
   const sat*         s,
-        double       tdelta,
+        double       delta_t,
         unsigned int maxiter,
         double       tolerance,
         vec3*        p,
@@ -1533,28 +1533,28 @@ sat_propagate
   }
 
   // Update for secular gravity and atmospheric drag
-  double xmdf     = s->mean_anomaly + s->xmdot * tdelta;
-  double omgadf   = s->argument_perigee + s->omgdot * tdelta;
-  double xnoddf   = s->right_asc_node + s->xnodot * tdelta;
-  double t2       = pow(tdelta, 2);
+  double xmdf     = s->mean_anomaly + s->xmdot * delta_t;
+  double omgadf   = s->argument_perigee + s->omgdot * delta_t;
+  double xnoddf   = s->right_asc_node + s->xnodot * delta_t;
+  double t2       = pow(delta_t, 2);
   double xnode    = xnoddf + s->xnodcf * t2;
-  double tempa    = 1 - s->C1 * tdelta;
-  double tempe    = s->Bstar * s->C4 * tdelta;
+  double tempa    = 1 - s->C1 * delta_t;
+  double tempe    = s->Bstar * s->C4 * delta_t;
   double templ    = s->t2cof * t2;
   double omega    = omgadf;
   double xmp      = xmdf;
 
   if (s->use_simple_model == false)
   {
-    double delomg = s->omgcof * tdelta;
+    double delomg = s->omgcof * delta_t;
     double delm   = s->xmcof * (pow(1.0 + s->eta * cos(xmdf), 3) - s->delmo);
     xmp           = xmdf + delomg + delm;
     omega         = omgadf - delomg - delm;
-    double t3     = t2 * tdelta;
-    double t4     = t3 * tdelta;
+    double t3     = t2 * delta_t;
+    double t4     = t3 * delta_t;
     tempa         = tempa - s->D2 * t2 - s->D3 * t3 - s->D4 * t4;
     tempe         = tempe + s->Bstar * s->C5 * (sin(xmp) - s->sinmo);
-    templ         = templ + s->t3cof * t3 + t4 * (s->t4cof + tdelta * s->t5cof);
+    templ         = templ + s->t3cof * t3 + t4 * (s->t4cof + delta_t * s->t5cof);
   }
 
   double nm    = s->xnodp;
@@ -1596,14 +1596,14 @@ sat_propagate
 
     // Calculate deep space resonance effects
     double dndt   = 0;
-    double theta  = fmod(s->GSTo + tdelta * RPTIM, TAU);
+    double theta  = fmod(s->GSTo + delta_t * RPTIM, TAU);
 
     // Perturbed quantities
-    em    += s->dedt * tdelta;
-    inclm += s->didt  * tdelta;
-    omega += s->domdt * tdelta;
-    xnode += s->dnodt * tdelta;
-    xmp   += s->dmdt  * tdelta;
+    em    += s->dedt * delta_t;
+    inclm += s->didt  * delta_t;
+    omega += s->domdt * delta_t;
+    xnode += s->dnodt * delta_t;
+    xmp   += s->dmdt  * delta_t;
 
     // Euler-Maclaurin numerical integration
     double ft = 0;
@@ -1614,7 +1614,7 @@ sat_propagate
       double xni   = s->xnodp;
       double xli   = s->xlamo;
 
-      if (tdelta > 0)
+      if (delta_t > 0)
         delta = stepp;
       else
         delta = stepn;
@@ -1667,9 +1667,9 @@ sat_propagate
         }
 
         // Integrator
-        if (fabs(tdelta - atime) < stepp)
+        if (fabs(delta_t - atime) < stepp)
         {
-          ft          = tdelta - atime;
+          ft          = delta_t - atime;
           integrating = false;
         }
 
@@ -1698,7 +1698,7 @@ sat_propagate
 
 #ifdef MATH_TRACE
       printf("======================================== dp1\n");
-      printf("tdelta %+.15e\n", tdelta);
+      printf("delta_t %+.15e\n", delta_t);
       printf("atime  %+.15e\n", atime);
       printf("xndt   %+.15e\n", xndt);
       printf("xldot  %+.15e\n", xldot);
@@ -1777,7 +1777,7 @@ sat_propagate
     const double zel = 0.05490;
 
     // Calculate time varying periodics
-    double zm    = s->zmos + ZNS * tdelta;
+    double zm    = s->zmos + ZNS * delta_t;
     double zf    = zm + 2 * zes * sin(zm);
     double sinzf = sin(zf);
     double f2    =  0.5 * sinzf * sinzf - 0.25;
@@ -1787,7 +1787,7 @@ sat_propagate
     double sls   = s->sl2 * f2 + s->sl3 * f3 + s->sl4 * sinzf;
     double sghs  = s->sgh2 * f2 + s->sgh3 * f3 + s->sgh4 * sinzf;
     double shs   = s->sh2 * f2 + s->sh3 * f3;
-    zm    = s->zmol + ZNL * tdelta;
+    zm    = s->zmol + ZNL * delta_t;
 
     zf    = zm + 2 * zel * sin(zm);
     sinzf = sin(zf);
@@ -2066,7 +2066,7 @@ sat_propagate
 
 #ifdef MATH_TRACE
       printf("---------------------------------------- p6\n");
-      printf("t %lf\n", tdelta);
+      printf("t %lf\n", delta_t);
       printf("px %12.6lf\n", p->x);
       printf("py %12.6lf\n", p->y);
       printf("pz %12.6lf\n", p->z);
@@ -2090,7 +2090,7 @@ sat_propagate
  * Get observational data about the satellite from ground station
  *
  * Inputs:  s         - sat struct pointer with initialized orbital data
- *          time      - Unix timestamp of observation
+ *          timestamp - Unix timestamp of observation
  *          time_ms   - Milllisecond portion of the above
  *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
  * Outputs: result    - Observational data
@@ -2123,10 +2123,10 @@ sat_observe
 
   if (s != NULL)
   {
-    double tdelta = difftime(timestamp, s->epoch) / 60
-                        + (time_ms - s->epoch_ms) / 60000;
+    double delta_t = difftime(timestamp, s->epoch) / 60
+                   + (time_ms - s->epoch_ms) / 60000;
 
-    retval = sat_propagate(s, tdelta, 10, 1.0e-12, &posteme, &velteme);
+    retval = sat_propagate(s, delta_t, 10, 1.0e-12, &posteme, &velteme);
 
     if (retval != 0)
     {
@@ -2229,17 +2229,21 @@ sat_observe
 /*
  * Get observational data about the satellite from ground station
  *
- * Inputs:  s         - sat struct pointer with initialized orbital data
- *          time      - Unix timestamp of observation
- *          time_ms   - Milllisecond portion of the above
- *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
- * Outputs: result    - Observational data
- * Returns: >= 0      - The number of found passes on success
- *         -1         - Invalid inputs or parametres
- *         -2         - Negative mean motion
- *         -3         - Eccentricity out of range (e >= 1; e < -1.0e-12)
- *         -4         - Short period preliminary quantities error
- *         -5         - Decayed satellite
+ * Inputs:  s          - sat struct pointer with initialized orbital data
+ *          time       - Unix timestamp of observation
+ *          time_ms    - Milllisecond portion of the above
+ *          obs_geo    - Geodetic coordinates of the ground station, rad, rad, km
+ *          start_time - Unix timestamp of start of time interval
+ *          stop_time  - Unix timestamp of end of time interval
+ *          delta_t    - Coarse time step, s
+ *          horizon    - Elevation to be considered observational horizon, rad
+ * Outputs: passes     - Array of pass structs
+ * Returns: >= 0       - The number of found passes on success
+ *         -1          - Invalid inputs or parametres
+ *         -2          - Negative mean motion
+ *         -3          - Eccentricity out of range (e >= 1; e < -1.0e-12)
+ *         -4          - Short period preliminary quantities error
+ *         -5          - Decayed satellite
  */
 int
 sat_find_passes
@@ -2419,17 +2423,17 @@ sat_find_passes
 /*
  * Find satellite transits over the solar and lunar discs
  *
- * Inputs:  s         - sat struct pointer with initialized orbital data
- *          time      - Unix timestamp of observation
- *          time_ms   - Milllisecond portion of the above
- *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
- * Outputs: result    - Observational data
- * Returns: >= 0      - The number of found transits on success
- *         -1         - Invalid inputs or parametres, failure to allocate memory
- *         -2         - Negative mean motion
- *         -3         - Eccentricity out of range (e >= 1; e < -1.0e-12)
- *         -4         - Short period preliminary quantities error
- *         -5         - Decayed satellite
+ * Inputs:  s          - sat struct pointer with initialized orbital data
+ *          obs_geo    - Geodetic coordinates of the ground station, rad, rad, km
+ *          passes     - Array of pass objects to check for transits
+ *          pass_count - Number of passes in the above array
+ * Outputs: transits   - Array of transit structs
+ * Returns: >= 0       - The number of found transits on success
+ *         -1          - Invalid inputs or parametres, failure to allocate memory
+ *         -2          - Negative mean motion
+ *         -3          - Eccentricity out of range (e >= 1; e < -1.0e-12)
+ *         -4          - Short period preliminary quantities error
+ *         -5          - Decayed satellite
  */
 int
 sat_find_transits
