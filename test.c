@@ -167,10 +167,6 @@ main (int argc, char** argv)
       return retval;
     }
 
-    // Andromeda Galaxy
-    vec3 star_radecrv = {10.6833 * DEG2RAD, 41.26917 * DEG2RAD, 1};
-    star_azelrng = star_observe(&star_radecrv, timestamp, time_ms, &obs_geo);
-
     printf("Lat:    %13.3lf deg\n",  o.latlonalt.lat * RAD2DEG);
     printf("Lon:    %13.3lf deg\n",  o.latlonalt.lon * RAD2DEG);
     printf("Alt:    %13.3lf km\n",   o.latlonalt.alt);
@@ -192,9 +188,6 @@ main (int argc, char** argv)
     printf("Sh.cone:%13.3lf deg\n", o.lunar_shadow_cone * RAD2DEG);
     moon_phase(buff, o.moon_phase);
     printf("Phase:  %13.0lf %-16s\n", fabs(o.moon_phase) * 100, buff);
-    printf("------------------- The star ------------------\n");
-    printf("Az:     %13.3lf deg\n", star_azelrng.az * RAD2DEG);
-    printf("El:     %13.3lf deg\n", star_azelrng.el * RAD2DEG);
     printf("-----------------------------------------------\n");
 
 #ifdef __unix__

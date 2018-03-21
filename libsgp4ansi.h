@@ -274,14 +274,4 @@ sat_find_transits
         transit*     transits
 );
 
-// Get observational data about a distant celestial object
-vec3
-star_observe
-(
-  const vec3*  radecrv,
-        time_t timestamp,
-        float  time_ms,
-  const vec3*  obs_geo
-);
-
 #endif /* LIBSGP4ANSI_H_ */

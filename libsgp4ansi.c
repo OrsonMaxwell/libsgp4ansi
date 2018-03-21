@@ -2552,25 +2552,3 @@ sat_find_transits
 
   return transit_count;
 }
-
-/*
- * Get observational data about a distant celestial object
- *
- * Inputs:  radecrv   - Equatorial coordinates of a celestial body, rad, rad, km
- *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
- *          timestamp - Unix timestamp of observation
- *          time_ms   - Milllisecond portion of the above
- * Outputs: None
- * Returns: azelrng   - azimuth-elevation-range vector from ground station
- */
-vec3
-star_observe
-(
-  const vec3*  radecrv,
-        time_t timestamp,
-        float  time_ms,
-  const vec3*  obs_geo
-)
-{
-  return eq2azelrng(radecrv, obs_geo, timestamp, time_ms);
-}
