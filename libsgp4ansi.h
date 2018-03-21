@@ -132,15 +132,19 @@ typedef struct _coe
  */
 typedef struct _obs
 {
-  vec3   latlonalt;    // Satellite projected geodetic coordinates
-  vec3   azelrng;      // Azimuth-Elevation-Range vector
-  double velocity;     // Satellite velocity, km/s
-  double rng_rate;     // Distance change rate, km/s
-  bool   is_illum;     // Is the satellite illuminated by the Sun?
-  vec3   sun_azelrng;  // Azimuth-Elevation-Range of The Sun
-  vec3   moon_azelrng; // Azimuth-Elevation-Range of The Moon
-  double moon_phase;   // Illuminated portion of Moon's disc combined with phase
-                       // (negative for waning, positive for waxing)
+  vec3   latlonalt;         // Satellite projected geodetic coordinates
+  vec3   azelrng;           // Azimuth-Elevation-Range vector
+  double velocity;          // Satellite velocity, km/s
+  double rng_rate;          // Distance change rate, km/s
+  bool   is_illum;          // Is the satellite illuminated by the Sun?
+  vec3   sun_azelrng;       // Azimuth-Elevation-Range of The Sun
+  vec3   moon_azelrng;      // Azimuth-Elevation-Range of The Moon
+  double moon_phase;        // Illuminated portion of Moon's disc combined with
+                            // phase (negative for waning, positive for waxing)
+  vec3   solar_shadow_lla;  // Lat-lon-alt vector of the solar shadow
+  double solar_shadow_cone; // Cone angle of the solar shadow of the satellite
+  vec3   lunar_shadow_lla;  // Lat-lon-alt vector of the lunar shadow
+  double lunar_shadow_cone; // Cone angle of the lunar shadow of the satellite
 } obs;
 
 /*
@@ -154,7 +158,7 @@ typedef struct _pass
   time_t   flare_t;    // Unix time of illumination
   time_t   eclipse_t;  // Unix time of (penumbral) eclipse
   vec3     aos;        // Acquisition of signal azimuth-elevation-range vector
-  vec3     tca;        // Time if closest approach azimuth-elevation-range vector
+  vec3     tca;        // Time if closest approach azimuth-elevation-rng vector
   vec3     los;        // Loss of signal azimuth-elevation-range vector
   vec3     flare;      // Illumination azimuth-elevation-range vector
   vec3     eclipse;    // Umbral eclipse azimuth-elevation-range vector

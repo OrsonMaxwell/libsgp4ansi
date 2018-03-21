@@ -437,7 +437,8 @@ sat_load_tle
   int cardnum, epochyr, nexp, Bexp, checksum, ephem_type, elset_number;
   double nddot, Bstar, epochdays;
 
-  int retval = sscanf(str1,"%2d %5u %1c %8s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6d ",
+  int retval =
+       sscanf(str1,"%2d %5u %1c %8s %2d %12lf %11lf %7lf %2d %7lf %2d %2d %6d ",
          &cardnum, &s->norad_number, &s->sec_class, s->int_designator, &epochyr,
          &epochdays,&s->mean_motion_dt2, &nddot, &nexp, &Bstar,
          &Bexp, &ephem_type, &elset_number);
@@ -449,11 +450,13 @@ sat_load_tle
 
   if (str2[52] == ' ') // check for minus sign
     retval = sscanf(str2,"%2d %5u %9lf %9lf %8lf %9lf %9lf %10lf %6d \n",
-           &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node, &s->eccentricity, &s->argument_perigee,
+           &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node,
+           &s->eccentricity, &s->argument_perigee,
            &s->mean_anomaly, &s->mean_motion, &s->orbit_number);
   else
     retval = sscanf(str2,"%2d %5u %9lf %9lf %8lf %9lf %9lf %11lf %6d \n",
-           &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node, &s->eccentricity, &s->argument_perigee,
+           &cardnum,&s->norad_number, &s->inclination, &s->right_asc_node,
+           &s->eccentricity, &s->argument_perigee,
            &s->mean_anomaly, &s->mean_motion, &s->orbit_number);
 
   if (retval != 9)
@@ -1554,7 +1557,7 @@ sat_propagate
     double t4     = t3 * delta_t;
     tempa         = tempa - s->D2 * t2 - s->D3 * t3 - s->D4 * t4;
     tempe         = tempe + s->Bstar * s->C5 * (sin(xmp) - s->sinmo);
-    templ         = templ + s->t3cof * t3 + t4 * (s->t4cof + delta_t * s->t5cof);
+    templ         = templ + s->t3cof *t3 + t4 * (s->t4cof + delta_t * s->t5cof);
   }
 
   double nm    = s->xnodp;
@@ -2175,6 +2178,8 @@ sat_observe
     double sun_semidia     = asin(RSOL / sat2sun_range);
     double earth_semidia   = asin(RE   / sat2earth_range);
 
+    result->solar_shadow_cone = sun_semidia;
+
     // Angle between the Earth and The Sun disk centres from the satellite v.p.
     double Theta = acos(vec3_dot(&posteme, &sat2sun)
                         / (sat2sun_range * sat2earth_range));
@@ -2191,11 +2196,16 @@ sat_observe
   }
 
   // Calculate position of the Moon
-  vec3 moonposeq;
+  vec3 moonposeq, moonposteme, sat2moon;
   double lambda_moon;
 
-  moonposeq = lunar_pos(timestamp, time_ms, &lambda_moon);
+  moonposeq     = lunar_pos(timestamp, time_ms, &lambda_moon);
+  moonposteme   = eq2teme(&moonposeq);
   result->moon_azelrng = eq2azelrng(&moonposeq, obs_geo, timestamp, time_ms);
+
+  // Calculate satellite to the Moon vector
+  sat2moon      = vec3_add(1, &posteme, -1, &moonposteme);
+  result->lunar_shadow_cone = asin(RLUN / vec3_mag(&sat2moon));
 
   // Fraction of the Moon disc illuminated
   double cospsi = sin(sunposeq.dec) * sin(moonposeq.dec)
@@ -2232,7 +2242,7 @@ sat_observe
  * Inputs:  s          - sat struct pointer with initialized orbital data
  *          time       - Unix timestamp of observation
  *          time_ms    - Milllisecond portion of the above
- *          obs_geo    - Geodetic coordinates of the ground station, rad, rad, km
+ *          obs_geo    - Geodetic coordinates of the gnd station, rad, rad, km
  *          start_time - Unix timestamp of start of time interval
  *          stop_time  - Unix timestamp of end of time interval
  *          delta_t    - Coarse time step, s
@@ -2339,7 +2349,8 @@ sat_find_passes
         passes[pass_count - 1].flare_t = find_shadow_crossing(s, obs_geo,
                                                               t - delta_t,
                                                               delta_t, FLARE);
-        retval = sat_observe(s, passes[pass_count - 1].flare_t, 0, obs_geo, &o_tmp);
+        retval = sat_observe(s, passes[pass_count - 1].flare_t, 0, obs_geo,
+                             &o_tmp);
 
         if (retval < 0)
         {
@@ -2356,7 +2367,8 @@ sat_find_passes
                                                                 delta_t,
                                                                 ECLIPSE);
 
-        retval = sat_observe(s, passes[pass_count - 1].eclipse_t, 0, obs_geo, &o_tmp);
+        retval = sat_observe(s, passes[pass_count - 1].eclipse_t, 0, obs_geo,
+                             &o_tmp);
 
         if (retval < 0)
         {
@@ -2424,12 +2436,12 @@ sat_find_passes
  * Find satellite transits over the solar and lunar discs
  *
  * Inputs:  s          - sat struct pointer with initialized orbital data
- *          obs_geo    - Geodetic coordinates of the ground station, rad, rad, km
+ *          obs_geo    - Geodetic coordinates of the gnd station, rad, rad, km
  *          passes     - Array of pass objects to check for transits
  *          pass_count - Number of passes in the above array
  * Outputs: transits   - Array of transit structs
  * Returns: >= 0       - The number of found transits on success
- *         -1          - Invalid inputs or parametres, failure to allocate memory
+ *         -1          - Invalid inputs or parametres, failed to allocate memory
  *         -2          - Negative mean motion
  *         -3          - Eccentricity out of range (e >= 1; e < -1.0e-12)
  *         -4          - Short period preliminary quantities error

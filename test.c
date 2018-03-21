@@ -184,10 +184,12 @@ main (int argc, char** argv)
     printf("Az:     %13.3lf deg\n", o.sun_azelrng.az * RAD2DEG);
     printf("El:     %13.3lf deg\n", o.sun_azelrng.el * RAD2DEG);
     printf("Range:  %13.3lf km\n", o.sun_azelrng.rng);
+    printf("Sh.cone:%13.3lf deg\n", o.solar_shadow_cone * RAD2DEG);
     printf("------------------- The Moon ------------------\n");
     printf("Az:     %13.3lf deg\n", o.moon_azelrng.az * RAD2DEG);
     printf("El:     %13.3lf deg\n", o.moon_azelrng.el * RAD2DEG);
     printf("Range:  %13.3lf km\n", o.moon_azelrng.rng);
+    printf("Sh.cone:%13.3lf deg\n", o.lunar_shadow_cone * RAD2DEG);
     moon_phase(buff, o.moon_phase);
     printf("Phase:  %13.0lf %-16s\n", fabs(o.moon_phase) * 100, buff);
     printf("------------------- The star ------------------\n");
