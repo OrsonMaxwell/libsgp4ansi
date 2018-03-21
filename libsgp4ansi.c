@@ -2227,7 +2227,7 @@ sat_observe
 }
 
 /*
- * Get observational data about the satellite from ground station
+ * Find satellite passes over ground station within given timeframe
  *
  * Inputs:  s          - sat struct pointer with initialized orbital data
  *          time       - Unix timestamp of observation

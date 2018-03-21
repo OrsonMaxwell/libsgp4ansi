@@ -246,7 +246,7 @@ sat_observe
         obs*    result
 );
 
-// Find satellite passes over ground station inside given timeframe
+// Find satellite passes over ground station within given timeframe
 int
 sat_find_passes
 (
