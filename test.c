@@ -89,6 +89,28 @@ moon_phase(char* string, double phase)
   }
 }
 
+void
+sat_print(sat* s)
+{
+  printf("-> name\t\t=\t%s\n", s->name);
+  printf("-> sec_class\t\t=\t%c\n", s->sec_class);
+  printf("-> int_designator\t\t=\t%s\n", s->int_designator);
+  printf("-> epoch\t\t=\t%ld\n", s->epoch);
+  printf("-> epoch_ms\t\t=\t%f\n", s->epoch_ms);
+  printf("-> julian_epoch\t\t=\t%.17e\n", s->julian_epoch);
+  printf("-> mean_motion_dt2\t\t=\t%.17e\n", s->mean_motion_dt2);
+  printf("-> mean_motion_ddt6\t\t=\t%.17e\n", s->mean_motion_ddt6);
+  printf("-> Bstar\t\t=\t%.17e\n", s->Bstar);
+  printf("-> inclination\t\t=\t%.17e\n", s->inclination);
+  printf("-> right_asc_node\t\t=\t%.17e\n", s->right_asc_node);
+  printf("-> eccentricity\t\t=\t%.17e\n", s->eccentricity);
+  printf("-> argument_perigee\t\t=\t%.17e\n", s->argument_perigee);
+  printf("-> mean_anomaly\t\t=\t%.17e\n", s->mean_anomaly);
+  printf("-> mean_motion\t\t=\t%.17e\n", s->mean_motion);
+  printf("-> norad_number\t\t=\t%d\n", s->norad_number);
+  printf("-> orbit_number\t\t=\t%d\n", s->orbit_number);
+}
+
 int
 main (int argc, char** argv)
 {
@@ -208,8 +230,8 @@ main (int argc, char** argv)
 //                 &s);
 
     sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   17233.89654113 +.00001846 +00000-0 +35084-4 0  9996",
-                 "2 25544 051.6406 070.7550 0005080 161.3029 292.5190 15.54181235071970",
+                 "1 25544U 98067A   18081.21898694  .00001699  00000-0  32887-4 0  9992",
+                 "2 25544  51.6407  92.2675 0001807 228.6697 232.3362 15.54125069104994",
                  &s);
 //
 //    sat_load_tle("JUGNU",
@@ -228,26 +250,28 @@ main (int argc, char** argv)
 //                 "2 33463   2.3909  67.6760 0005346 217.9202 107.6646  1.00271179 32268",
 //                 &s);
 
+    sat_print(&s);
+
     struct tm t = {
-        .tm_year  = 117,
-        .tm_mon   = 7,
-        .tm_mday  = 21,
-        .tm_hour  = 0,
-        .tm_min   = 0,
-        .tm_sec   = 0,
+        .tm_year  = 118,
+        .tm_mon   = 2,
+        .tm_mday  = 22,
+        .tm_hour  = 5,
+        .tm_min   = 28,
+        .tm_sec   = 28,
         .tm_isdst = 0
     };
 
     int      pass_count;
     int      transit_count;
     // The Dacha
-    //vec3     obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+    vec3     obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
     // Peyton Observatory
     //vec3     obs_geo   = {40.346568 * DEG2RAD, -74.651688 * DEG2RAD, 0.0451};
     // Banner, Wyoming
-    vec3     obs_geo   = {44.601882 * DEG2RAD, -106.855443 * DEG2RAD, 1.4057};
-    time_t   start_time    = mktime(&t) - TIMEZONE;
-    time_t   stop_time     = mktime(&t) - TIMEZONE + 1 * 1440 * 60;
+    //vec3     obs_geo   = {44.601882 * DEG2RAD, -106.855443 * DEG2RAD, 1.4057};
+    time_t   start_time    = mktime(&t);
+    time_t   stop_time     = mktime(&t) + 30 * 1440 * 60;
     pass*    passes;
     transit* transits;
     char     buff[70];
