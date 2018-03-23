@@ -548,6 +548,7 @@ sat_load_params
   s->Bstar            = Bstar;
   s->inclination      = inclination      * DEG2RAD;
   s->right_asc_node   = right_asc_node   * DEG2RAD;
+  s->eccentricity     = eccentricity;
   s->argument_perigee = argument_perigee * DEG2RAD;
   s->mean_anomaly     = mean_anomaly     * DEG2RAD;
   s->mean_motion      = mean_motion      / RPD2RADPM;
