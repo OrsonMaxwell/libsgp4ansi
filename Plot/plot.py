@@ -6,6 +6,8 @@ import re
 import os, sys
 import subprocess
 import datetime
+import csv
+from math import degrees, isnan
 
 # Configuration ###############################################################
 
@@ -120,6 +122,9 @@ if (not dry_run):
   print(subprocess.Popen([os.path.join(os.getcwd(), ansi_binary), 'c', fullcat_filename], stdout=subprocess.PIPE).communicate()[0].decode())
   stop = datetime.datetime.now()
   tdiff_ansic = stop - start
+  
+  print('Running libsgp4ansi shadow plotting mode...')
+  print(subprocess.Popen([os.path.join(os.getcwd(), ansi_binary), 's'], stdout=subprocess.PIPE).communicate()[0].decode())
 
 # Load generated data #########################################################
 
@@ -257,6 +262,38 @@ for sat in list(aiaa_ver_sats.keys()):
   verif_points[sat] = maxdelta * 1000 # Convert to meters
   verif_annot.append(sat)
 
+# Get Shadow plot data ########################################################
+print('Loading shadow data...')
+
+sh_sun_az = []
+sh_sun_el = []
+sh_moon_az = []
+sh_moon_el = []
+sh_sat_az = []
+sh_sat_el = []
+sh_sun_lat = []
+sh_sun_lon = []
+sh_moon_lat = []
+sh_moon_lon = []
+sh_sat_lat = []
+sh_sat_lon = []
+with open('ansi_shadows.csv', newline='') as csvfile:
+    csvreader = csv.reader(csvfile, lineterminator='\n', quoting=csv.QUOTE_NONNUMERIC)
+    for row in csvreader:
+        sh_sun_az.append(degrees(row[1]))
+        sh_sun_el.append(degrees(row[2]))
+        sh_moon_az.append(degrees(row[3]))
+        sh_moon_el.append(degrees(row[4]))
+        sh_sat_az.append(degrees(row[5]))
+        sh_sat_el.append(degrees(row[6]))
+        sh_sun_lat.append(degrees(row[7]))
+        sh_sun_lon.append(degrees(row[8]))
+        sh_moon_lat.append(degrees(row[9] if not isnan(row[9]) else -100))
+        sh_moon_lon.append(degrees(row[10] if not isnan(row[10]) else 0))
+        sh_sat_lat.append(degrees(row[11]))
+        sh_sat_lon.append(degrees(row[12]))
+    print('Loaded {} shadow points'.format(len(sh_sat_az)))
+  
 # Plotting everything #########################################################
 
 print('Plotting data - please wait...')
@@ -496,5 +533,35 @@ axp.grid(which='minor', axis='x', ls='dotted', alpha=0.3)
 axp.set_xlabel('Time from epoch, min')
 axp.set_ylabel('Position difference, m')
 fig.set_tight_layout({'pad':0.0, 'w_pad':0.1, 'h_pad':0.1}) 
+
+# Shadow plot #################################################################
+fig, axs = plt.subplots(1, 1)
+fig.canvas.set_window_title('Solar and lunar shadows') 
+
+xmin = -100
+xmax = 70
+xticksmin = range(xmin, xmax + 1, 10)
+xticksmaj = range(-120, 90 + 1, 30)
+ymin = 10
+ymax = 60
+yticksmin = range(ymin, ymax + 1, 5)
+yticksmaj = range(0, 60 + 1, 30)
+
+for i, g_track_p in enumerate(sh_sat_lat):
+  axs.plot(sh_sat_lon[i], sh_sat_lat[i], c='r', marker='o', ls='', mew=0.0, markersize=2, alpha=0.7)
+  axs.plot(sh_sun_lon[i], sh_sun_lat[i], c='k', marker='o', ls='', mew=0.0, markersize=4, alpha=0.1)
+  axs.plot(sh_moon_lon[i], sh_moon_lat[i], c='b', marker='o', ls='', mew=0.0, markersize=4, alpha=0.2)
+
+axs.set_xticks(xticksmin, True);
+axs.set_xticks(xticksmaj, False);
+axs.set_xlim(xmin, xmax)
+axs.set_ylim(ymin, ymax)
+axs.grid(which='major', axis='both', ls='dashed', alpha=0.7)
+axs.grid(which='minor', axis='x', ls='dotted', alpha=0.3)
+axs.set_title('Gnd track (red), solar shadow (black), lunar shadow (blue)')
+axs.set_xlabel('Longitude')
+axs.set_ylabel('Latitude')
+fig.set_tight_layout({'pad':0.0, 'w_pad':0.1, 'h_pad':0.1})
+
 
 plt.show()

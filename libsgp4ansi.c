@@ -2248,6 +2248,23 @@ sat_observe
     result->moon_phase *= -1;
   }
 
+  // Calculate solar and lunar shadows' geodetic coordinates
+  // Using Sun/Moon to satellite vector as a direction unit vector to project
+  // the shadows onto the WGS ellipsoid
+  vec3 sol_shadow_teme, sol_shadow_ecef, lun_shadow_teme, lun_shadow_ecef;
+  vec3 dummy; // Omit velocity
+
+  sol_shadow_teme = cast2ellipsoid(&sunposteme, &posteme);
+  lun_shadow_teme = cast2ellipsoid(&moonposteme, &posteme);
+
+  teme2ecef(&sol_shadow_teme, &dummy, unix2jul(timestamp, time_ms),
+            &sol_shadow_ecef, &dummy);
+  teme2ecef(&lun_shadow_teme, &dummy, unix2jul(timestamp, time_ms),
+            &lun_shadow_ecef, &dummy);
+
+  result->solar_shadow_lla = ecef2geo(&sol_shadow_ecef);
+  result->lunar_shadow_lla = ecef2geo(&lun_shadow_ecef);
+
   return retval;
 }
 

@@ -399,3 +399,61 @@ eq2teme
   return posteme;
 }
 
+/*
+ * Cast a ray vector onto the WGS ellipsoid centered around origin
+ *
+ * Inputs:  origin - Ray origin vector
+ *          dir    - direction unit vector
+ * Outputs: None
+ * Returns: shadow - point vector of closest intersection (zero when no
+ *                   solutions found)
+ */
+vec3
+cast2ellipsoid
+(
+  vec3* origin,
+  vec3* dir
+)
+{
+  vec3 result = {0};
+
+  // For clarity
+  double x  = origin->x;
+  double y  = origin->y;
+  double z  = origin->z;
+  double u  = dir->x - origin->x;
+  double v  = dir->y - origin->y;
+  double w  = dir->z - origin->z;
+
+  double x2 = pow(x, 2);
+  double y2 = pow(y, 2);
+  double z2 = pow(z, 2);
+  double u2 = pow(u, 2);
+  double v2 = pow(v, 2);
+  double w2 = pow(w, 2);
+
+  // Semiaxes of the ellipsoid, squared
+  double a2 = pow(RE, 2);
+  double b2 = pow(RE / (1 + FLATT), 2);
+
+  double d  = (b2 * (u2 + v2) + a2 * w2);
+
+  // Closest intersection solution
+  double t;
+  if (d != 0)
+  {
+    t = 1 / d * (b2 * (u * x + v * y)
+               + a2 * w * z + 0.5 * sqrt(4 * pow((b2 * (u * x + v * y)
+               + a2 * w * z), 2) - 4 * d * (b2 * (-a2 + x2 + y2) + a2 * z2)));
+    t *= -1;
+
+
+    result.x = x + u * t;
+    result.y = y + v * t;
+    result.z = z + w * t;
+  }
+
+  // Back substitute for intersection point vector
+  return result;
+}
+

@@ -119,6 +119,7 @@ main (int argc, char** argv)
   if ((argv[1][0] != 'c')
       && (argv[1][0] != 'v')
       && (argv[1][0] != 't')
+      && (argv[1][0] != 's')
       && (argv[1][0] != 'o')
       && (argv[1][0] != 'p'))
   {
@@ -218,6 +219,61 @@ main (int argc, char** argv)
     Sleep(1000);
 #endif
 
+    }
+    return 0;
+  }
+
+  if (argv[1][0] == 's')
+  {
+    printf("libsgp4ansi v%d.%d: shadow plot run\n", version_major, version_minor);
+    outfile  = fopen("ansi_shadows.csv", "w");
+
+    sat_load_tle("ISS (ZARYA)",
+                 "1 25544U 98067A   17233.89654113 +.00001846 +00000-0 +35084-4 0  9996",
+                 "2 25544 051.6406 070.7550 0005080 161.3029 292.5190 15.54181235071970",
+                 &s);
+
+        struct tm t = {
+        .tm_year  = 117,
+        .tm_mon   = 7,
+        .tm_mday  = 21,
+        .tm_hour  = 16,
+        .tm_min   = 30,
+        .tm_sec   = 0,
+        .tm_isdst = 0
+    };
+
+
+    int      pass_count;
+    int      transit_count;
+    // The Dacha
+    //vec3 obs_geo = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+    // Banner, WY
+    vec3   obs_geo    = {44.601882 * DEG2RAD, -106.855443 * DEG2RAD, 1.4057};
+    time_t start_time = mktime(&t);
+    time_t stop_time  = mktime(&t) + 30 * 60;
+    time_t timestamp  = start_time;
+    int    delta_t    = 2;
+    obs    o;
+    char   buff[70];
+
+    while (timestamp < stop_time)
+    {
+      int retval = sat_observe(&s, &obs_geo, timestamp, 0, &o);
+
+      if (retval < 0)
+      {
+        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&timestamp));
+        printf("Error %2d at %s!", retval, buff);
+        return retval;
+      }
+      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&timestamp));
+      fprintf(outfile, "\"%s\",%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf\n", buff,
+             o.sun_azelrng.az, o.sun_azelrng.el, o.moon_azelrng.az, o.moon_azelrng.el, o.azelrng.az, o.azelrng.el,
+             o.solar_shadow_lla.lat, o.solar_shadow_lla.lon, o.lunar_shadow_lla.lat, o.lunar_shadow_lla.lon,
+             o.latlonalt.lat, o.latlonalt.lon);
+
+      timestamp += delta_t;
     }
     return 0;
   }

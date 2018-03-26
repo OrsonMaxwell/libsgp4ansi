@@ -72,4 +72,12 @@ eq2teme
   const vec3*  radecrv
 );
 
+// Cast a ray vector onto the WGS ellipsoid centered around origin
+vec3
+cast2ellipsoid
+(
+  vec3* origin,
+  vec3* dir
+);
+
 #endif /* COORD_H_ */

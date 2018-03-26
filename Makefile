@@ -83,6 +83,7 @@ test_clean:
 
 test_data_clean:
 	rm -f ${OUTPUTDIR}/*.out
+	rm -f ${OUTPUTDIR}/*.csv
 
 clean: lib_clean ref_test_clean test_clean test_data_clean
 
