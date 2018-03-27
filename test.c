@@ -246,14 +246,13 @@ main (int argc, char** argv)
 
     int      pass_count;
     int      transit_count;
-    // The Dacha
-    //vec3 obs_geo = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
-    // Banner, WY
-    vec3   obs_geo    = {44.601882 * DEG2RAD, -106.855443 * DEG2RAD, 1.4057};
-    time_t start_time = mktime(&t);
-    time_t stop_time  = mktime(&t) + 30 * 60;
+
+    // Casper, WY
+    vec3   obs_geo    = {44.601882 * DEG2RAD, -106.865443 * DEG2RAD, 1.4057};
+    time_t start_time = mktime(&t) - TIMEZONE;
+    time_t stop_time  = mktime(&t) - TIMEZONE + 40 * 60;
     time_t timestamp  = start_time;
-    int    delta_t    = 2;
+    int    delta_t    = 30;
     obs    o;
     char   buff[70];
 

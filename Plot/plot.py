@@ -2,6 +2,7 @@
 # Plot differences between sets of TEME vectors
 
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
 import re
 import os, sys
 import subprocess
@@ -280,12 +281,12 @@ sh_sat_lon = []
 with open('ansi_shadows.csv', newline='') as csvfile:
     csvreader = csv.reader(csvfile, lineterminator='\n', quoting=csv.QUOTE_NONNUMERIC)
     for row in csvreader:
-        sh_sun_az.append(degrees(row[1]))
-        sh_sun_el.append(degrees(row[2]))
-        sh_moon_az.append(degrees(row[3]))
-        sh_moon_el.append(degrees(row[4]))
-        sh_sat_az.append(degrees(row[5]))
-        sh_sat_el.append(degrees(row[6]))
+        sh_sun_az.append(row[1])
+        sh_sun_el.append(90 - degrees(row[2]))
+        sh_moon_az.append(row[3])
+        sh_moon_el.append(90 - degrees(row[4]))
+        sh_sat_az.append(row[5])
+        sh_sat_el.append(90 - degrees(row[6]))
         sh_sun_lat.append(degrees(row[7]))
         sh_sun_lon.append(degrees(row[8]))
         sh_moon_lat.append(degrees(row[9] if not isnan(row[9]) else -100))
@@ -534,34 +535,65 @@ axp.set_xlabel('Time from epoch, min')
 axp.set_ylabel('Position difference, m')
 fig.set_tight_layout({'pad':0.0, 'w_pad':0.1, 'h_pad':0.1}) 
 
-# Shadow plot #################################################################
+# Shadow map plot #############################################################
 fig, axs = plt.subplots(1, 1)
-fig.canvas.set_window_title('Solar and lunar shadows') 
+fig.canvas.set_window_title('Solar and lunar shadows')
 
-xmin = -100
-xmax = 70
+img = plt.imread('map.png')
+axs.imshow(img, extent=[-180, 180, -90, 90])
+
+xmin = -180
+xmax = 180
 xticksmin = range(xmin, xmax + 1, 10)
-xticksmaj = range(-120, 90 + 1, 30)
-ymin = 10
-ymax = 60
-yticksmin = range(ymin, ymax + 1, 5)
-yticksmaj = range(0, 60 + 1, 30)
+xticksmaj = range(xmin, xmax + 1, 30)
+ymin = -90
+ymax = 90
+yticksmin = range(ymin, ymax + 1, 10)
+yticksmaj = range(ymin, ymax + 1, 30)
 
-for i, g_track_p in enumerate(sh_sat_lat):
-  axs.plot(sh_sat_lon[i], sh_sat_lat[i], c='r', marker='o', ls='', mew=0.0, markersize=2, alpha=0.7)
-  axs.plot(sh_sun_lon[i], sh_sun_lat[i], c='k', marker='o', ls='', mew=0.0, markersize=4, alpha=0.1)
-  axs.plot(sh_moon_lon[i], sh_moon_lat[i], c='b', marker='o', ls='', mew=0.0, markersize=4, alpha=0.2)
+sat_track, = axs.plot(sh_sat_lon, sh_sat_lat, c='r', marker='', ls='-', lw=2, alpha=0.8)
+sh_moon_l, = axs.plot(sh_moon_lon, sh_moon_lat, c='k', marker='', ls='-', lw=4, alpha=0.3)
+sh_moon_m  = axs.scatter(sh_moon_lon, sh_moon_lat, edgecolors='b', s=16, facecolors='none', alpha=1)
+sh_sun_l,  = axs.plot(sh_sun_lon, sh_sun_lat, c='k', marker='', ls='-', lw=4, alpha=0.3)
+sh_sun_m   = axs.scatter(sh_sun_lon, sh_sun_lat, edgecolors='y', s=16, facecolors='none', alpha=1)
 
+axs.legend([sat_track, (sh_moon_l, sh_moon_m), (sh_sun_l, sh_sun_m)], ['ISS ground track', 'Satellite lunar shadow', 'Satellite solar shadow'])
+
+# Banner, WY
+coords = (-106.865443, 44.601882)
+axs.plot(coords[0], coords[1], c='w', marker='P', ls='', mew=0.0, markersize=5, alpha=1)
+axs.annotate('Banner, WY', xy=coords, color='white', horizontalalignment='right', verticalalignment='bottom',)
+  
 axs.set_xticks(xticksmin, True);
 axs.set_xticks(xticksmaj, False);
+axs.set_yticks(yticksmin, True);
+axs.set_yticks(yticksmaj, False);
 axs.set_xlim(xmin, xmax)
 axs.set_ylim(ymin, ymax)
 axs.grid(which='major', axis='both', ls='dashed', alpha=0.7)
-axs.grid(which='minor', axis='x', ls='dotted', alpha=0.3)
-axs.set_title('Gnd track (red), solar shadow (black), lunar shadow (blue)')
+axs.grid(which='minor', axis='both', ls='dotted', alpha=0.3)
+axs.set_title('Solar eclipse 2017 scenario')
 axs.set_xlabel('Longitude')
 axs.set_ylabel('Latitude')
 fig.set_tight_layout({'pad':0.0, 'w_pad':0.1, 'h_pad':0.1})
 
+# Shadow map plot #############################################################
+fig, axr = plt.subplots(1, 1, subplot_kw={'projection': 'polar'})
+fig.canvas.set_window_title('Sky in Banner, WY')
+
+axr.set_theta_zero_location('N')
+axr.set_rlim(0, 90, 1)
+axr.set_yticklabels([])
+axr.set_facecolor('#ddf3ff')
+
+axr.xaxis.grid(True,color='k',linestyle=':')
+axr.yaxis.grid(True,color='k',linestyle=':')
+
+sat_track, = axr.plot(sh_sat_az, sh_sat_el, c='r', marker='', ls='-', lw=1, alpha=0.8)
+moon_m     = axr.scatter(sh_moon_az, sh_moon_el, edgecolors='b', s=24, facecolors='none', alpha=1)
+sun_m      = axr.scatter(sh_sun_az, sh_sun_el, edgecolors='y', s=24, facecolors='none', alpha=1)
+
+axr.legend([sat_track, sun_m, moon_m], ['ISS', 'The Sun', 'The Moon'])
+axs.set_title('Sky radar as seen from Banner, WY')
 
 plt.show()
