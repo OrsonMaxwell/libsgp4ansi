@@ -267,7 +267,7 @@ main (int argc, char** argv)
         return retval;
       }
       strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&timestamp));
-      fprintf(outfile, "\"%s\",%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf\n", buff,
+      fprintf(outfile, "\"%s\",%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf\n", buff,
              o.sun_azelrng.az, o.sun_azelrng.el, o.moon_azelrng.az, o.moon_azelrng.el, o.azelrng.az, o.azelrng.el,
              o.solar_shadow_lla.lat, o.solar_shadow_lla.lon, o.lunar_shadow_lla.lat, o.lunar_shadow_lla.lon,
              o.latlonalt.lat, o.latlonalt.lon, o.sun_latlonalt.lat, o.moon_latlonalt.lat, o.sun_latlonalt.lon, o.moon_latlonalt.lon);

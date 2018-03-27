@@ -146,6 +146,7 @@ typedef struct _obs
   vec3   moon_azelrng;      // Azimuth-Elevation-Range of The Moon
   double moon_phase;        // Illuminated portion of Moon's disc combined with
                             // phase (negative for waning, positive for waxing)
+  double moon_tilt;         // Lunar terminator tilt angle, rad
   vec3   solar_shadow_lla;  // Lat-lon-alt vector of the solar shadow
   double solar_shadow_cone; // Cone angle of the solar shadow of the satellite
   vec3   lunar_shadow_lla;  // Lat-lon-alt vector of the lunar shadow
