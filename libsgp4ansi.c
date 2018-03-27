@@ -2138,6 +2138,7 @@ sat_observe
 
   vec3 posteme, velteme;
   int  retval = 0;
+  double jultime =  unix2jul(timestamp, time_ms);
 
   if (s != NULL)
   {
@@ -2153,8 +2154,7 @@ sat_observe
     // Switching to ECEF common frame to fix to Earth
     vec3 posecef, velecef, obsposecef, obsvelecef;
 
-    teme2ecef(&posteme, &velteme, unix2jul(timestamp, time_ms),
-              &posecef, &velecef);
+    teme2ecef(&posteme, &velteme, jultime, &posecef, &velecef);
 
     result->latlonalt = ecef2geo(&posecef);
 
@@ -2173,14 +2173,21 @@ sat_observe
 
   }
 
+  // For teme2ecef
+  vec3 dummy;
+
   // Find out if the satellite is illuminated by the Sun
-  vec3 sunposeq, sunposteme, sun_azelrng, sat2sun;
+  vec3 sunposeq, sunposteme, sunposecef, sun_azelrng, sat2sun;
   double lambda_sun;
 
   // Calculate position of the Sun
   sunposeq   = solar_pos(timestamp, time_ms, &lambda_sun);
   sunposteme = eq2teme(&sunposeq);
-  result->sun_azelrng = eq2azelrng(&sunposeq, obs_geo, timestamp, time_ms);
+
+  teme2ecef(&sunposteme, &dummy, jultime, &sunposecef, &dummy);
+
+  result->sun_latlonalt = ecef2geo(&sunposecef);
+  result->sun_azelrng   = eq2azelrng(&sunposeq, obs_geo, timestamp, time_ms);
 
   if (s != NULL)
   {
@@ -2211,12 +2218,16 @@ sat_observe
   }
 
   // Calculate position of the Moon
-  vec3 moonposeq, moonposteme, sat2moon;
+  vec3 moonposeq, moonposteme, moonecef, sat2moon;
   double lambda_moon;
 
   moonposeq     = lunar_pos(timestamp, time_ms, &lambda_moon);
   moonposteme   = eq2teme(&moonposeq);
-  result->moon_azelrng = eq2azelrng(&moonposeq, obs_geo, timestamp, time_ms);
+
+  teme2ecef(&moonposteme, &dummy, jultime, &moonecef, &dummy);
+
+  result->moon_latlonalt = ecef2geo(&moonecef);
+  result->moon_azelrng   = eq2azelrng(&moonposeq, obs_geo, timestamp, time_ms);
 
   // Calculate satellite to the Moon vector
   sat2moon      = vec3_add(1, &posteme, -1, &moonposteme);
@@ -2252,15 +2263,12 @@ sat_observe
   // Using Sun/Moon to satellite vector as a direction unit vector to project
   // the shadows onto the WGS ellipsoid
   vec3 sol_shadow_teme, sol_shadow_ecef, lun_shadow_teme, lun_shadow_ecef;
-  vec3 dummy; // Omit velocity
 
   sol_shadow_teme = cast2ellipsoid(&sunposteme, &posteme);
   lun_shadow_teme = cast2ellipsoid(&moonposteme, &posteme);
 
-  teme2ecef(&sol_shadow_teme, &dummy, unix2jul(timestamp, time_ms),
-            &sol_shadow_ecef, &dummy);
-  teme2ecef(&lun_shadow_teme, &dummy, unix2jul(timestamp, time_ms),
-            &lun_shadow_ecef, &dummy);
+  teme2ecef(&sol_shadow_teme, &dummy, jultime, &sol_shadow_ecef, &dummy);
+  teme2ecef(&lun_shadow_teme, &dummy, jultime, &lun_shadow_ecef, &dummy);
 
   result->solar_shadow_lla = ecef2geo(&sol_shadow_ecef);
   result->lunar_shadow_lla = ecef2geo(&lun_shadow_ecef);
