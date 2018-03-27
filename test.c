@@ -238,7 +238,7 @@ main (int argc, char** argv)
         .tm_mon   = 7,
         .tm_mday  = 21,
         .tm_hour  = 16,
-        .tm_min   = 30,
+        .tm_min   = 35,
         .tm_sec   = 0,
         .tm_isdst = 0
     };
@@ -250,7 +250,7 @@ main (int argc, char** argv)
     // Casper, WY
     vec3   obs_geo    = {44.601882 * DEG2RAD, -106.865443 * DEG2RAD, 1.4057};
     time_t start_time = mktime(&t) - TIMEZONE;
-    time_t stop_time  = mktime(&t) - TIMEZONE + 40 * 60;
+    time_t stop_time  = mktime(&t) - TIMEZONE + 30 * 60;
     time_t timestamp  = start_time;
     int    delta_t    = 30;
     obs    o;
