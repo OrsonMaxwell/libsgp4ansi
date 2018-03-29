@@ -623,9 +623,9 @@ if __name__ == '__main__':
   if elev_only:
     elev()
   if not dry_run:
-    # verif()
-    # fullcat()
-    # timing()
+    verif()
+    fullcat()
+    timing()
     shadow()
     print('Plotting data - please wait...')
     plt.show()
