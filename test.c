@@ -144,8 +144,8 @@ main (int argc, char** argv)
   if (argv[1][0] == 'o')
   {
     sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   17304.43179856  .00002963  00000-0  51675-4 0  9996",
-                 "2 25544  51.6415  79.1213 0005738  79.0270 358.3133 15.54307707 82943",
+                 "1 25544U 98067A   18088.09922913  .00003436  00000-0  59062-4 0  9992",
+                 "2 25544  51.6414  57.9705 0001517 268.1993 192.3547 15.54150155106064",
                  &s);
 
 //    sat_load_tle("FENGYUN 2E",
@@ -154,16 +154,16 @@ main (int argc, char** argv)
 //                 &s);
 
     struct tm t = {
-      .tm_year  = 117,
-      .tm_mon   = 10,
-      .tm_mday  = 8,
-      .tm_hour  = 0,
-      .tm_min   = 0,
-      .tm_sec   = 0,
+      .tm_year  = 118,
+      .tm_mon   = 2,
+      .tm_mday  = 29,
+      .tm_hour  = 17,
+      .tm_min   = 44,
+      .tm_sec   = 51,
       .tm_isdst = 0
     };
 
-    double time_ms = 0;
+    double time_ms   = 0;
 
     int    retval    = 0;
     time_t timestamp = mktime(&t) - TIMEZONE;
@@ -172,51 +172,52 @@ main (int argc, char** argv)
     // Peyton Observatory
     //vec3   obs_geo   = {40.346568 * DEG2RAD, -74.651688 * DEG2RAD, 0.0451};
     // Banner, Wyoming
-    vec3   obs_geo   = {44.601882 * DEG2RAD, -106.865443 * DEG2RAD, 1.4057};
+    //vec3   obs_geo   = {44.601882 * DEG2RAD, -106.865443 * DEG2RAD, 1.4057};
+    vec3   obs_geo   = {55.0536 * DEG2RAD, 38.01944 * DEG2RAD, 0.180};
     obs    o = {0};
     char   buff[70];
     vec3   star_azelrng;
 
     while (true)
     {
-    timestamp = time(0);
+      timestamp = time(0);
 
-    retval = sat_observe(&s, &obs_geo, timestamp, time_ms, &o);
+      retval = sat_observe(&s, &obs_geo, timestamp, time_ms, &o);
 
-    if (retval < 0)
-    {
-      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&timestamp));
-      printf("Error %2d at %s!", retval, buff);
-      return retval;
-    }
+      if (retval < 0)
+      {
+        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&timestamp));
+        printf("Error %2d at %s!", retval, buff);
+        return retval;
+      }
 
-    printf("Lat:    %13.3lf deg\n",  o.latlonalt.lat * RAD2DEG);
-    printf("Lon:    %13.3lf deg\n",  o.latlonalt.lon * RAD2DEG);
-    printf("Alt:    %13.3lf km\n",   o.latlonalt.alt);
-    printf("Vel:    %13.3lf km/s\n", o.velocity);
-    printf("Az:     %13.3lf deg\n",  o.azelrng.az * RAD2DEG);
-    printf("El      %13.3lf deg\n",  o.azelrng.el * RAD2DEG);
-    printf("Range:  %13.3lf km\n",   o.azelrng.rng);
-    printf("RRate:  %13.3lf km/s\n", o.rng_rate);
-    printf("Illum:  %9d\n",          o.is_illum);
-    printf("------------------- The Sun -------------------\n");
-    printf("Az:     %13.3lf deg\n", o.sun_azelrng.az * RAD2DEG);
-    printf("El:     %13.3lf deg\n", o.sun_azelrng.el * RAD2DEG);
-    printf("Range:  %13.3lf km\n", o.sun_azelrng.rng);
-    printf("Sh.cone:%13.3lf deg\n", o.solar_shadow_cone * RAD2DEG);
-    printf("------------------- The Moon ------------------\n");
-    printf("Az:     %13.3lf deg\n", o.moon_azelrng.az * RAD2DEG);
-    printf("El:     %13.3lf deg\n", o.moon_azelrng.el * RAD2DEG);
-    printf("Range:  %13.3lf km\n", o.moon_azelrng.rng);
-    printf("Sh.cone:%13.3lf deg\n", o.lunar_shadow_cone * RAD2DEG);
-    moon_phase(buff, o.moon_phase);
-    printf("Phase:  %13.0lf %-16s\n", fabs(o.moon_phase) * 100, buff);
-    printf("-----------------------------------------------\n");
+      printf("Lat:    %13.3lf deg\n",  o.latlonalt.lat * RAD2DEG);
+      printf("Lon:    %13.3lf deg\n",  o.latlonalt.lon * RAD2DEG);
+      printf("Alt:    %13.3lf km\n",   o.latlonalt.alt);
+      printf("Vel:    %13.3lf km/s\n", o.velocity);
+      printf("Az:     %13.3lf deg\n",  o.azelrng.az * RAD2DEG);
+      printf("El      %13.3lf deg\n",  o.azelrng.el * RAD2DEG);
+      printf("Range:  %13.3lf km\n",   o.azelrng.rng);
+      printf("RRate:  %13.3lf km/s\n", o.rng_rate);
+      printf("Illum:  %9d\n",          o.is_illum);
+      printf("------------------- The Sun -------------------\n");
+      printf("Az:     %13.3lf deg\n", o.sun_azelrng.az * RAD2DEG);
+      printf("El:     %13.3lf deg\n", o.sun_azelrng.el * RAD2DEG);
+      printf("Range:  %13.3lf km\n", o.sun_azelrng.rng);
+      printf("Sh.cone:%13.3lf deg\n", o.solar_shadow_cone * RAD2DEG);
+      printf("------------------- The Moon ------------------\n");
+      printf("Az:     %13.3lf deg\n", o.moon_azelrng.az * RAD2DEG);
+      printf("El:     %13.3lf deg\n", o.moon_azelrng.el * RAD2DEG);
+      printf("Range:  %13.3lf km\n", o.moon_azelrng.rng);
+      printf("Sh.cone:%13.3lf deg\n", o.lunar_shadow_cone * RAD2DEG);
+      moon_phase(buff, o.moon_phase);
+      printf("Phase:  %13.0lf %-16s\n", fabs(o.moon_phase) * 100, buff);
+      printf("-----------------------------------------------\n");
 
 #ifdef __unix__
-    sleep(1);
+      sleep(1);
 #elif defined(_WIN32) || defined(WIN32)
-    Sleep(1000);
+      Sleep(1000);
 #endif
 
     }
@@ -270,7 +271,7 @@ main (int argc, char** argv)
       fprintf(outfile, "\"%s\",%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf\n", buff,
              o.sun_azelrng.az, o.sun_azelrng.el, o.moon_azelrng.az, o.moon_azelrng.el, o.azelrng.az, o.azelrng.el,
              o.solar_shadow_lla.lat, o.solar_shadow_lla.lon, o.lunar_shadow_lla.lat, o.lunar_shadow_lla.lon,
-             o.latlonalt.lat, o.latlonalt.lon, o.sun_latlonalt.lat, o.moon_latlonalt.lat, o.sun_latlonalt.lon, o.moon_latlonalt.lon);
+             o.latlonalt.lat, o.latlonalt.lon, o.sun_latlonalt.lat, o.sun_latlonalt.lon, o.moon_latlonalt.lat, o.moon_latlonalt.lon);
 
       timestamp += delta_t;
     }
@@ -284,9 +285,14 @@ main (int argc, char** argv)
 //                 "2 20580  28.4686 135.8754 0002536 284.0568  44.6453 15.08912154312056",
 //                 &s);
 
+//    sat_load_tle("ISS (ZARYA)",
+//                 "1 25544U 98067A   18081.21898694  .00001699  00000-0  32887-4 0  9992",
+//                 "2 25544  51.6407  92.2675 0001807 228.6697 232.3362 15.54125069104994",
+//                 &s);
+
     sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   18081.21898694  .00001699  00000-0  32887-4 0  9992",
-                 "2 25544  51.6407  92.2675 0001807 228.6697 232.3362 15.54125069104994",
+                 "1 25544U 98067A   18088.09922913  .00003436  00000-0  59062-4 0  9992",
+                 "2 25544  51.6414  57.9705 0001517 268.1993 192.3547 15.54150155106064",
                  &s);
 //
 //    sat_load_tle("JUGNU",
@@ -294,39 +300,33 @@ main (int argc, char** argv)
 //                 "2 37839  19.9607 121.0705 0018917 356.6865 128.9420 14.12595841309799",
 //                 &s);
 //
-//
-//    sat_load_tle("???",
-//                 "1 08195U 75081A   17303.82395862  .00000099  00000-0  11873-3 0   813",
-//                 "2 08195  64.1586 279.0717 6877146 264.7651  20.2257  2.00491383225656",
-//                 &s);
-//
 //    sat_load_tle("FENGYUN 2E",
 //                 "1 33463U 08066A   17281.80233449 -.00000213  00000-0  00000+0 0  9997",
 //                 "2 33463   2.3909  67.6760 0005346 217.9202 107.6646  1.00271179 32268",
 //                 &s);
 
-    sat_print(&s);
+    //sat_print(&s);
 
     struct tm t = {
         .tm_year  = 118,
         .tm_mon   = 2,
-        .tm_mday  = 22,
-        .tm_hour  = 5,
-        .tm_min   = 28,
-        .tm_sec   = 28,
+        .tm_mday  = 29,
+        .tm_hour  = 17,
+        .tm_min   = 35,
+        .tm_sec   = 0,
         .tm_isdst = 0
     };
 
     int      pass_count;
     int      transit_count;
     // The Dacha
-    vec3     obs_geo   = {54.9246 * DEG2RAD, 38.0475 * DEG2RAD, 0.180};
+    vec3     obs_geo   = {55.0536 * DEG2RAD, 38.01944 * DEG2RAD, 0.180};
     // Peyton Observatory
     //vec3     obs_geo   = {40.346568 * DEG2RAD, -74.651688 * DEG2RAD, 0.0451};
     // Banner, Wyoming
     //vec3     obs_geo   = {44.601882 * DEG2RAD, -106.855443 * DEG2RAD, 1.4057};
-    time_t   start_time    = mktime(&t);
-    time_t   stop_time     = mktime(&t) + 30 * 1440 * 60;
+    time_t   start_time    = mktime(&t) - TIMEZONE;
+    time_t   stop_time     = mktime(&t) - TIMEZONE + 10 * 60;
     pass*    passes;
     transit* transits;
     char     buff[70];
