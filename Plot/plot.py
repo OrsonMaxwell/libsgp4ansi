@@ -552,8 +552,6 @@ def shadow():
           sun_lon.append(degrees(row[14]))
           moon_lat.append(degrees(row[15]))
           moon_lon.append(degrees(row[16]))
-      print(sun_lat[0])
-      print(sun_lon[0])
       print('Loaded {} shadow points'.format(len(sh_sat_az)))
   # Shadow map plot #############################################################
   fig, axs = plt.subplots(1, 1)
