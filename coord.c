@@ -7,11 +7,13 @@
  * IERS Bulletin - A (Vol. XXVIII No. 030)
  * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
  * Astronomical Algorithms, Jean Meeus
+ * 1980 IAU Theory of nutation
  *
- * Copyright � 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright (c) 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #include <math.h>
+#include <stdio.h>
 
 #include "libsgp4ansi.h"
 #include "const.h"
@@ -351,20 +353,46 @@ eq2azelrng
         float  time_ms
 )
 {
-  vec3 azelrng;
+  vec3 azelrng, tc_radecrv;
+
+  // ECEF observer vector
+  vec3 obsposecef = geo2ecef(obs_geo);
+
+  // Switching to topocentric equatorial frame
+  // Geocentric latitude
+  double gclat    = atan(pow(1 - FLATT, 2) * tan(obs_geo->lat));
+  // Mean equatorial parallax
+  double pi       = asin(RE / radecrv->rv);
+  // Parallax compensation
+  double ro       = vec3_mag(&obsposecef) / RE;
+  double dalpha   = atan2(-ro * cos(gclat) * sin(pi) * sin(radecrv->ra),
+                          cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
+                          * sin(radecrv->ra));
+
+  printf("Ro:  %lf\n", vec3_mag(&obsposecef));
+  printf("Gcl: %lf\n", gclat * RAD2DEG);
+  printf("da:  %lf\n", dalpha * RAD2DEG);
+
+  tc_radecrv.ra   = radecrv->ra + dalpha;
+  tc_radecrv.dec  = atan2((sin(radecrv->dec) -ro * sin(tc_radecrv.ra) * sin(pi))
+                          * cos(dalpha),
+                          cos(radecrv->dec) - ro * cos(tc_radecrv.ra) * sin(pi)
+                          * cos(radecrv->ra));
+
+  printf("Ra':     %.6f\n", tc_radecrv.ra * RAD2DEG);
+  printf("Dec':    %.6f\n", tc_radecrv.dec * RAD2DEG);
 
   double ThetaLST = jul2gst(unix2jul(timestamp, time_ms)) + obs_geo->lon;
-
   // Equation 4-11 (Define Siderial Time LHA)
-  double LHA = fmod(ThetaLST - radecrv->ra, TAU);
+  double LHA = fmod(ThetaLST - tc_radecrv.ra, TAU);
 
   // Equation 4-12 (Elevation Deg)
-  azelrng.el = asin(sin(obs_geo->lat) * sin(radecrv->dec) + cos(obs_geo->lat)
-             * cos(radecrv->dec) * cos(LHA));
+  azelrng.el = asin(sin(obs_geo->lat) * sin(tc_radecrv.dec) + cos(obs_geo->lat)
+             * cos(tc_radecrv.dec) * cos(LHA));
 
   // Equation 4-13 / 4-14 (Adaptation) (Azimuth Deg)
-  azelrng.az = fmod(atan2(-sin(LHA) * cos(radecrv->dec) / cos(azelrng.el),
-               (sin(radecrv->dec) - sin(azelrng.el) * sin(obs_geo->lat))
+  azelrng.az = fmod(atan2(-sin(LHA) * cos(tc_radecrv.dec) / cos(azelrng.el),
+               (sin(tc_radecrv.dec) - sin(azelrng.el) * sin(obs_geo->lat))
              / (cos(azelrng.el) * cos(obs_geo->lat))), TAU);
 
   if (azelrng.az < 0)
@@ -372,7 +400,7 @@ eq2azelrng
     azelrng.az += TAU;
   }
 
-  azelrng.rng = radecrv->rv;
+  azelrng.rng = radecrv->rv - RE * ro;
 
   return azelrng;
 }

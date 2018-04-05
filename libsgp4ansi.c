@@ -7,8 +7,9 @@
  * IERS Bulletin - A (Vol. XXVIII No. 030)
  * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
  * Astronomical Algorithms, Jean Meeus
+ * 1980 IAU Theory of nutation
  *
- * Copyright � 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright (c) 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #include <ctype.h>
@@ -2136,12 +2137,12 @@ sat_observe
     return -1;
   }
 
-  vec3   posteme, velteme;
-  int    retval  = 0;
-  double julian =  unix2jul(timestamp, time_ms);
+  vec3   posteme, velteme, dummy, obsposecef;
+  int    retval    = 0;
+  double julian    =  unix2jul(timestamp, time_ms);
 
-  // For teme2ecef
-  vec3 dummy;
+  // ECEF observer vector
+  obsposecef       = geo2ecef(obs_geo);
 
   if (s != NULL)
   {
@@ -2165,9 +2166,6 @@ sat_observe
     result->velocity  = sqrt(GM * (2 / (RE + result->latlonalt.alt)
         - 1 / (RE * s->aodp)));
 
-
-    obsposecef = geo2ecef(obs_geo);
-
     // Observer to satellite vector in ECEF frame
     vec3 posdiffecef  = vec3_add(1, &posecef, -1, &obsposecef);
 
@@ -2186,7 +2184,7 @@ sat_observe
   teme2ecef(&sunposteme, &dummy, julian, &sunposecef, &dummy);
 
   result->sun_latlonalt = ecef2geo(&sunposecef);
-  result->sun_azelrng   = eq2azelrng(&sunposeq, obs_geo, timestamp, time_ms);
+  //result->sun_azelrng   = eq2azelrng(&sunposeq, obs_geo, timestamp, time_ms);
 
   if (s != NULL)
   {
@@ -2203,7 +2201,7 @@ sat_observe
 
     // Angle between the Earth and The Sun disk centres from the satellite v.p.
     double Theta = acos(vec3_dot(&posteme, &sat2sun)
-                        / (sat2sun_range * sat2earth_range));
+                 / (sat2sun_range * sat2earth_range));
 
     // Considering only umbral eclipses
     if ((earth_semidia > sun_semidia) && (Theta < earth_semidia - sun_semidia))
@@ -2223,15 +2221,17 @@ sat_observe
   moonposeq     = lunar_pos(timestamp, time_ms, &lambda_moon);
   moonposteme   = eq2teme(&moonposeq);
 
+  double moon_dia;
+  moon_dia      = asin(RLUN / (moonposeq.rv - vec3_mag(&obsposecef)));
+
+  printf("Moon angular diameter: %.4f\n", moon_dia  * RAD2DEG * 2);
+
   teme2ecef(&moonposteme, &dummy, julian, &moonecef, &dummy);
 
   result->moon_latlonalt = ecef2geo(&moonecef);
   result->moon_azelrng   = eq2azelrng(&moonposeq, obs_geo, timestamp, time_ms);
 
   // Fraction of the Moon disc illuminated
-  double cospsi = sin(sunposeq.dec) * sin(moonposeq.dec)
-                + cos(sunposeq.dec) * cos(moonposeq.dec)
-                * cos(sunposeq.ra - moonposeq.ra);
   double psi    = acos(sin(sunposeq.dec) * sin(moonposeq.dec)
                 + cos(sunposeq.dec) * cos(moonposeq.dec)
                 * cos(sunposeq.ra - moonposeq.ra));

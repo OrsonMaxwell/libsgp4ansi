@@ -234,7 +234,7 @@ main (int argc, char** argv)
                  "2 25544 051.6406 070.7550 0005080 161.3029 292.5190 15.54181235071970",
                  &s);
 
-        struct tm t = {
+    struct tm t = {
         .tm_year  = 117,
         .tm_mon   = 7,
         .tm_mday  = 21,
@@ -248,7 +248,7 @@ main (int argc, char** argv)
     int      pass_count;
     int      transit_count;
 
-    // Casper, WY
+    // Banner, WY
     vec3   obs_geo    = {44.601882 * DEG2RAD, -106.865443 * DEG2RAD, 1.4057};
     time_t start_time = mktime(&t) - TIMEZONE;
     time_t stop_time  = mktime(&t) - TIMEZONE + 30 * 60;
@@ -261,13 +261,12 @@ main (int argc, char** argv)
     {
       int retval = sat_observe(&s, &obs_geo, timestamp, 0, &o);
 
+      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&timestamp));
       if (retval < 0)
       {
-        strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&timestamp));
         printf("Error %2d at %s!", retval, buff);
         return retval;
       }
-      strftime(buff, sizeof buff, "%Y-%m-%d %H:%M:%S", gmtime(&timestamp));
       fprintf(outfile, "\"%s\",%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.2lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf,%.5lf\n", buff,
              o.sun_azelrng.az, o.sun_azelrng.el, o.moon_azelrng.az, o.moon_azelrng.el, o.azelrng.az, o.azelrng.el,
              o.solar_shadow_lla.lat, o.solar_shadow_lla.lon, o.lunar_shadow_lla.lat, o.lunar_shadow_lla.lon,
@@ -291,8 +290,8 @@ main (int argc, char** argv)
 //                 &s);
 
     sat_load_tle("ISS (ZARYA)",
-                 "1 25544U 98067A   18088.09922913  .00003436  00000-0  59062-4 0  9992",
-                 "2 25544  51.6414  57.9705 0001517 268.1993 192.3547 15.54150155106064",
+                 "1 25544U 98067A   18092.01970131  .00001677  00000-0  32498-4 0  9993",
+                 "2 25544  51.6411  38.4234 0001540 286.9015 163.3157 15.54179657106671",
                  &s);
 //
 //    sat_load_tle("JUGNU",
@@ -309,10 +308,10 @@ main (int argc, char** argv)
 
     struct tm t = {
         .tm_year  = 118,
-        .tm_mon   = 2,
-        .tm_mday  = 29,
-        .tm_hour  = 17,
-        .tm_min   = 35,
+        .tm_mon   = 3,
+        .tm_mday  = 2,
+        .tm_hour  = 0,
+        .tm_min   = 0,
         .tm_sec   = 0,
         .tm_isdst = 0
     };
@@ -326,7 +325,7 @@ main (int argc, char** argv)
     // Banner, Wyoming
     //vec3     obs_geo   = {44.601882 * DEG2RAD, -106.855443 * DEG2RAD, 1.4057};
     time_t   start_time    = mktime(&t) - TIMEZONE;
-    time_t   stop_time     = mktime(&t) - TIMEZONE + 10 * 60;
+    time_t   stop_time     = mktime(&t) - TIMEZONE + 3 * 1440 * 60;
     pass*    passes;
     transit* transits;
     char     buff[70];
