@@ -13,7 +13,6 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 
 #include "libsgp4ansi.h"
 #include "epoch.h"

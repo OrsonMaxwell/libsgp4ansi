@@ -73,6 +73,14 @@ eq2teme
   const vec3*  radecrv
 );
 
+// Apply parallax to horizontal and/or equitorial vectors
+vec3
+gc2tc
+(
+  vec3* radecrv,
+  vec3* azelrng
+);
+
 // Cast a ray vector onto the WGS ellipsoid centered around origin
 vec3
 cast2ellipsoid

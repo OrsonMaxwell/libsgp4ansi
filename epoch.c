@@ -14,7 +14,6 @@
 
 #include <time.h>
 #include <math.h>
-#include <stdio.h>
 
 #include "libsgp4ansi.h"
 #include "const.h"

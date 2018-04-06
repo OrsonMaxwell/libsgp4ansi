@@ -2156,7 +2156,7 @@ sat_observe
       return retval;
     }
     // Switching to ECEF common frame to fix to Earth
-    vec3 posecef, velecef, obsposecef, obsvelecef;
+    vec3 posecef, velecef, obsvelecef;
 
     teme2ecef(&posteme, &velteme, julian, &posecef, &velecef);
 
@@ -2184,7 +2184,7 @@ sat_observe
   teme2ecef(&sunposteme, &dummy, julian, &sunposecef, &dummy);
 
   result->sun_latlonalt = ecef2geo(&sunposecef);
-  //result->sun_azelrng   = eq2azelrng(&sunposeq, obs_geo, timestamp, time_ms);
+  result->sun_azelrng   = eq2azelrng(&sunposeq, obs_geo, timestamp, time_ms);
 
   if (s != NULL)
   {

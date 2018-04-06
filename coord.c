@@ -279,6 +279,8 @@ geo2ecef
   double rsurf = sqrt(pow(RE, 2) / ((1 / pow(1.0 - FLATT, 2) - 1) *
                  pow(sin(gclat), 2) + 1));
 
+
+
   // ECEF position vector
   ecef.x = rsurf * cos(gclat) * cos(geo->lon)
              + geo->alt * cos(geo->lat) * cos(geo->lon);
@@ -307,39 +309,38 @@ ecef2azelrng
   vec3 azelrng;
 
   // Find azimuth
-  double cosaz = (-op->z * op->x * dp->x - op->z * op->y * dp->y
-               + (pow(op->x, 2) + pow(op->y, 2)) * dp->z)
-          / sqrt((pow(op->x, 2) + pow(op->y, 2))
-               * (pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
-               * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+  double cosaz    = (-op->z * op->x * dp->x - op->z * op->y * dp->y
+                  + (pow(op->x, 2) + pow(op->y, 2)) * dp->z)
+                  / sqrt((pow(op->x, 2) + pow(op->y, 2))
+                  * (pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
+                  * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
 
-  double sinaz = (-op->y * dp->x + op->x * dp->y)
-         / sqrt((pow(op->x, 2) + pow(op->y, 2))
-              * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+  double sinaz    = (-op->y * dp->x + op->x * dp->y)
+                  / sqrt((pow(op->x, 2) + pow(op->y, 2))
+                  * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
 
-  azelrng.az = PIDIV2 - atan2(cosaz, sinaz);
+  azelrng.az      = PIDIV2 - atan2(cosaz, sinaz);
   if (azelrng.az < 0)
   {
-    azelrng.az += TAU;
+    azelrng.az   += TAU;
   }
 
   // Find elevation
-  double cosel = (op->x * dp->x + op->y * dp->y + op->z * dp->z)
-               / sqrt((pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
-                    * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
-
-  azelrng.el = PIDIV2 - acos(cosel);
+  double cosel    = (op->x * dp->x + op->y * dp->y + op->z * dp->z)
+                  / sqrt((pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
+                       * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+  azelrng.el      = PIDIV2 - acos(cosel);
 
   // Find range
-  azelrng.rng = vec3_mag(dp);
+  azelrng.rng     = vec3_mag(dp);
 
   return azelrng;
 }
 
 /*
- * Convert equatorial vector to az-el-rng vector from ground st-n at given time
+ * Convert geocentric equatorial to local apparent horizontal vector
  *
- * Inputs:  radecrv   - Equatorial coordinates vector
+ * Inputs:  radecrv   - Geocentric equatorial coordinates vector
  *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
  *          timestamp - Unix time
  *          time_ms   - Millisecond portion if the time
@@ -357,18 +358,6 @@ eq2azelrng
 {
   vec3 azelrng, tc_radecrv;
 
-//  vec3 *obs_geo, *radecrv;
-//  obs_geo      = malloc(sizeof(vec3));
-//  obs_geo->lat = 33.35611 * DEG2RAD;
-//  obs_geo->lon = -116.8625 * DEG2RAD;
-//  obs_geo->alt = 1.706;
-//  radecrv      = malloc(sizeof(vec3));
-//  radecrv->ra  = 339.530208 * DEG2RAD;
-//  radecrv->dec = -15.771083 * DEG2RAD;
-//  radecrv->rv  = 0.37276 * AU;
-//  timestamp    = 1062040620;
-//  time_ms      = 0;
-
   // Julian date
   double julian_date = unix2jul(timestamp, time_ms);
 
@@ -378,64 +367,49 @@ eq2azelrng
            &dpsi, &depsilon);
 
   // Sidereal time
-  double GMST = jul2gmst(julian_date);
-  double AGST = GMST - dpsi * cos(depsilon);
+  double GMST     = jul2gmst(julian_date);
+  double AGST     = GMST - dpsi * cos(depsilon);
   // Hour angle
-  double H    = fmod(AGST - radecrv->ra + obs_geo->lon, TAU);
+  double H        = fmod(AGST - radecrv->ra + obs_geo->lon, TAU);
 
-//  printf("GMST:%lf\n", GMST * RAD2DEG);
-//  printf("AGST:%lf\n", AGST * RAD2DEG);
-//  printf("a:   %lf\n", radecrv->ra * RAD2DEG);
-//  printf("L:   %lf\n", obs_geo->lon * RAD2DEG);
-//  printf("H:   %lf\n", H * RAD2DEG + 360);
   // ECEF observer vector
   vec3 obsposecef = geo2ecef(obs_geo);
 
-  // Switching to topocentric equatorial frame
-  // Geocentric latitude
-  double gclat  = atan(pow(1 - FLATT, 2) * tan(obs_geo->lat));
   // Mean equatorial parallax
   double pi       = asin(RE / radecrv->rv);
-  // Parallax compensation
   double ro       = vec3_mag(&obsposecef) / RE;
-  double dalpha   = atan2(-ro * cos(gclat) * sin(pi) * sin(H),
-                          cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
-                          * sin(H));
+//  Apparend Ra Dec if we ever need them
+//  // Switching to topocentric equatorial frame
+//  // Geocentric latitude
+//  double gclat    = atan(pow(1 - FLATT, 2) * tan(obs_geo->lat));
+//  double dalpha   = atan2(-ro * cos(gclat) * sin(pi) * sin(H),
+//                          cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
+//                          * sin(H));
 
-//  printf("pi:  %lf\n", pi * RAD2DEG);
-//  printf("Ro:  %lf\n", vec3_mag(&obsposecef));
-//  printf("Gcl: %lf\n", gclat * RAD2DEG);
-//  printf("da:  %lf\n", dalpha * RAD2DEG);
+//  tc_radecrv.ra   = radecrv->ra + dalpha;
+//  tc_radecrv.dec  = atan2((sin(radecrv->dec) - ro * sin(gclat) * sin(pi))
+//                          * cos(dalpha),
+//                           cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
+//                          * cos(H));
+//
 
-  tc_radecrv.ra   = radecrv->ra + dalpha;
-  tc_radecrv.dec  = atan2((sin(radecrv->dec) - ro * sin(gclat) * sin(pi))
-                          * cos(dalpha),
-                           cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
-                          * cos(H));
+  // Geocentric horizontal coordinates
+  azelrng.az = atan2(sin(H), cos(H) * sin(obs_geo->lat) - tan(radecrv->dec)
+                     * cos(obs_geo->lat));
+  azelrng.el = asin(sin(obs_geo->lat) * sin(radecrv->dec) + cos(obs_geo->lat)
+             * cos(radecrv->dec) * cos(H));
 
-  printf("Ra:      %.6f\n", radecrv->ra * RAD2DEG);
-  printf("Dec:     %.6f\n", radecrv->dec * RAD2DEG);
-  printf("Ra':     %.6f\n", tc_radecrv.ra * RAD2DEG);
-  printf("Dec':    %.6f\n", tc_radecrv.dec * RAD2DEG);
-
-  // Equation 4-12 (Elevation Deg)
-  azelrng.el = asin(sin(obs_geo->lat) * sin(tc_radecrv.dec) + cos(obs_geo->lat)
-             * cos(tc_radecrv.dec) * cos(H));
-
-  // Equation 4-13 / 4-14 (Adaptation) (Azimuth Deg)
-  azelrng.az = fmod(atan2(-sin(H) * cos(tc_radecrv.dec) / cos(azelrng.el),
-               (sin(tc_radecrv.dec) - sin(azelrng.el) * sin(obs_geo->lat))
-             / (cos(azelrng.el) * cos(obs_geo->lat))), TAU);
+  // Apply horizontal parallax
+  double p   = asin(ro * sin(pi) * cos(azelrng.el));
+  azelrng.el-= p;
 
   if (azelrng.az < 0)
   {
-    azelrng.az += TAU;
+    azelrng.az += PI;
   }
 
   azelrng.rng = radecrv->rv - RE * ro;
 
-//  free(radecrv);
-//  free(obs_geo);
   return azelrng;
 }
 
