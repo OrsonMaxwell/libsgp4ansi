@@ -74,41 +74,35 @@ nutation
   *Ldot     = 218.3164591 + 481267.88134236 * T - 0.0013268 * T2
             + T3 / 538841 - T4 / 65194000;
   *Ldot     = (*Ldot < 0) ? (fmod(*Ldot, 360) + 360) : (fmod(*Ldot, 360));
-  printf("L':         %.6f\n", *Ldot);
   *Ldot    *= DEG2RAD;
 
   // Mean elongation of the Moon
   *D        = 297.8502042 + 445267.1115168 * T - 0.00163 * T2 + T3 / 545868
             - T4 / 113065000;
   *D        = (*D < 0) ? (fmod(*D, 360) + 360) : (fmod(*D, 360));
-  printf("D:          %.6f\n", *D);
   *D       *= DEG2RAD;
 
   // Mean anomaly of the Sun
   *M        = 357.5291092 + 35999.0502909 * T - 0.0001536 * T2 - T3 / 24490000;
   *M        = (*M < 0) ? (fmod(*M, 360) + 360) : (fmod(*M, 360));
-  printf("M:          %.6f\n", *M);
   *M       *= DEG2RAD;
 
   // Mean nomaly of the Moon
   *Mdot      = 134.9634114 + 477198.8676313 * T + 0.008997 * T2 + T2 / 69699
               - T4 / 14712000;
   *Mdot     = (*Mdot < 0) ? (fmod(*Mdot, 360) + 360) : (fmod(*Mdot, 360));
-  printf("M':         %.6f\n", *Mdot);
   *Mdot     *= DEG2RAD;
 
   // Argument of latitude of the Moon
   *F         = 93.2720993 + 483202.0175273 * T - 0.0034029 * T2 - T3 / 3526000
              + T4 / 863310000;
   *F        = (*F < 0) ? (fmod(*F, 360) + 360) : (fmod(*F, 360));
-  printf("F:          %.6f\n", *F);
   *F *= DEG2RAD;
 
   // Latitude of the ascending node of lunar mean orbit on the ecliptic
   // measured from mean equinox
   *Omega     = 125.04452 - 1934.136261 * T + 0.0020708 * T2 + T3 / 450000;
   *Omega    = (*Omega < 0) ? (fmod(*Omega, 360) + 360) : (fmod(*Omega, 360));
-  printf("Om:         %.2f\n", *Omega);
 
   // Most significant terms
   *dpsi      = 0;
@@ -134,8 +128,7 @@ nutation
   *depsilon += (  200          ) * cos(2 * *F + *Omega);
   *depsilon += (  129 - 0.1 * T) * cos(*Mdot + 2 * *F + 2 * *Omega);
   *depsilon += (  -95 + 0.3 * T) * cos(-2 * *D -*M + 2 * *F + 2 * *Omega);
-  printf("dp:         %.6f\n", fmod(*dpsi / 36000000, 360));
-  printf("de:         %.6f\n", fmod(*depsilon / 36000000, 360));
+
   // Convert from 0.0001" to radians
   *dpsi       = (*dpsi < 0) ? (*dpsi / 36000000 + 360) : (*dpsi / 36000000);
   *depsilon   = (*depsilon < 0) ? (*depsilon / 36000000 + 360)
@@ -145,8 +138,7 @@ nutation
 }
 
 /*
- * Find (coarse) position of the Sun at given Julian time in geocentric
- * equatorial frame
+ * Find apparent position of Sun at given time in equatorial geocentric frame
  *
  * Inputs:  time    - Unix time
  *          time_ms - Millisecond portion of time
@@ -223,8 +215,7 @@ solar_pos
 }
 
 /*
- * Find (coarse) position of the Moon at given Julian time in geocentric
- * equatorial frame
+ * Find apparent position of Moon at given time in equatorial geocentric frame
  *
  * Inputs:  time    - Unix time
  *          time_ms - Millisecond portion of time
@@ -241,14 +232,11 @@ lunar_pos
 {
   vec3 redecrv;
 
-  printf("JD:        %lf\n", unix2jul(time, time_ms));
   // Julian century
   double T  = unix2century(time, time_ms);;
   double T2 = pow(T, 2);
   double T3 = pow(T, 3);
   double T4 = pow(T, 4);
-
-  printf("T:          %.16f\n", T);
 
   double D, M, Mdot, F, Omega, Ldot, dpsi, depsilon;
   nutation(T, &D, &M, &Mdot, &F, &Omega, &Ldot, &dpsi, &depsilon);
@@ -257,9 +245,6 @@ lunar_pos
   double A1 = 119.75 + 131.849    * T;
   double A2 = 53.09  + 479264.29  * T;
   double A3 = 313.45 + 481266.484 * T;
-  printf("A1:         %.2f\n", fmod(A1, 360));
-  printf("A2:         %.2f\n", fmod(A2, 360) + 360);
-  printf("A3:         %.2f\n", fmod(A3, 360) + 360);
   A1       *= DEG2RAD;
   A2       *= DEG2RAD;
   A3       *= DEG2RAD;
@@ -267,7 +252,6 @@ lunar_pos
   // Eccentricity correction coefficient
   double E  = 1 - 0.002516 * T - 0.0000074 * T2;
   double E2 = pow(E, 2);
-  printf("E:          %lf\n", E);
 
   // Table periodic terms
   double Sigmal = 0;
@@ -453,21 +437,13 @@ lunar_pos
   Sigmab +=  127  * sin(Ldot - Mdot);
   Sigmab += -115  * sin(Ldot + Mdot);
 
-  printf("El:         %lf\n", Sigmal); // -1127527
-  printf("Eb:         %lf\n", Sigmab); // -3229127
-  printf("Er:         %lf\n", Sigmar); // -16590675
-
   // Right ascension, declination and range
   double ra     = Ldot * RAD2DEG + Sigmal / 1000000;
-  printf("ra:         %lf\n", fmod(ra, 360));
   double beta   = Sigmab / 1000000;
-  printf("b:          %lf\n", fmod(beta, 360));
   double Delta  = 385000.56 + Sigmar / 1000;
-  printf("d:          %lf\n", Delta);
 
   // Apparent longitude
   double alambda  = ra + dpsi * RAD2DEG;
-  printf("alambda:    %lf\n", fmod(alambda, 360));
   alambda *= DEG2RAD;
 
   if (lambda != NULL)
@@ -481,17 +457,14 @@ lunar_pos
 
   // True obliquity of the ecliptic
   double epsilon = epsilono + depsilon * RAD2DEG;
-  printf("epsilon:    %lf\n", fmod(epsilon, 360));
 
   // Apparent right ascension, declination and radius vector
   redecrv.ra  = atan2(sin(alambda) * cos(epsilon * DEG2RAD)
                     - tan(beta * DEG2RAD) * sin(epsilon * DEG2RAD),
                       cos(alambda));
-  printf("GC RA:      %lf\n", redecrv.ra * RAD2DEG);
   redecrv.dec = asin(sin(beta * DEG2RAD) * cos(epsilon * DEG2RAD)
               + cos(beta * DEG2RAD) * sin(epsilon * DEG2RAD)
               * sin(alambda));
-  printf("GC Dec:     %lf\n", redecrv.dec * RAD2DEG);
   redecrv.rv  = Delta;
 
   return redecrv;

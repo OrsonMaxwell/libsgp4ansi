@@ -36,7 +36,7 @@ unix2jul
 
 // Convert Julian date to Greenwich Sidereal Time
 double
-jul2gst
+jul2gmst
 (
   double julian
 );

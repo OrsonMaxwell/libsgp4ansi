@@ -14,6 +14,7 @@
 
 #include <time.h>
 #include <math.h>
+#include <stdio.h>
 
 #include "libsgp4ansi.h"
 #include "const.h"
@@ -117,28 +118,29 @@ unix2jul
 }
 
 /*
- * Convert Julian date to Greenwich Siderial Time
+ * Convert Julian date to Greenwich Mean Siderial Time
  *
  * Inputs:  julian_date - Julian date
  * Returns: GST time, rad
  */
 double
-jul2gst
+jul2gmst
 (
   double julian_date
 )
 {
-  double gst, UT1;
+  double gmst;
 
-  UT1 = (julian_date - J2000) / 36525.0;
-  gst = -6.2e-6 * UT1 * UT1 * UT1 + 0.093104 * UT1 * UT1 +
-      (876600.0 * 3600 + 8640184.812866) * UT1 + 67310.54841;
+  double T = (julian_date - J2000) / 36525;
 
-  gst = fmod(gst * DEG2RAD / 240.0, TAU);
+  gmst = 280.46061837 + 360.98564736629 * (julian_date - J2000)
+      + 0.000387933 * pow(T, 2) - pow(T, 3) / 38710000;
+
+  gmst = fmod(gmst * DEG2RAD, TAU);
 
   // Check quadrants
-  if (gst < 0.0)
-    gst += TAU;
+  if (gmst < 0.0)
+    gmst += TAU;
 
-  return gst;
+  return gmst;
 }

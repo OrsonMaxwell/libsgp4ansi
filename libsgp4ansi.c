@@ -743,7 +743,7 @@ sat_init
   if (s->is_deep_space == true) // Deep space init here
   {
 
-    s->GSTo  = jul2gst(s->julian_epoch);
+    s->GMSTo  = jul2gmst(s->julian_epoch);
 
     // Constants
     const double zes    =  0.01675;
@@ -1022,7 +1022,7 @@ sat_init
     printf("[DS] xgh4 %+.15e\n", s->xgh4);
     printf("[DS] xh2  %+.15e\n", s->xh2);
     printf("[DS] xh3  %+.15e\n", s->xh3);
-    printf("[DS] GSTo %+.15e\n", s->GSTo);
+    printf("[DS] GSTo %+.15e\n", s->GMSTo);
 #endif
 
     const double q22    = 1.7891679e-6;
@@ -1231,7 +1231,7 @@ sat_init
             s->d5421 = temp * f542 * g521;
             s->d5433 = temp * f543 * g533;
             s->xlamo = fmod(s->mean_anomaly + 2 * s->right_asc_node
-                     - 2 * s->GSTo, TAU);
+                     - 2 * s->GMSTo, TAU);
             s->xfact = s->xmdot + s->dmdt
                      + 2 * (s->xnodot + s->dnodt - RPTIM) - s->xnodp;
       }
@@ -1256,7 +1256,7 @@ sat_init
         s->xfact = s->xmdot + (s->omgdot + s->xnodot) - RPTIM + s->dmdt
                  + s->domdt + s->dnodt - s->xnodp;
         s->xlamo = fmod(s->mean_anomaly + s->right_asc_node
-                 + s->argument_perigee - s->GSTo, TAU);
+                 + s->argument_perigee - s->GMSTo, TAU);
       }
     }
   }
@@ -1615,7 +1615,7 @@ sat_propagate
 
     // Calculate deep space resonance effects
     double dndt   = 0;
-    double theta  = fmod(s->GSTo + delta_t * RPTIM, TAU);
+    double theta  = fmod(s->GMSTo + delta_t * RPTIM, TAU);
 
     // Perturbed quantities
     em    += s->dedt * delta_t;
@@ -2255,7 +2255,7 @@ sat_observe
   }
 
   // LST
-  double H   = jul2gst(julian) + obs_geo->lon - moonposeq.ra;
+  double H   = jul2gmst(julian) + obs_geo->lon - moonposeq.ra;
 
   // Parallactic angle
   double q   = atan2(sin(H), (tan(obs_geo->lat) * cos(moonposeq.dec)

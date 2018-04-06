@@ -14,12 +14,14 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "libsgp4ansi.h"
 #include "const.h"
 #include "coord.h"
 #include "epoch.h"
 #include "vector.h"
+#include "solar.h"
 
 /*
  * Solve Kepler's equation for known true anomaly
@@ -113,7 +115,7 @@ teme2ecef
 )
 {
   // Greenwich Siderial Time, rad
-  double GST = jul2gst(julian);
+  double GST = jul2gmst(julian);
 
   // Pef - tod matrix
   double pef_tod[3][3] =
@@ -355,43 +357,73 @@ eq2azelrng
 {
   vec3 azelrng, tc_radecrv;
 
+//  vec3 *obs_geo, *radecrv;
+//  obs_geo      = malloc(sizeof(vec3));
+//  obs_geo->lat = 33.35611 * DEG2RAD;
+//  obs_geo->lon = -116.8625 * DEG2RAD;
+//  obs_geo->alt = 1.706;
+//  radecrv      = malloc(sizeof(vec3));
+//  radecrv->ra  = 339.530208 * DEG2RAD;
+//  radecrv->dec = -15.771083 * DEG2RAD;
+//  radecrv->rv  = 0.37276 * AU;
+//  timestamp    = 1062040620;
+//  time_ms      = 0;
+
+  // Julian date
+  double julian_date = unix2jul(timestamp, time_ms);
+
+  // find Earth nutation correction
+  double D, M, Mdot, F, Omega, Ldot, dpsi, depsilon;
+  nutation((julian_date - J2000) / 36525, &D, &M, &Mdot, &F, &Omega, &Ldot,
+           &dpsi, &depsilon);
+
+  // Sidereal time
+  double GMST = jul2gmst(julian_date);
+  double AGST = GMST - dpsi * cos(depsilon);
+  // Hour angle
+  double H    = fmod(AGST - radecrv->ra + obs_geo->lon, TAU);
+
+//  printf("GMST:%lf\n", GMST * RAD2DEG);
+//  printf("AGST:%lf\n", AGST * RAD2DEG);
+//  printf("a:   %lf\n", radecrv->ra * RAD2DEG);
+//  printf("L:   %lf\n", obs_geo->lon * RAD2DEG);
+//  printf("H:   %lf\n", H * RAD2DEG + 360);
   // ECEF observer vector
   vec3 obsposecef = geo2ecef(obs_geo);
 
   // Switching to topocentric equatorial frame
   // Geocentric latitude
-  double gclat    = atan(pow(1 - FLATT, 2) * tan(obs_geo->lat));
+  double gclat  = atan(pow(1 - FLATT, 2) * tan(obs_geo->lat));
   // Mean equatorial parallax
   double pi       = asin(RE / radecrv->rv);
   // Parallax compensation
   double ro       = vec3_mag(&obsposecef) / RE;
-  double dalpha   = atan2(-ro * cos(gclat) * sin(pi) * sin(radecrv->ra),
+  double dalpha   = atan2(-ro * cos(gclat) * sin(pi) * sin(H),
                           cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
-                          * sin(radecrv->ra));
+                          * sin(H));
 
-  printf("Ro:  %lf\n", vec3_mag(&obsposecef));
-  printf("Gcl: %lf\n", gclat * RAD2DEG);
-  printf("da:  %lf\n", dalpha * RAD2DEG);
+//  printf("pi:  %lf\n", pi * RAD2DEG);
+//  printf("Ro:  %lf\n", vec3_mag(&obsposecef));
+//  printf("Gcl: %lf\n", gclat * RAD2DEG);
+//  printf("da:  %lf\n", dalpha * RAD2DEG);
 
   tc_radecrv.ra   = radecrv->ra + dalpha;
-  tc_radecrv.dec  = atan2((sin(radecrv->dec) -ro * sin(tc_radecrv.ra) * sin(pi))
+  tc_radecrv.dec  = atan2((sin(radecrv->dec) - ro * sin(gclat) * sin(pi))
                           * cos(dalpha),
-                          cos(radecrv->dec) - ro * cos(tc_radecrv.ra) * sin(pi)
-                          * cos(radecrv->ra));
+                           cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
+                          * cos(H));
 
+  printf("Ra:      %.6f\n", radecrv->ra * RAD2DEG);
+  printf("Dec:     %.6f\n", radecrv->dec * RAD2DEG);
   printf("Ra':     %.6f\n", tc_radecrv.ra * RAD2DEG);
   printf("Dec':    %.6f\n", tc_radecrv.dec * RAD2DEG);
 
-  double ThetaLST = jul2gst(unix2jul(timestamp, time_ms)) + obs_geo->lon;
-  // Equation 4-11 (Define Siderial Time LHA)
-  double LHA = fmod(ThetaLST - tc_radecrv.ra, TAU);
-
   // Equation 4-12 (Elevation Deg)
   azelrng.el = asin(sin(obs_geo->lat) * sin(tc_radecrv.dec) + cos(obs_geo->lat)
-             * cos(tc_radecrv.dec) * cos(LHA));
+             * cos(tc_radecrv.dec) * cos(H));
 
   // Equation 4-13 / 4-14 (Adaptation) (Azimuth Deg)
-  azelrng.az = fmod(atan2(-sin(LHA) * cos(tc_radecrv.dec) / cos(azelrng.el),
+  azelrng.az = fmod(atan2(-sin(H) * cos(tc_radecrv.dec) / cos(azelrng.el),
                (sin(tc_radecrv.dec) - sin(azelrng.el) * sin(obs_geo->lat))
              / (cos(azelrng.el) * cos(obs_geo->lat))), TAU);
 
@@ -402,6 +434,8 @@ eq2azelrng
 
   azelrng.rng = radecrv->rv - RE * ro;
 
+//  free(radecrv);
+//  free(obs_geo);
   return azelrng;
 }
 

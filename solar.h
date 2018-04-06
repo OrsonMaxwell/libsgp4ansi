@@ -33,11 +33,12 @@ nutation
   double* Mdot,
   double* F,
   double* Omega,
-  double* L,
-  double* Ldot
+  double* Ldot,
+  double* dpsi,
+  double* depsilon
 );
 
-// Find (coarse) position of the Sun at given Julian time in equatorial frame
+// Find apparent position of Sun at given time in equatorial geocentric frame
 vec3
 solar_pos
 (
@@ -46,7 +47,7 @@ solar_pos
   double* lambda
 );
 
-// Find (coarse) position of the Moon at given Julian time in equatorial frame
+// Find apparent position of Moon at given time in equatorial geocentric frame
 vec3
 lunar_pos
 (
