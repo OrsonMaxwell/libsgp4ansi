@@ -2169,7 +2169,7 @@ sat_observe
     // Observer to satellite vector in ECEF frame
     vec3 posdiffecef  = vec3_add(1, &posecef, -1, &obsposecef);
 
-    result->azelrng   = ecef2azelrng(&obsposecef, &posdiffecef);
+    result->azelrng   = ecef2azelrng(&posecef, obs_geo);
     result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->azelrng.rng;
   }
 
@@ -2223,8 +2223,6 @@ sat_observe
 
   double moon_dia;
   moon_dia      = asin(RLUN / (moonposeq.rv - vec3_mag(&obsposecef)));
-
-  printf("Moon angular diameter: %.4f\n", moon_dia  * RAD2DEG * 2);
 
   teme2ecef(&moonposteme, &dummy, julian, &moonecef, &dummy);
 

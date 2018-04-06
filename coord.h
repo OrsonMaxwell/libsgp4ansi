@@ -52,8 +52,8 @@ geo2ecef
 vec3
 ecef2azelrng
 (
-  const vec3* op,
-  const vec3* dp
+  const vec3* posecef,
+  const vec3* obs_geo
 );
 
 // Convert equatorial vector to az-el-rng vector from ground st-n at given time
@@ -85,8 +85,8 @@ gc2tc
 vec3
 cast2ellipsoid
 (
-  vec3* origin,
-  vec3* dir
+  const vec3* origin,
+  const vec3* dir
 );
 
 #endif /* COORD_H_ */

@@ -13,8 +13,6 @@
  */
 
 #include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #include "libsgp4ansi.h"
 #include "const.h"
@@ -302,37 +300,36 @@ geo2ecef
 vec3
 ecef2azelrng
 (
-  const vec3* op,
-  const vec3* dp
+  const vec3* posecef,
+  const vec3* obs_geo
 )
 {
   vec3 azelrng;
 
-  // Find azimuth
-  double cosaz    = (-op->z * op->x * dp->x - op->z * op->y * dp->y
-                  + (pow(op->x, 2) + pow(op->y, 2)) * dp->z)
-                  / sqrt((pow(op->x, 2) + pow(op->y, 2))
-                  * (pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
-                  * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+  // Observer to satellite vector in ECEF frame
+  vec3 op       = geo2ecef(obs_geo);
+  vec3 dp       = vec3_add(1, posecef, -1, &op);
 
-  double sinaz    = (-op->y * dp->x + op->x * dp->y)
-                  / sqrt((pow(op->x, 2) + pow(op->y, 2))
-                  * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+  // Normalize difference vector
+  azelrng.rng     = vec3_mag(&dp);
+  double dx       = dp.x / azelrng.rng;
+  double dy       = dp.y / azelrng.rng;
+  double dz       = dp.z / azelrng.rng;
 
-  azelrng.az      = PIDIV2 - atan2(cosaz, sinaz);
+  double north    = -cos(obs_geo->lon) * sin(obs_geo->lat) * dx
+                   - sin(obs_geo->lon) * sin(obs_geo->lat) * dy
+                   + cos(obs_geo->lat) * dz;
+  double east     = -sin(obs_geo->lon) * dx+cos(obs_geo->lon) * dy;
+  double vertical =  cos(obs_geo->lon) * cos(obs_geo->lat) * dx
+                   + sin(obs_geo->lon) * cos(obs_geo->lat) * dy
+                   + sin(obs_geo->lat) * dz;
+
+  // compute elevation
+  azelrng.el = (PIDIV2 - acos(vertical));
+  // compute azimuth; check for negative angles
+  azelrng.az = atan(east / north);
   if (azelrng.az < 0)
-  {
-    azelrng.az   += TAU;
-  }
-
-  // Find elevation
-  double cosel    = (op->x * dp->x + op->y * dp->y + op->z * dp->z)
-                  / sqrt((pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
-                       * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
-  azelrng.el      = PIDIV2 - acos(cosel);
-
-  // Find range
-  azelrng.rng     = vec3_mag(dp);
+    azelrng.az += PI;
 
   return azelrng;
 }
@@ -378,37 +375,37 @@ eq2azelrng
   // Mean equatorial parallax
   double pi       = asin(RE / radecrv->rv);
   double ro       = vec3_mag(&obsposecef) / RE;
-//  Apparend Ra Dec if we ever need them
-//  // Switching to topocentric equatorial frame
-//  // Geocentric latitude
+
+  // Apparent Ra Dec if we ever need them
+  // Switching to topocentric equatorial frame
+  // Geocentric latitude
 //  double gclat    = atan(pow(1 - FLATT, 2) * tan(obs_geo->lat));
 //  double dalpha   = atan2(-ro * cos(gclat) * sin(pi) * sin(H),
 //                          cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
 //                          * sin(H));
-
+//
 //  tc_radecrv.ra   = radecrv->ra + dalpha;
 //  tc_radecrv.dec  = atan2((sin(radecrv->dec) - ro * sin(gclat) * sin(pi))
 //                          * cos(dalpha),
 //                           cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
 //                          * cos(H));
-//
 
   // Geocentric horizontal coordinates
-  azelrng.az = atan2(sin(H), cos(H) * sin(obs_geo->lat) - tan(radecrv->dec)
+  azelrng.az    = atan2(sin(H), cos(H) * sin(obs_geo->lat) - tan(radecrv->dec)
                      * cos(obs_geo->lat));
-  azelrng.el = asin(sin(obs_geo->lat) * sin(radecrv->dec) + cos(obs_geo->lat)
-             * cos(radecrv->dec) * cos(H));
+  azelrng.el    = asin(sin(obs_geo->lat) * sin(radecrv->dec) + cos(obs_geo->lat)
+                * cos(radecrv->dec) * cos(H));
 
   // Apply horizontal parallax
-  double p   = asin(ro * sin(pi) * cos(azelrng.el));
-  azelrng.el-= p;
+  double p      = asin(ro * sin(pi) * cos(azelrng.el));
+  azelrng.el   -= p;
 
   if (azelrng.az < 0)
   {
     azelrng.az += PI;
   }
 
-  azelrng.rng = radecrv->rv - RE * ro;
+  azelrng.rng   = radecrv->rv - RE * ro;
 
   return azelrng;
 }
@@ -447,8 +444,8 @@ eq2teme
 vec3
 cast2ellipsoid
 (
-  vec3* origin,
-  vec3* dir
+  const vec3* origin,
+  const vec3* dir
 )
 {
   vec3 result = {0};
