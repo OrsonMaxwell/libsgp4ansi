@@ -7,8 +7,9 @@
  * IERS Bulletin - A (Vol. XXVIII No. 030)
  * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
  * Astronomical Algorithms, Jean Meeus
+ * 1980 IAU Theory of nutation
  *
- * Copyright � 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright (c) 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #ifndef EPOCH_H_
@@ -35,7 +36,7 @@ unix2jul
 
 // Convert Julian date to Greenwich Sidereal Time
 double
-jul2gst
+jul2gmst
 (
   double julian
 );

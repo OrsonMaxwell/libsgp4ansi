@@ -7,14 +7,38 @@
  * IERS Bulletin - A (Vol. XXVIII No. 030)
  * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
  * Astronomical Algorithms, Jean Meeus
+ * 1980 IAU Theory of nutation
  *
- * Copyright � 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright (c) 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #ifndef SOLAR_H_
 #define SOLAR_H_
 
-// Find (coarse) position of the Sun at given Julian time in equatorial frame
+// Find julian century from a given time and date
+double
+unix2century
+(
+  time_t  time,
+  float   time_ms
+);
+
+// Determine Earth nutation parametres on a given date
+void
+nutation
+(
+  double  T,
+  double* D,
+  double* M,
+  double* Mdot,
+  double* F,
+  double* Omega,
+  double* Ldot,
+  double* dpsi,
+  double* depsilon
+);
+
+// Find apparent position of Sun at given time in equatorial geocentric frame
 vec3
 solar_pos
 (
@@ -23,7 +47,7 @@ solar_pos
   double* lambda
 );
 
-// Find (coarse) position of the Moon at given Julian time in equatorial frame
+// Find apparent position of Moon at given time in equatorial geocentric frame
 vec3
 lunar_pos
 (

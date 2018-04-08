@@ -7,8 +7,9 @@
  * IERS Bulletin - A (Vol. XXVIII No. 030)
  * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
  * Astronomical Algorithms, Jean Meeus
+ * 1980 IAU Theory of nutation
  *
- * Copyright � 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright (c) 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #include <math.h>
@@ -18,6 +19,7 @@
 #include "coord.h"
 #include "epoch.h"
 #include "vector.h"
+#include "solar.h"
 
 /*
  * Solve Kepler's equation for known true anomaly
@@ -111,7 +113,7 @@ teme2ecef
 )
 {
   // Greenwich Siderial Time, rad
-  double GST = jul2gst(julian);
+  double GST = jul2gmst(julian);
 
   // Pef - tod matrix
   double pef_tod[3][3] =
@@ -275,6 +277,8 @@ geo2ecef
   double rsurf = sqrt(pow(RE, 2) / ((1 / pow(1.0 - FLATT, 2) - 1) *
                  pow(sin(gclat), 2) + 1));
 
+
+
   // ECEF position vector
   ecef.x = rsurf * cos(gclat) * cos(geo->lon)
              + geo->alt * cos(geo->lat) * cos(geo->lon);
@@ -296,46 +300,44 @@ geo2ecef
 vec3
 ecef2azelrng
 (
-  const vec3* op,
-  const vec3* dp
+  const vec3* posecef,
+  const vec3* obs_geo
 )
 {
   vec3 azelrng;
 
-  // Find azimuth
-  double cosaz = (-op->z * op->x * dp->x - op->z * op->y * dp->y
-               + (pow(op->x, 2) + pow(op->y, 2)) * dp->z)
-          / sqrt((pow(op->x, 2) + pow(op->y, 2))
-               * (pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
-               * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+  // Observer to satellite vector in ECEF frame
+  vec3 op       = geo2ecef(obs_geo);
+  vec3 dp       = vec3_add(1, posecef, -1, &op);
 
-  double sinaz = (-op->y * dp->x + op->x * dp->y)
-         / sqrt((pow(op->x, 2) + pow(op->y, 2))
-              * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
+  // Normalize difference vector
+  azelrng.rng     = vec3_mag(&dp);
+  double dx       = dp.x / azelrng.rng;
+  double dy       = dp.y / azelrng.rng;
+  double dz       = dp.z / azelrng.rng;
 
-  azelrng.az = PIDIV2 - atan2(cosaz, sinaz);
+  double north    = -cos(obs_geo->lon) * sin(obs_geo->lat) * dx
+                   - sin(obs_geo->lon) * sin(obs_geo->lat) * dy
+                   + cos(obs_geo->lat) * dz;
+  double east     = -sin(obs_geo->lon) * dx+cos(obs_geo->lon) * dy;
+  double vertical =  cos(obs_geo->lon) * cos(obs_geo->lat) * dx
+                   + sin(obs_geo->lon) * cos(obs_geo->lat) * dy
+                   + sin(obs_geo->lat) * dz;
+
+  // compute elevation
+  azelrng.el = (PIDIV2 - acos(vertical));
+  // compute azimuth; check for negative angles
+  azelrng.az = atan(east / north);
   if (azelrng.az < 0)
-  {
-    azelrng.az += TAU;
-  }
-
-  // Find elevation
-  double cosel = (op->x * dp->x + op->y * dp->y + op->z * dp->z)
-               / sqrt((pow(op->x, 2) + pow(op->y, 2) + pow(op->z, 2))
-                    * (pow(dp->x, 2) + pow(dp->y, 2) + pow(dp->z, 2)));
-
-  azelrng.el = PIDIV2 - acos(cosel);
-
-  // Find range
-  azelrng.rng = vec3_mag(dp);
+    azelrng.az += PI;
 
   return azelrng;
 }
 
 /*
- * Convert equatorial vector to az-el-rng vector from ground st-n at given time
+ * Convert geocentric equatorial to local apparent horizontal vector
  *
- * Inputs:  radecrv   - Equatorial coordinates vector
+ * Inputs:  radecrv   - Geocentric equatorial coordinates vector
  *          obs_geo   - Geodetic coordinates of the ground station, rad, rad, km
  *          timestamp - Unix time
  *          time_ms   - Millisecond portion if the time
@@ -351,28 +353,59 @@ eq2azelrng
         float  time_ms
 )
 {
-  vec3 azelrng;
+  vec3 azelrng, tc_radecrv;
 
-  double ThetaLST = jul2gst(unix2jul(timestamp, time_ms)) + obs_geo->lon;
+  // Julian date
+  double julian_date = unix2jul(timestamp, time_ms);
 
-  // Equation 4-11 (Define Siderial Time LHA)
-  double LHA = fmod(ThetaLST - radecrv->ra, TAU);
+  // find Earth nutation correction
+  double D, M, Mdot, F, Omega, Ldot, dpsi, depsilon;
+  nutation((julian_date - J2000) / 36525, &D, &M, &Mdot, &F, &Omega, &Ldot,
+           &dpsi, &depsilon);
 
-  // Equation 4-12 (Elevation Deg)
-  azelrng.el = asin(sin(obs_geo->lat) * sin(radecrv->dec) + cos(obs_geo->lat)
-             * cos(radecrv->dec) * cos(LHA));
+  // Sidereal time
+  double GMST     = jul2gmst(julian_date);
+  double AGST     = GMST - dpsi * cos(depsilon);
+  // Hour angle
+  double H        = fmod(AGST - radecrv->ra + obs_geo->lon, TAU);
 
-  // Equation 4-13 / 4-14 (Adaptation) (Azimuth Deg)
-  azelrng.az = fmod(atan2(-sin(LHA) * cos(radecrv->dec) / cos(azelrng.el),
-               (sin(radecrv->dec) - sin(azelrng.el) * sin(obs_geo->lat))
-             / (cos(azelrng.el) * cos(obs_geo->lat))), TAU);
+  // ECEF observer vector
+  vec3 obsposecef = geo2ecef(obs_geo);
+
+  // Mean equatorial parallax
+  double pi       = asin(RE / radecrv->rv);
+  double ro       = vec3_mag(&obsposecef) / RE;
+
+  // Apparent Ra Dec if we ever need them
+  // Switching to topocentric equatorial frame
+  // Geocentric latitude
+//  double gclat    = atan(pow(1 - FLATT, 2) * tan(obs_geo->lat));
+//  double dalpha   = atan2(-ro * cos(gclat) * sin(pi) * sin(H),
+//                          cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
+//                          * sin(H));
+//
+//  tc_radecrv.ra   = radecrv->ra + dalpha;
+//  tc_radecrv.dec  = atan2((sin(radecrv->dec) - ro * sin(gclat) * sin(pi))
+//                          * cos(dalpha),
+//                           cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
+//                          * cos(H));
+
+  // Geocentric horizontal coordinates
+  azelrng.az    = atan2(sin(H), cos(H) * sin(obs_geo->lat) - tan(radecrv->dec)
+                     * cos(obs_geo->lat));
+  azelrng.el    = asin(sin(obs_geo->lat) * sin(radecrv->dec) + cos(obs_geo->lat)
+                * cos(radecrv->dec) * cos(H));
+
+  // Apply horizontal parallax
+  double p      = asin(ro * sin(pi) * cos(azelrng.el));
+  azelrng.el   -= p;
 
   if (azelrng.az < 0)
   {
-    azelrng.az += TAU;
+    azelrng.az += PI;
   }
 
-  azelrng.rng = radecrv->rv;
+  azelrng.rng   = radecrv->rv - RE * ro;
 
   return azelrng;
 }
@@ -411,8 +444,8 @@ eq2teme
 vec3
 cast2ellipsoid
 (
-  vec3* origin,
-  vec3* dir
+  const vec3* origin,
+  const vec3* dir
 )
 {
   vec3 result = {0};

@@ -7,8 +7,9 @@
  * IERS Bulletin - A (Vol. XXVIII No. 030)
  * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
  * Astronomical Algorithms, Jean Meeus
+ * 1980 IAU Theory of nutation
  *
- * Copyright � 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright (c) 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #include <ctype.h>
@@ -742,7 +743,7 @@ sat_init
   if (s->is_deep_space == true) // Deep space init here
   {
 
-    s->GSTo  = jul2gst(s->julian_epoch);
+    s->GMSTo  = jul2gmst(s->julian_epoch);
 
     // Constants
     const double zes    =  0.01675;
@@ -1021,7 +1022,7 @@ sat_init
     printf("[DS] xgh4 %+.15e\n", s->xgh4);
     printf("[DS] xh2  %+.15e\n", s->xh2);
     printf("[DS] xh3  %+.15e\n", s->xh3);
-    printf("[DS] GSTo %+.15e\n", s->GSTo);
+    printf("[DS] GSTo %+.15e\n", s->GMSTo);
 #endif
 
     const double q22    = 1.7891679e-6;
@@ -1230,7 +1231,7 @@ sat_init
             s->d5421 = temp * f542 * g521;
             s->d5433 = temp * f543 * g533;
             s->xlamo = fmod(s->mean_anomaly + 2 * s->right_asc_node
-                     - 2 * s->GSTo, TAU);
+                     - 2 * s->GMSTo, TAU);
             s->xfact = s->xmdot + s->dmdt
                      + 2 * (s->xnodot + s->dnodt - RPTIM) - s->xnodp;
       }
@@ -1255,7 +1256,7 @@ sat_init
         s->xfact = s->xmdot + (s->omgdot + s->xnodot) - RPTIM + s->dmdt
                  + s->domdt + s->dnodt - s->xnodp;
         s->xlamo = fmod(s->mean_anomaly + s->right_asc_node
-                 + s->argument_perigee - s->GSTo, TAU);
+                 + s->argument_perigee - s->GMSTo, TAU);
       }
     }
   }
@@ -1614,7 +1615,7 @@ sat_propagate
 
     // Calculate deep space resonance effects
     double dndt   = 0;
-    double theta  = fmod(s->GSTo + delta_t * RPTIM, TAU);
+    double theta  = fmod(s->GMSTo + delta_t * RPTIM, TAU);
 
     // Perturbed quantities
     em    += s->dedt * delta_t;
@@ -2136,12 +2137,12 @@ sat_observe
     return -1;
   }
 
-  vec3   posteme, velteme;
-  int    retval  = 0;
-  double julian =  unix2jul(timestamp, time_ms);
+  vec3   posteme, velteme, dummy, obsposecef;
+  int    retval    = 0;
+  double julian    =  unix2jul(timestamp, time_ms);
 
-  // For teme2ecef
-  vec3 dummy;
+  // ECEF observer vector
+  obsposecef       = geo2ecef(obs_geo);
 
   if (s != NULL)
   {
@@ -2155,7 +2156,7 @@ sat_observe
       return retval;
     }
     // Switching to ECEF common frame to fix to Earth
-    vec3 posecef, velecef, obsposecef, obsvelecef;
+    vec3 posecef, velecef, obsvelecef;
 
     teme2ecef(&posteme, &velteme, julian, &posecef, &velecef);
 
@@ -2165,13 +2166,10 @@ sat_observe
     result->velocity  = sqrt(GM * (2 / (RE + result->latlonalt.alt)
         - 1 / (RE * s->aodp)));
 
-
-    obsposecef = geo2ecef(obs_geo);
-
     // Observer to satellite vector in ECEF frame
     vec3 posdiffecef  = vec3_add(1, &posecef, -1, &obsposecef);
 
-    result->azelrng   = ecef2azelrng(&obsposecef, &posdiffecef);
+    result->azelrng   = ecef2azelrng(&posecef, obs_geo);
     result->rng_rate  = vec3_dot(&posdiffecef, &velecef) / result->azelrng.rng;
   }
 
@@ -2203,7 +2201,7 @@ sat_observe
 
     // Angle between the Earth and The Sun disk centres from the satellite v.p.
     double Theta = acos(vec3_dot(&posteme, &sat2sun)
-                        / (sat2sun_range * sat2earth_range));
+                 / (sat2sun_range * sat2earth_range));
 
     // Considering only umbral eclipses
     if ((earth_semidia > sun_semidia) && (Theta < earth_semidia - sun_semidia))
@@ -2223,15 +2221,15 @@ sat_observe
   moonposeq     = lunar_pos(timestamp, time_ms, &lambda_moon);
   moonposteme   = eq2teme(&moonposeq);
 
+  double moon_dia;
+  moon_dia      = asin(RLUN / (moonposeq.rv - vec3_mag(&obsposecef)));
+
   teme2ecef(&moonposteme, &dummy, julian, &moonecef, &dummy);
 
   result->moon_latlonalt = ecef2geo(&moonecef);
   result->moon_azelrng   = eq2azelrng(&moonposeq, obs_geo, timestamp, time_ms);
 
   // Fraction of the Moon disc illuminated
-  double cospsi = sin(sunposeq.dec) * sin(moonposeq.dec)
-                + cos(sunposeq.dec) * cos(moonposeq.dec)
-                * cos(sunposeq.ra - moonposeq.ra);
   double psi    = acos(sin(sunposeq.dec) * sin(moonposeq.dec)
                 + cos(sunposeq.dec) * cos(moonposeq.dec)
                 * cos(sunposeq.ra - moonposeq.ra));
@@ -2255,7 +2253,7 @@ sat_observe
   }
 
   // LST
-  double H   = jul2gst(julian) + obs_geo->lon - moonposeq.ra;
+  double H   = jul2gmst(julian) + obs_geo->lon - moonposeq.ra;
 
   // Parallactic angle
   double q   = atan2(sin(H), (tan(obs_geo->lat) * cos(moonposeq.dec)

@@ -574,9 +574,9 @@ def shadow():
   sh_moon_m  = axs.scatter(sh_moon_lon, sh_moon_lat, edgecolors='b', s=16, facecolors='none', alpha=1)
   sh_sun_l,  = axs.plot(sh_sun_lon, sh_sun_lat, c='k', marker='', ls='-', lw=4, alpha=0.3)
   sh_sun_m   = axs.scatter(sh_sun_lon, sh_sun_lat, edgecolors='#FFFF00', s=16, facecolors='none', alpha=1)
-  moon_m     = axs.scatter(moon_lon, moon_lat, edgecolors='none', facecolors='b', s=49, alpha=1)
   sun_m      = axs.scatter(sun_lon, sun_lat, edgecolors='none', facecolors='#FFFF00', s=49, alpha=1)
-
+  moon_m     = axs.scatter(moon_lon, moon_lat, edgecolors='none', facecolors='b', s=49, alpha=1)
+  
   axs.legend([sat_track, (sh_moon_l, sh_moon_m), (sh_sun_l, sh_sun_m), sun_m, moon_m],
              ['ISS ground track', 'Satellite lunar shadow', 'Satellite solar shadow', 'Sun', 'Moon'])
 

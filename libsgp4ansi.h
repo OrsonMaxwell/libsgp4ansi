@@ -7,8 +7,9 @@
  * IERS Bulletin - A (Vol. XXVIII No. 030)
  * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
  * Astronomical Algorithms, Jean Meeus
+ * 1980 IAU Theory of nutation
  *
- * Copyright � 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright (c) 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #ifndef LIBSGP4ANSI_H_
@@ -87,7 +88,7 @@ typedef struct _sat
   // Flags
   bool is_deep_space, use_simple_model, is_24h_resonant, is_12h_resonant;
   // Standard orbital elements
-  double GSTo;                    // Greenwich Sidereal Time at epoch
+  double GMSTo;                   // Greenwich Mean Sidereal Time at epoch
   double xnodp;                   // Original mean motion recovered from TLE
   double aodp;                    // Semimajor axis, AE
   double perigee_alt;             // Altitude of perigee from surface, km
@@ -141,9 +142,11 @@ typedef struct _obs
   double rng_rate;          // Distance change rate, km/s
   bool   is_illum;          // Is the satellite illuminated by the Sun?
   vec3   sun_latlonalt;     // Solar projected geodetic coordinates
-  vec3   moon_latlonalt;    // Lunar projected geodetic coordinates
   vec3   sun_azelrng;       // Azimuth-Elevation-Range of The Sun
+  double sun_diameter;      // Solar disk angular diameter, rad
+  vec3   moon_latlonalt;    // Lunar projected geodetic coordinates
   vec3   moon_azelrng;      // Azimuth-Elevation-Range of The Moon
+  double moon_diameter;     // Solar disk angular diameter, rad
   double moon_phase;        // Illuminated portion of Moon's disc combined with
                             // phase (negative for waning, positive for waxing)
   double moon_tilt;         // Lunar terminator tilt angle, rad

@@ -7,8 +7,9 @@
  * IERS Bulletin - A (Vol. XXVIII No. 030)
  * Fundamentals of Astrodynamics and Applications, D. Vallado, Second Edition
  * Astronomical Algorithms, Jean Meeus
+ * 1980 IAU Theory of nutation
  *
- * Copyright � 2017 Orson J. Maxwell. Please see LICENSE for details.
+ * Copyright (c) 2017 Orson J. Maxwell. Please see LICENSE for details.
  */
 
 #ifndef COORD_H_
@@ -51,8 +52,8 @@ geo2ecef
 vec3
 ecef2azelrng
 (
-  const vec3* op,
-  const vec3* dp
+  const vec3* posecef,
+  const vec3* obs_geo
 );
 
 // Convert equatorial vector to az-el-rng vector from ground st-n at given time
@@ -72,12 +73,20 @@ eq2teme
   const vec3*  radecrv
 );
 
+// Apply parallax to horizontal and/or equitorial vectors
+vec3
+gc2tc
+(
+  vec3* radecrv,
+  vec3* azelrng
+);
+
 // Cast a ray vector onto the WGS ellipsoid centered around origin
 vec3
 cast2ellipsoid
 (
-  vec3* origin,
-  vec3* dir
+  const vec3* origin,
+  const vec3* dir
 );
 
 #endif /* COORD_H_ */
