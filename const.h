@@ -57,6 +57,7 @@
 #define ECC       0.0818188              // Eccentricity
 #define OMEGAE    7.292115147e-5         // Angular velocity, rad/sec
 #define FLATT     0.00335277945416750486 // Flattening of the Earth ellipsoid
+#define FLATT84   0.00335281066478120473 // WGS84 flattening for geodetic funcs
 #define XKE       0.0743669161           // (60.0 / sqrt(Re*Re*Re/GM))
 #define J2        0.001082616            // 2nd grav zonal harmonic of the Earth
 #define J3       -0.00000253881          // 3rd grav zonal harmonic of the Earth
@@ -69,6 +70,7 @@
 #define ECC       0.0818188              // Eccentricity
 #define OMEGAE    7.292115147e-5         // Angular velocity, rad/sec
 #define FLATT     0.00335277945416750486 // Flattening of the Earth ellipsoid
+#define FLATT84   0.00335281066478120473 // WGS84 flattening for geodetic funcs
 #define XKE       0.07436691613317342186 // (60.0 / sqrt(Re^3/GM))
 #define J2        0.001082616            // 2nd grav zonal harmonic of the Earth
 #define J3       -0.00000253881          // 3rd grav zonal harmonic of the Earth
@@ -80,7 +82,7 @@
 #define RE        6378.137               // Earth radius, km
 #define ECC       0.0818188              // Eccentricity
 #define OMEGAE    7.292115e-5            // Angular velocity, rad/sec
-#define FLATT     0.00335281066478120473 // Flattening
+#define FLATT     0.00335281066478120473 // Flattening of the Earth ellipsoid
 #define XKE       0.07436685316871384602 // (60.0 / sqrt(Re*Re*Re/GM))
 #define J2        0.00108262998905       // 2nd grav zonal harmonic of the Earth
 #define J3       -0.00000253215306       // 3rd grav zonal harmonic of the Earth

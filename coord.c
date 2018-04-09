@@ -271,10 +271,10 @@ geo2ecef
   vec3 ecef;
 
   // Geocentric latitude
-  double gclat = atan(pow(1 - FLATT, 2) * tan(geo->lat));
+  double gclat = atan(pow(1 - FLATT84, 2) * tan(geo->lat));
 
   // Radius of Earth at surface point
-  double rsurf = sqrt(pow(RE, 2) / ((1 / pow(1.0 - FLATT, 2) - 1) *
+  double rsurf = sqrt(pow(RE, 2) / ((1 / pow(1.0 - FLATT84, 2) - 1) *
                  pow(sin(gclat), 2) + 1));
 
 
@@ -379,7 +379,7 @@ eq2azelrng
   // Apparent Ra Dec if we ever need them
   // Switching to topocentric equatorial frame
   // Geocentric latitude
-//  double gclat    = atan(pow(1 - FLATT, 2) * tan(obs_geo->lat));
+//  double gclat    = atan(pow(1 - FLATT84, 2) * tan(obs_geo->lat));
 //  double dalpha   = atan2(-ro * cos(gclat) * sin(pi) * sin(H),
 //                          cos(radecrv->dec) - ro * cos(gclat) * sin(pi)
 //                          * sin(H));
@@ -467,7 +467,7 @@ cast2ellipsoid
 
   // Semiaxes of the ellipsoid, squared
   double a2 = pow(RE, 2);
-  double b2 = pow(RE / (1 + FLATT), 2);
+  double b2 = pow(RE / (1 + FLATT84), 2);
 
   double d  = (b2 * (u2 + v2) + a2 * w2);
 
