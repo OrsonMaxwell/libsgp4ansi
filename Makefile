@@ -28,10 +28,6 @@ else
 	CCFLAGS += ${RELEASEFLAGS}
 endif
 
-ifeq ($(MATHTRACE), 1)
-	CCFLAGS += -DMATH_TRACE
-endif
-
 all: test ref_test
 
 test: library ${OUTPUTDIR}/${TEST_NAME}

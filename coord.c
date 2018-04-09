@@ -292,10 +292,10 @@ geo2ecef
 /*
  * Find azimuth, elevation and range from ECEF vectors
  *
- * Inputs:  op      - Observer position vector in ECEF frame
- *          dp      - Observer to satellite position vector in ECEF frame
+ * Inputs:  posecef - Satellite position vector in ECEF frame
+ *          obs_geo - Observer geodetic position vector
  * Outputs: None
- * Returns: azelrng - Azimuth, elevation, range vector, rad, rad, km
+ * Returns: azelrng - Satellite from observer horizontal vector, rad, rad, km
  */
 vec3
 ecef2azelrng
@@ -324,9 +324,9 @@ ecef2azelrng
                    + sin(obs_geo->lon) * cos(obs_geo->lat) * dy
                    + sin(obs_geo->lat) * dz;
 
-  // compute elevation
+  // Elevation
   azelrng.el = PIDIV2 - acos(vertical);
-  // compute azimuth; check for negative angles
+  // Azimuth; check for negative angles
   azelrng.az = atan2(east, north);
   if (azelrng.az < 0)
     azelrng.az += TAU;
