@@ -266,14 +266,13 @@ find_tca
         unsigned int delta_t
 )
 {
-  obs    o_c     = {0};
-  obs    o_d     = {0};
-
   // Iterative golden section search
-  unsigned int  a = start_time;
-  unsigned int  b = start_time + delta_t;
-  unsigned int  c = b - (b - a) / GOLDENR;
-  unsigned int  d = a + (b - a) / GOLDENR;
+  obs           o_c = {0};
+  obs           o_d = {0};
+  unsigned int  a   = start_time;
+  unsigned int  b   = start_time + delta_t;
+  unsigned int  c   = b - (b - a) / GOLDENR;
+  unsigned int  d   = a + (b - a) / GOLDENR;
 
   while (abs(c - d) > 1)
   {
@@ -536,12 +535,12 @@ sat_load_params
   }
 
   strcpy(s->name, name);
-  s->sec_class    = sec_class;
+  s->sec_class        = sec_class;
   strcpy(s->int_designator, int_designator);
 
-  s->epoch        = epoch;
-  s->epoch_ms     = epoch_ms;
-  s->julian_epoch = unix2jul(s->epoch, s->epoch_ms);
+  s->epoch            = epoch;
+  s->epoch_ms         = epoch_ms;
+  s->julian_epoch     = unix2jul(s->epoch, s->epoch_ms);
 
   // Converting from TLE to SGP4 units (minutes, radians and kilometres)
   s->mean_motion_dt2  = mean_motion_dt2  / (RPD2RADPM * 1440);
@@ -675,7 +674,7 @@ sat_init
                  + 2 * temp3 * (3 - 7 * theta2)) * cosio;
       s->xnodcf  = 3.5 * betao2 * xhdot1 * s->C1;
       s->t2cof   = 1.5 * s->C1;
-  // Division by zero check then inclination = 180 deg
+      // Division by zero check when inclination = 180 deg
       s->xlcof   = 0.125 * A3OVK2 * sinio * (3.0 + 5.0 * cosio)
                  / ((fabs(cosio+1.0) > 1.5e-12) ? ((1.0 + cosio)) : (1.5e-12));
       s->aycof   = 0.25 * A3OVK2 * sinio;
@@ -712,9 +711,9 @@ sat_init
     double stem   = sin(xnodce);
     double ctem   = cos(xnodce);
     double zcosil = 0.91375164 - 0.03568096 * ctem;
-    double zsinil = sqrt(1.0 - zcosil * zcosil);
+    double zsinil = sqrt(1.0 - pow(zcosil, 2));
     double zsinhl = 0.089683511 * stem / zsinil;
-    double zcoshl = sqrt(1.0 - zsinhl * zsinhl);
+    double zcoshl = sqrt(1.0 - pow(zsinhl, 2));
     double gam    = 5.8351514 + 0.0019443680 * day;
     double zy     = zcoshl * ctem + 0.91744867 * zsinhl * stem;
     double zx     = gam + atan2(0.39785416 * stem / zsinil, zy) - xnodce;
@@ -765,12 +764,12 @@ sat_init
       x7  =  a5 * cosomm;
       x8  =  a6 * cosomm;
 
-      z31 = 12.0 * x1 * x1 - 3.0 * x3 * x3;
+      z31 = 12.0 * pow(x1, 2) - 3.0 * pow(x3, 2);
       z32 = 24.0 * x1 * x2 - 6.0 * x3 * x4;
-      z33 = 12.0 * x2 * x2 - 3.0 * x4 * x4;
-      z1  =  3.0 *  (a1 * a1 + a2 * a2) + z31 * eo2;
+      z33 = 12.0 * pow(x2, 2) - 3.0 * pow(x4, 2);
+      z1  =  3.0 *  (pow(a1, 2) + pow(a2, 2)) + z31 * eo2;
       z2  =  6.0 *  (a1 * a3 + a2 * a4) + z32 * eo2;
-      z3  =  3.0 *  (a3 * a3 + a4 * a4) + z33 * eo2;
+      z3  =  3.0 *  (pow(a3, 2) + pow(a4, 2)) + z33 * eo2;
       z11 = -6.0 * a1 * a5 + eo2 *  (-24.0 * x1 * x7-6.0 * x3 * x5);
       z12 = -6.0 *  (a1 * a6 + a3 * a5) + eo2 *
           (-24.0 * (x2 * x7 + x1 * x8) - 6.0 * (x3 * x6 + x4 * x5));
@@ -924,8 +923,8 @@ sat_init
     // Calculate deep space resonance effects
     double aonv  = pow(s->xnodp / XKE, TWOTHIRD);
     double ainv2 = pow(aonv, 2);
-    double sini2  =  sinim * sinim;
-    double cosisq =  cosim * cosim;
+    double sini2  =  pow(sinim, 2);
+    double cosisq =  pow(cosim, 2);
 
     // Initialize the resonance terms
     if ((s->is_12h_resonant == true)
@@ -1004,7 +1003,7 @@ sat_init
         f321 =  1.875 * sinim  *  (1.0 - 2.0 * cosim - 3.0 * cosisq);
         f322 = -1.875 * sinim  *  (1.0 + 2.0 * cosim - 3.0 * cosisq);
         f441 = 35.0 * sini2 * f220;
-        f442 = 39.3750 * sini2 * sini2;
+        f442 = 39.3750 * pow(sini2, 2);
         f522 =  9.84375 * sinim * (sini2 * (1.0 - 2.0 * cosim- 5.0 * cosisq)
              + 0.33333333 * (-2.0 + 4.0 * cosim + 6.0 * cosisq) );
         f523 = sinim * (4.92187512 * sini2 * (-2.0 - 4.0 * cosim
@@ -1051,7 +1050,7 @@ sat_init
             f220 = 0.75 * (1 + cosim) * (1 + cosim);
             f311 = 0.9375 * sini2 * (1 + 3 * cosim) - 0.75 * (1 + cosim);
             f330 = 1 + cosim;
-            f330 = 1.875 * f330 * f330 * f330;
+            f330 = 1.875 * pow(f330, 2) * f330;
          s->del1 = 3 * pow(s->xnodp, 2) * ainv2;
          s->del2 = 2 * s->del1 * f220 * g200 * q22;
          s->del3 = 3 * s->del1 * f330 * g300 * q33 * aonv;
@@ -1379,7 +1378,7 @@ sat_propagate
     // Euler-Maclaurin integrator steps for resonant orbits
     const double stepp = 720;
     const double stepn = -stepp;
-    const double step2 = (stepp * stepp) / 2;
+    const double step2 = (pow(stepp, 2)) / 2;
 
     // Calculate deep space resonance effects
     double dndt   = 0;
@@ -1468,8 +1467,8 @@ sat_propagate
         }
       }
 
-             nm = xni + xndt  * ft + xnddt * ft * ft * 0.5;
-      double xl = xli + xldot * ft + xndt  * ft * ft * 0.5;
+             nm = xni + xndt  * ft + xnddt * pow(ft, 2) * 0.5;
+      double xl = xli + xldot * ft + xndt  * pow(ft, 2) * 0.5;
 
       if (s->is_12h_resonant)
       {
@@ -1490,7 +1489,7 @@ sat_propagate
     return -2;
   }
 
-  double am = pow((XKE / nm), TWOTHIRD) * tempa * tempa;
+  double am = pow((XKE / nm), TWOTHIRD) * pow(tempa, 2);
          nm = XKE / pow(am, 1.5);
          em = em - tempe;
 
@@ -1507,7 +1506,7 @@ sat_propagate
 
          xmp += s->xnodp * templ;
   double xlm  = xmp + omega + xnode;
-  double em2  = em * em;
+  double em2  = pow(em, 2);
 
   xnode  = fmod(xnode, TAU);
   omega  = fmod(omega, TAU);
@@ -1536,7 +1535,7 @@ sat_propagate
     double zm    = s->zmos + ZNS * delta_t;
     double zf    = zm + 2 * zes * sin(zm);
     double sinzf = sin(zf);
-    double f2    =  0.5 * sinzf * sinzf - 0.25;
+    double f2    =  0.5 * pow(sinzf, 2) - 0.25;
     double f3    = -0.5 * sinzf * cos(zf);
     double ses   = s->se2* f2 + s->se3 * f3;
     double sis   = s->si2 * f2 + s->si3 * f3;
@@ -1547,7 +1546,7 @@ sat_propagate
 
     zf    = zm + 2 * zel * sin(zm);
     sinzf = sin(zf);
-    f2    =  0.5 * sinzf * sinzf - 0.25;
+    f2    =  0.5 * pow(sinzf, 2) - 0.25;
     f3    = -0.5 * sinzf * cos(zf);
     double sel   = s->ee2 * f2 + s->e3 * f3;
     double sil   = s->xi2 * f2 + s->xi3 * f3;
@@ -1688,7 +1687,7 @@ sat_propagate
   // Short period preliminary quantities
   double ecose = axnl * coseo1 + aynl * sineo1;
   double esine = axnl * sineo1 - aynl * coseo1;
-  double el2   = axnl * axnl   + aynl * aynl;
+  double el2   = pow(axnl, 2)   + pow(aynl, 2);
   double pl    = am * (1 - el2);
   double mrt;
 
@@ -1706,12 +1705,12 @@ sat_propagate
     double cosu   = am / rl * (coseo1 - axnl + aynl * esine / (1 + betal));
     double su     = atan2(sinu, cosu);
     double sin2u  = (cosu + cosu) * sinu;
-    double cos2u  = 1 - 2 * sinu * sinu;
+    double cos2u  = 1 - 2 * pow(sinu, 2);
     double temp1  = 0.5 * J2 * (1 / pl);
     double temp2  = temp1 * (1 / pl);
 
     // Update for short period periodics
-    double cosip2 = cosip * cosip;
+    double cosip2 = pow(cosip, 2);
     double con41  = s->con41;
     double x1mth2 = s->x1mth2;
     double x7thm1 = s->x7thm1;

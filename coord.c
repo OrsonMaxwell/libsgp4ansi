@@ -140,10 +140,10 @@ teme2ecef
   // Polar motion coefficients, rad
   double xp;
   double yp;
-  xp = (0.1033 + 0.0494*cos(A) + 0.0482*sin(A) + 0.0297*cos(C)
-     + 0.0307*sin(C)) * 4.84813681e-6;
-  yp = (0.3498 + 0.0441*cos(A) - 0.0393*sin(A) + 0.0307*cos(C)
-     - 0.0297*sin(C)) * 4.84813681e-6;
+  xp = (0.1033 + 0.0494 * cos(A) + 0.0482 * sin(A) + 0.0297 * cos(C)
+     + 0.0307 * sin(C)) * 4.84813681e-6;
+  yp = (0.3498 + 0.0441 * cos(A) - 0.0393 * sin(A) + 0.0307 * cos(C)
+     - 0.0297 * sin(C)) * 4.84813681e-6;
 
   double pm[3][3] =
   {
@@ -200,11 +200,11 @@ ecef2geo
   double       tolerance = 1.0e-12;
 
   // Longitude
-  double ijsq = sqrt(posecef->i * posecef->i + posecef->j * posecef->j);
+  double ijsq = sqrt(pow(posecef->i, 2) + pow(posecef->j, 2));
 
   if (fabs(ijsq) < tolerance)
   {
-    geo.lon = ((posecef->k < 0)?-1:1) * PIDIV2;
+    geo.lon = ((posecef->k < 0) ? -1 : 1) * PIDIV2;
   }
   else
   {
@@ -232,13 +232,14 @@ ecef2geo
   double c, latsine;
   int    i     = 1;
   double delta = geo.lat + 10;
+  double ecc2  = pow(ECC, 2);
 
   while ((fabs(delta - geo.lat) >= tolerance) && (i < maxiter))
   {
     delta   = geo.lat;
     latsine = sin(geo.lat);
-    c       = RE / (sqrt(1 - ECC * ECC * latsine * latsine));
-    geo.lat = atan((posecef->k + c * ECC * ECC * latsine) / ijsq);
+    c       = RE / (sqrt(1 - ecc2 * pow(latsine,2)));
+    geo.lat = atan((posecef->k + c * ecc2 * latsine) / ijsq);
     i++;
   }
 
@@ -249,7 +250,7 @@ ecef2geo
   }
   else
   {
-    geo.alt = posecef->k / sin(geo.lat) - c * (1 - ECC * ECC);
+    geo.alt = posecef->k / sin(geo.lat) - c * (1 - ecc2);
   }
 
   return geo;
@@ -281,9 +282,9 @@ geo2ecef
 
   // ECEF position vector
   ecef.x = rsurf * cos(gclat) * cos(geo->lon)
-             + geo->alt * cos(geo->lat) * cos(geo->lon);
+         + geo->alt * cos(geo->lat) * cos(geo->lon);
   ecef.y = rsurf * cos(gclat) * sin(geo->lon)
-             + geo->alt * cos(geo->lat) * sin(geo->lon);
+         + geo->alt * cos(geo->lat) * sin(geo->lon);
   ecef.z = rsurf * sin(gclat) + geo->alt * sin (geo->lat);
 
   return ecef;
@@ -307,8 +308,8 @@ ecef2azelrng
   vec3 azelrng;
 
   // Observer to satellite vector in ECEF frame
-  vec3 obsecef  = geo2ecef(obs_geo);
-  vec3 dp       = vec3_add(1, posecef, -1, &obsecef);
+  vec3 obsecef    = geo2ecef(obs_geo);
+  vec3 dp         = vec3_add(1, posecef, -1, &obsecef);
 
   // Normalize difference vector
   azelrng.rng     = vec3_mag(&dp);
