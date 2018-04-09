@@ -307,8 +307,8 @@ ecef2azelrng
   vec3 azelrng;
 
   // Observer to satellite vector in ECEF frame
-  vec3 op       = geo2ecef(obs_geo);
-  vec3 dp       = vec3_add(1, posecef, -1, &op);
+  vec3 obsecef  = geo2ecef(obs_geo);
+  vec3 dp       = vec3_add(1, posecef, -1, &obsecef);
 
   // Normalize difference vector
   azelrng.rng     = vec3_mag(&dp);
@@ -319,17 +319,17 @@ ecef2azelrng
   double north    = -cos(obs_geo->lon) * sin(obs_geo->lat) * dx
                    - sin(obs_geo->lon) * sin(obs_geo->lat) * dy
                    + cos(obs_geo->lat) * dz;
-  double east     = -sin(obs_geo->lon) * dx+cos(obs_geo->lon) * dy;
+  double east     = -sin(obs_geo->lon) * dx + cos(obs_geo->lon) * dy;
   double vertical =  cos(obs_geo->lon) * cos(obs_geo->lat) * dx
                    + sin(obs_geo->lon) * cos(obs_geo->lat) * dy
                    + sin(obs_geo->lat) * dz;
 
   // compute elevation
-  azelrng.el = (PIDIV2 - acos(vertical));
+  azelrng.el = PIDIV2 - acos(vertical);
   // compute azimuth; check for negative angles
-  azelrng.az = atan(east / north);
+  azelrng.az = atan2(east, north);
   if (azelrng.az < 0)
-    azelrng.az += PI;
+    azelrng.az += TAU;
 
   return azelrng;
 }

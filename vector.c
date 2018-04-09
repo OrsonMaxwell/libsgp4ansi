@@ -30,7 +30,7 @@ vec3_mag
   const vec3* arg
 )
 {
-  return sqrt(arg->x * arg->x + arg->y * arg->y + arg->z * arg->z);
+  return sqrt(pow(arg->x, 2) + pow(arg->y,2) + pow(arg->z, 2));
 }
 
 /*
