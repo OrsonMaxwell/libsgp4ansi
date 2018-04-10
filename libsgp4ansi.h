@@ -25,8 +25,8 @@
 //                                VERSION                                    //
 // ************************************************************************* //
 
-#define LIBSGP4ANSI_VERSION_MAJ 0
-#define LIBSGP4ANSI_VERSION_MIN 9
+#define LIBSGP4ANSI_VERSION_MAJ 1
+#define LIBSGP4ANSI_VERSION_MIN 0
 extern const int version_major;
 extern const int version_minor;
 
