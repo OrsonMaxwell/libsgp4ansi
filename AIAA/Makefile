@@ -18,10 +18,6 @@ else
 	CXXFLAGS += ${RELEASEFLAGS}
 endif
 
-ifeq ($(MATHTRACE), 1)
-	CXXFLAGS += -DMATH_TRACE
-endif
-
 all: ../${OUTPUTDIR}/${REF_TEST_NAME}
 	@echo "${CURDIR}/../${OUTPUTDIR}/${REF_TEST_NAME} done"
 

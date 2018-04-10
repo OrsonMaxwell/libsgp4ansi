@@ -43,7 +43,12 @@ library: ${OUTPUTDIR}/${LIB_NAME}
 	@echo "${CURDIR}/${OUTPUTDIR}/${LIB_NAME} done"
 
 ${OUTPUTDIR}/${LIB_NAME}: libsgp4ansi.o epoch.o coord.o vector.o solar.o
-	${GCC} ${CCFLAGS} ${LIBFLAGS} -shared libsgp4ansi.o epoch.o coord.o vector.o solar.o -o ${OUTPUTDIR}/${LIB_NAME} ${LIBS}
+	${GCC} ${LIBFLAGS} -shared libsgp4ansi.o epoch.o coord.o vector.o solar.o -o ${OUTPUTDIR}/${LIB_NAME} ${LIBS}
+
+static: LIBFLAGS = -no-pie -pg
+static: CCFLAGS  = -std=c11
+static: ${OUTPUTDIR}/${TEST_NAME} libsgp4ansi.o epoch.o coord.o vector.o solar.o
+	${GCC} ${CCFLAGS} ${LIBFLAGS} libsgp4ansi.o epoch.o coord.o vector.o solar.o -o ${OUTPUTDIR}/${TEST_NAME} test.c ${LIBS}
 
 libsgp4ansi.o: libsgp4ansi.c libsgp4ansi.h const.h
 	${GCC} ${CCFLAGS} ${LIBFLAGS} -c libsgp4ansi.c ${LIBS}
